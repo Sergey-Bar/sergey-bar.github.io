@@ -3,52 +3,147 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Professional CV and portfolio website for Sergey Bar.">
-  <title>Sergey Bar | CV</title>
+
+  <!-- Primary meta -->
+  <title>Sergey Bar | QA Engineer</title>
+  <meta name="description" content="Sergey Bar — QA Engineer specializing in embedded, web & mobile testing, AI-driven quality, and building QA processes from the ground up. 5+ years across defense, semiconductor, and security.">
+  <meta name="author" content="Sergey Bar">
+  <link rel="canonical" href="https://sergey-bar.github.io/">
+  <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#070c17" media="(prefers-color-scheme: dark)">
+
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Sergey Bar | QA Engineer">
+  <meta property="og:description" content="QA Engineer specializing in embedded, web & mobile testing, AI-driven quality, and building QA from the ground up.">
+  <meta property="og:url" content="https://sergey-bar.github.io/">
+  <meta property="og:image" content="https://sergey-bar.github.io/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Sergey Bar | QA Engineer">
+  <meta name="twitter:description" content="QA Engineer specializing in embedded, web & mobile testing, AI-driven quality, and building QA from the ground up.">
+  <meta name="twitter:image" content="https://sergey-bar.github.io/og-image.png">
+
+  <!-- Inline SVG favicon (no extra file needed) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%232563eb'/%3E%3Cstop offset='1' stop-color='%237c3aed'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='50%25' y='53%25' font-family='Segoe UI, Arial, sans-serif' font-size='30' font-weight='700' fill='%23ffffff' text-anchor='middle' dominant-baseline='middle'%3ESB%3C/text%3E%3C/svg%3E">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+
+  <!-- Set theme before paint to avoid flash of the wrong theme -->
+  <script>
+    (function () {
+      document.documentElement.classList.add('js');
+      try {
+        var saved = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Sergey Bar",
+    "jobTitle": "QA Engineer",
+    "url": "https://sergey-bar.github.io/",
+    "email": "mailto:sergeybaris@gmail.com",
+    "address": { "@type": "PostalAddress", "addressCountry": "Israel" },
+    "knowsLanguage": ["Hebrew", "Russian", "English"],
+    "sameAs": [
+      "https://github.com/Sergey-Bar",
+      "https://www.linkedin.com/in/sergeybar"
+    ]
+  }
+  </script>
 </head>
 <body>
-  <div class="page-bg" aria-hidden="true"></div>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="progress-bar" id="progressBar" aria-hidden="true"></div>
+
+  <div class="bg" aria-hidden="true">
+    <div class="bg-aurora"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-grain"></div>
+  </div>
 
   <header class="site-header">
-    <a class="brand" href="#top">Sergey Bar</a>
-    <button class="menu-toggle" aria-label="Open navigation" aria-expanded="false">Menu</button>
-    <nav class="nav-links" aria-label="Main navigation">
+    <a class="brand" href="#top"><span class="brand-dot" aria-hidden="true"></span> Sergey Bar</a>
+
+    <nav id="primary-nav" class="nav-links" aria-label="Main navigation">
       <a href="#about">About</a>
+      <a href="#impact">Impact</a>
       <a href="#experience">Experience</a>
-      <a href="#projects">Projects</a>
       <a href="#skills">Skills</a>
       <a href="#contact">Contact</a>
     </nav>
+
+    <div class="header-actions">
+      <button class="icon-button theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false">
+        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+        </svg>
+      </button>
+      <button class="icon-button menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="primary-nav">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M3 6h18M3 12h18M3 18h18"></path>
+        </svg>
+      </button>
+    </div>
   </header>
 
-  <main id="top">
+  <main id="main">
+    <span id="top"></span>
+
     <section class="hero container reveal">
-      <p class="eyebrow">Open to new opportunities</p>
-      <h1>Product-minded Software Engineer with a focus on performance, quality, and user impact.</h1>
+      <p class="eyebrow"><span class="pulse" aria-hidden="true"></span> Open to Senior QA, QA Team Lead &amp; QA Manager roles</p>
+      <h1>I <span class="grad">break complex systems</span> before they break in the real world.</h1>
       <p class="hero-copy">
-        I build reliable web products end-to-end, from architecture and implementation to developer workflows and delivery.
+        QA Engineer specializing in embedded, web, and mobile testing, AI-driven quality, and building
+        QA processes from the ground up. 5+ years across defense, semiconductors, and security, turning
+        ad-hoc testing into reliable, measurable quality.
       </p>
       <div class="hero-cta">
-        <a class="button primary" href="#contact">Hire Me</a>
-        <a class="button ghost" href="https://github.com/Sergey-Bar" target="_blank" rel="noreferrer">GitHub</a>
+        <a class="button primary" href="#contact">Get in touch</a>
+        <button class="button ghost" type="button" data-print>Download CV (PDF)</button>
+        <a class="button ghost" href="https://www.linkedin.com/in/sergeybar" target="_blank" rel="noreferrer">LinkedIn</a>
       </div>
       <ul class="hero-stats" aria-label="Key achievements">
-        <li>
-          <span class="stat-value">7+</span>
-          <span class="stat-label">Years experience</span>
+        <li class="card">
+          <span class="stat-value" data-count="5" data-suffix="+">5+</span>
+          <span class="stat-label">Years in QA</span>
         </li>
-        <li>
-          <span class="stat-value">20+</span>
-          <span class="stat-label">Projects shipped</span>
+        <li class="card">
+          <span class="stat-value" data-count="30" data-prefix="$" data-suffix="M">$30M</span>
+          <span class="stat-label">Platform revenue safeguarded</span>
         </li>
-        <li>
-          <span class="stat-value">99.9%</span>
-          <span class="stat-label">Service reliability</span>
+        <li class="card">
+          <span class="stat-value" data-count="0">0</span>
+          <span class="stat-label">Critical production defects</span>
         </li>
+        <li class="card">
+          <span class="stat-value" data-count="40" data-suffix="%">40%</span>
+          <span class="stat-label">System stability gain</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="container worked-at" aria-label="Companies I have worked with">
+      <p class="worked-at-label">Where I have worked</p>
+      <ul class="logo-strip">
+        <li><img class="logo-badge sm" src="assets/logos/iaf.png" alt="" aria-hidden="true" width="40" height="40" loading="lazy" decoding="async"><span>Israeli Air Force</span></li>
+        <li><img class="logo-badge sm" src="assets/logos/nova.png" alt="" aria-hidden="true" width="40" height="40" loading="lazy" decoding="async"><span>Nova</span></li>
+        <li><img class="logo-badge sm" src="assets/logos/flir.png" alt="" aria-hidden="true" width="40" height="40" loading="lazy" decoding="async"><span>Teledyne FLIR</span></li>
+        <li><img class="logo-badge sm" src="assets/logos/enabley.png" alt="" aria-hidden="true" width="40" height="40" loading="lazy" decoding="async"><span>Enabley</span></li>
       </ul>
     </section>
 
@@ -56,22 +151,59 @@
       <div>
         <h2>About</h2>
         <p>
-          I am a full-stack engineer who enjoys turning complex requirements into clean, maintainable systems.
-          My core strengths are backend architecture, frontend performance, and pragmatic product delivery.
+          I have loved technology since I was 8 years old, when I took my computer apart just to
+          figure out how to put it back together. QA and understanding how things work have been in
+          my blood ever since.
         </p>
         <p>
-          I work best in teams that value ownership, thoughtful communication, and measurable outcomes.
+          Over the last 5+ years I have worked across defense, hardware testing, security, and
+          software. People are my greatest strength: I build real connections, help teams work
+          together, and understand what users need. I pair that with a deep focus on data, balancing
+          hard technical problems with clear communication so everyone does their best work.
+        </p>
+        <p>
+          If your product needs to be exact and reliable, I know how to prove it works. Away from the
+          keyboard, you will usually find me baking or trying out a new recipe.
         </p>
       </div>
       <aside class="card profile-card">
-        <h3>Quick Info</h3>
-        <ul>
-          <li>Location: Add your city, country</li>
-          <li>Email: your.email@example.com</li>
-          <li>Phone: +00 000 000 0000</li>
-          <li>Languages: English, Add others</li>
+        <h3>Quick info</h3>
+        <ul class="info-list">
+          <li><span>Location</span><strong>Israel</strong></li>
+          <li><span>Email</span><strong><a href="mailto:sergeybaris@gmail.com">sergeybaris@gmail.com</a></strong></li>
+          <li><span>LinkedIn</span><strong><a href="https://www.linkedin.com/in/sergeybar" target="_blank" rel="noreferrer">/in/sergeybar</a></strong></li>
+          <li><span>Languages</span><strong>Hebrew, Russian, English</strong></li>
         </ul>
       </aside>
+    </section>
+
+    <section id="impact" class="container reveal">
+      <div class="section-heading">
+        <h2>Selected impact</h2>
+        <p>A few results I am proud of.</p>
+      </div>
+      <div class="project-grid">
+        <article class="card project-card" data-tilt>
+          <h3>Built QA from the ground up, twice</h3>
+          <p>Joined as the first and only QA hire and created the entire quality function from nothing: test strategy, quality gates, release criteria, and documentation.</p>
+          <p class="tags">Test Strategy · Process · Release Sign-off</p>
+        </article>
+        <article class="card project-card" data-tilt>
+          <h3>Caught a release-blocking bug with AI</h3>
+          <p>Used AI-powered code review and deep SQL and data analysis to uncover a critical calculation inaccuracy on a security-critical platform before it reached production.</p>
+          <p class="tags">AI-Driven QA · SQL · Data Validation</p>
+        </article>
+        <article class="card project-card" data-tilt>
+          <h3>Fixed a critical memory leak, +40% stability</h3>
+          <p>Root-caused a memory leak with dotMemory and dotTrace on a $30M enterprise platform, improving system stability and performance by 40%.</p>
+          <p class="tags">dotMemory · dotTrace · Performance</p>
+        </article>
+        <article class="card project-card" data-tilt>
+          <h3>Led QA for a $30M platform</h3>
+          <p>Led 4 QA engineers across 12+ concurrent product lines and delivered 4 major releases with zero critical production defects.</p>
+          <p class="tags">Leadership · Embedded · Web</p>
+        </article>
+      </div>
     </section>
 
     <section id="experience" class="container reveal">
@@ -81,51 +213,67 @@
       </div>
       <div class="timeline">
         <article class="card timeline-item">
-          <header>
-            <h3>Senior Software Engineer</h3>
-            <p>Company Name · 2022 - Present</p>
+          <header class="ti-head">
+            <img class="logo-badge" src="assets/logos/iaf.png" alt="" aria-hidden="true" width="52" height="52" loading="lazy">
+            <div class="ti-head-text">
+              <h3>Quality Assurance Engineer</h3>
+              <p class="meta">Israeli Air Force · Aug 2025 - Present · Israel</p>
+            </div>
           </header>
+          <p class="role-summary">Sole QA Engineer for a full-stack data analysis platform, owning all quality responsibilities from process definition to release sign-off in a security-critical environment with zero pre-existing QA infrastructure.</p>
           <ul>
-            <li>Led migration to modern cloud architecture, reducing infrastructure costs by 30%.</li>
-            <li>Improved API response times by 45% with targeted profiling and caching.</li>
-            <li>Mentored 4 engineers and introduced release quality gates in CI.</li>
+            <li>Discovered a critical data calculation inaccuracy through AI-powered code review and deep data analysis, classified as a release blocker that kept flawed operational data out of production.</li>
+            <li>Architected the entire QA lifecycle from scratch: test strategy, quality gates, release criteria, and comprehensive test documentation.</li>
+            <li>Designed and implemented an operational project management system, improving cross-team visibility across development, stakeholders, and operations.</li>
+            <li>Performed deep-dive SQL validation, cross-referencing API responses with database records to catch data integrity issues before release.</li>
+            <li>Executed functional, regression, integration, and exploratory testing across responsive web and mobile (PWA) in Agile sprints.</li>
           </ul>
         </article>
 
         <article class="card timeline-item">
-          <header>
-            <h3>Software Engineer</h3>
-            <p>Previous Company · 2019 - 2022</p>
+          <header class="ti-head">
+            <img class="logo-badge" src="assets/logos/nova.png" alt="" aria-hidden="true" width="52" height="52" loading="lazy">
+            <div class="ti-head-text">
+              <h3>Quality Assurance Engineer</h3>
+              <p class="meta">Nova Ltd. · Jan 2025 - Aug 2025 · Rehovot</p>
+            </div>
           </header>
+          <p class="role-summary">QA for a global leader in semiconductor metrology and process control, testing mission-critical measurement software deployed to tier-1 chip manufacturers including Samsung, Intel, and TSMC.</p>
           <ul>
-            <li>Built customer-facing features used by 50k+ monthly active users.</li>
-            <li>Implemented observability dashboards that cut incident resolution time by 40%.</li>
-            <li>Collaborated with product/design to increase conversion by 18%.</li>
+            <li>Verified end-to-end functionality of in-house software interfacing with fab machines, validating precision across distributed measurement workflows.</li>
+            <li>Tested message-driven architectures using RabbitMQ within microservices, ensuring reliable communication and data integrity.</li>
+            <li>Investigated integration issues across software layers and hardware interfaces, driving root-cause analysis with R&amp;D.</li>
+            <li>Managed the defect lifecycle in Azure DevOps with full traceability under strict semiconductor-industry quality standards.</li>
           </ul>
         </article>
-      </div>
-    </section>
 
-    <section id="projects" class="container reveal">
-      <div class="section-heading">
-        <h2>Selected Projects</h2>
-        <p>Things I have built and improved.</p>
-      </div>
-      <div class="project-grid">
-        <article class="card project-card">
-          <h3>Project One</h3>
-          <p>Short project summary focused on business or user impact.</p>
-          <p class="tags">React · Node.js · PostgreSQL</p>
+        <article class="card timeline-item">
+          <header class="ti-head">
+            <img class="logo-badge" src="assets/logos/flir.png" alt="" aria-hidden="true" width="52" height="52" loading="lazy">
+            <div class="ti-head-text">
+              <h3>QA Technical Lead <span class="role-note">(progressed from SQA Engineer)</span></h3>
+              <p class="meta">Teledyne FLIR · 2022 - 2025 · 3 years · Petah Tikva</p>
+            </div>
+          </header>
+          <p class="role-summary">QA Tech Lead for United VMS (Latitude, Horizon, Meridian), an enterprise video management and security platform with thousands of installations worldwide and ~$30M in annual revenue.</p>
+          <ul>
+            <li>Led 4 QA engineers with 50% hands-on involvement across software, firmware, and hardware integration; mentored the team on Wireshark protocol analysis, video testing, and memory profiling.</li>
+            <li>Delivered 4 major releases with zero critical production defects and cut issue-resolution time by 20% through better bug pipelines and cross-team triage.</li>
+            <li>Identified and resolved a critical memory leak with dotMemory/dotTrace, improving stability and performance by 40%.</li>
+            <li>Recognized as product Subject Matter Expert and selected by Product leadership to help design the next-generation security platform.</li>
+            <li>Drove CI/CD quality integration via Jenkins and served as Scrum Master, facilitating Agile ceremonies and improving team velocity.</li>
+          </ul>
         </article>
-        <article class="card project-card">
-          <h3>Project Two</h3>
-          <p>Short project summary focused on technical depth and outcomes.</p>
-          <p class="tags">TypeScript · Docker · AWS</p>
-        </article>
-        <article class="card project-card">
-          <h3>Project Three</h3>
-          <p>Short project summary focused on scale, reliability, or performance.</p>
-          <p class="tags">Go · Redis · Terraform</p>
+
+        <article class="card timeline-item">
+          <header class="ti-head">
+            <img class="logo-badge" src="assets/logos/enabley.png" alt="" aria-hidden="true" width="52" height="52" loading="lazy">
+            <div class="ti-head-text">
+              <h3>Quality Assurance Engineer</h3>
+              <p class="meta">Enabley · 2022</p>
+            </div>
+          </header>
+          <p class="role-summary">QA for a learning-technology platform, contributing functional and regression testing across web features.</p>
         </article>
       </div>
     </section>
@@ -135,30 +283,84 @@
         <h2>Skills</h2>
         <p>Core technologies and strengths.</p>
       </div>
-      <ul class="skill-list card">
-        <li><strong>Languages:</strong> TypeScript, JavaScript, Python, Go</li>
-        <li><strong>Frontend:</strong> React, Next.js, HTML, CSS</li>
-        <li><strong>Backend:</strong> Node.js, REST APIs, GraphQL</li>
-        <li><strong>Infrastructure:</strong> Docker, CI/CD, AWS, Linux</li>
-        <li><strong>Ways of working:</strong> Agile delivery, mentoring, system design</li>
-      </ul>
+      <div class="skills-grid">
+        <div class="card skill-group">
+          <h3>Testing &amp; QA</h3>
+          <ul class="chips">
+            <li>Manual Testing</li><li>Exploratory</li><li>Regression</li><li>Integration</li><li>Test Strategy</li><li>Risk-Based Testing</li>
+          </ul>
+        </div>
+        <div class="card skill-group">
+          <h3>Automation</h3>
+          <ul class="chips">
+            <li>Playwright</li><li>Python</li><li>k6</li>
+          </ul>
+        </div>
+        <div class="card skill-group">
+          <h3>APIs &amp; Data</h3>
+          <ul class="chips">
+            <li>SQL</li><li>REST</li><li>GraphQL</li><li>Wireshark</li>
+          </ul>
+        </div>
+        <div class="card skill-group">
+          <h3>Performance &amp; Debug</h3>
+          <ul class="chips">
+            <li>dotMemory</li><li>dotTrace</li><li>RabbitMQ</li>
+          </ul>
+        </div>
+        <div class="card skill-group">
+          <h3>AI &amp; Automation</h3>
+          <ul class="chips">
+            <li>AI-Driven Testing</li><li>AI Agents</li><li>Make.com</li><li>GreenAPI</li>
+          </ul>
+        </div>
+        <div class="card skill-group">
+          <h3>DevOps &amp; Process</h3>
+          <ul class="chips">
+            <li>Azure DevOps</li><li>Jenkins</li><li>CI/CD</li><li>Agile</li><li>Scrum Master</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="credentials" class="container split reveal">
+      <div class="card">
+        <h3>Certifications</h3>
+        <ul class="stack-list">
+          <li>QA Engineer</li>
+          <li>Getting Started with DevOps on AWS</li>
+          <li>The Project Management Course: Beginner to PROject Manager</li>
+          <li>Introduction to Generative AI</li>
+          <li>Test Automation Foundations</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Education</h3>
+        <ul class="stack-list">
+          <li><strong>QA Engineer</strong><span>SVCollege · 2020 - 2021</span></li>
+          <li><strong>Project Management</strong><span>Elevation · 2026</span></li>
+        </ul>
+      </div>
     </section>
 
     <section id="contact" class="container reveal">
-      <div class="section-heading">
-        <h2>Contact</h2>
-        <p>Let us build something meaningful.</p>
-      </div>
       <div class="card contact-card">
-        <p>Email: <a href="mailto:your.email@example.com">your.email@example.com</a></p>
-        <p>LinkedIn: <a href="https://www.linkedin.com" target="_blank" rel="noreferrer">linkedin.com/in/your-profile</a></p>
-        <p>GitHub: <a href="https://github.com/Sergey-Bar" target="_blank" rel="noreferrer">github.com/Sergey-Bar</a></p>
+        <div class="contact-copy">
+          <h2>Let us build something reliable.</h2>
+          <p>I am open to Senior QA Engineer, QA Team Lead, and QA Manager roles. The fastest way to reach me is email or LinkedIn.</p>
+        </div>
+        <div class="contact-actions">
+          <a class="button primary" href="mailto:sergeybaris@gmail.com">Email me</a>
+          <a class="button ghost" href="https://www.linkedin.com/in/sergeybar" target="_blank" rel="noreferrer">LinkedIn</a>
+          <a class="button ghost" href="https://github.com/Sergey-Bar" target="_blank" rel="noreferrer">GitHub</a>
+        </div>
       </div>
     </section>
   </main>
 
   <footer class="site-footer container">
-    <p><span id="year"></span> Sergey Bar. Built with care.</p>
+    <p>&copy; <span id="year"></span> Sergey Bar. Built with care.</p>
+    <a class="text-link" href="#top">Back to top ↑</a>
   </footer>
 
   <script src="script.js"></script>

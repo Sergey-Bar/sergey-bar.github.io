@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page not found | Sergey Bar</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d4ed8'/%3E%3Ctext x='50%25' y='53%25' font-family='Segoe UI, Arial, sans-serif' font-size='30' font-weight='700' fill='%23ffffff' text-anchor='middle' dominant-baseline='middle'%3ESB%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+    .notfound {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 0.6rem;
+      padding: 2rem;
+    }
+    .notfound .code {
+      font-family: "Sora", "Segoe UI", sans-serif;
+      font-weight: 800;
+      font-size: clamp(4rem, 18vw, 9rem);
+      line-height: 1;
+      color: var(--primary);
+    }
+    .notfound p {
+      color: var(--muted);
+      max-width: 40ch;
+      margin: 0.2rem 0 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true">
+    <div class="bg-aurora"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-grain"></div>
+  </div>
+  <main class="notfound">
+    <div class="code">404</div>
+    <h1>This page wandered off.</h1>
+    <p>The page you are looking for does not exist or may have moved.</p>
+    <a class="button primary" href="/">Back to home</a>
+  </main>
+</body>
+</html>

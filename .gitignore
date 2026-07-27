@@ -1,0 +1,9 @@
+# Personal source material — not for publishing
+ME/
+*.pdf
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
