@@ -9,7 +9,7 @@ export const npmStats = {
   "downloadsAllTime": 6244,
   "windowStart": "2026-09-04",
   "windowEnd": "2026-10-04",
-  "measuredAt": "2026-10-04T20:05:36.951Z",
+  "measuredAt": "2026-10-04T20:17:47.473Z",
   "stale": false
 } as const;
 

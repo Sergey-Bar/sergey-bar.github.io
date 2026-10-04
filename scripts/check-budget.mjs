@@ -56,17 +56,28 @@ if (built.join("|") !== declared.join("|")) {
 
 /* -------------------------------------------------------------- lighthouse */
 
-const lhci = readFileSync(join(root, ".lighthouserc.json"), "utf8");
-const audited = (lhci.match(/http:\/\/localhost\/[^"]*/g) ?? []).length;
+// Parsed, not just read: a malformed config is a silent no-op waiting to
+// happen, and this runs before the audit that would otherwise be skipped.
+let audited;
+try {
+  const lhci = JSON.parse(readFileSync(join(root, ".lighthouserc.json"), "utf8"));
+  audited = (JSON.stringify(lhci).match(/http:\/\/localhost\/[^"]*/g) ?? []).length;
+} catch (error) {
+  failures.push(".lighthouserc.json is not valid JSON");
+  console.error(`FAIL lighthouse — .lighthouserc.json is not valid JSON: ${error.message}`);
+  audited = -1;
+}
 
-if (audited !== routes.length) {
-  failures.push("lighthouse route drift");
-  console.error(
-    `FAIL lighthouse — .lighthouserc.json audits ${audited} URL(s), ` +
-      `src/content/routes.json declares ${routes.length}`,
-  );
-} else {
-  console.log(`ok    lighthouse — audits all ${audited} routes`);
+if (audited >= 0) {
+  if (audited !== routes.length) {
+    failures.push("lighthouse route drift");
+    console.error(
+      `FAIL lighthouse — .lighthouserc.json audits ${audited} URL(s), ` +
+        `src/content/routes.json declares ${routes.length}`,
+    );
+  } else {
+    console.log(`ok    lighthouse — audits all ${audited} routes`);
+  }
 }
 
 /* ----------------------------------------------------------- bytes per route */
