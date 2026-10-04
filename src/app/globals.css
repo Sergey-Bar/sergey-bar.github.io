@@ -1,0 +1,362 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Tokens — plan §5.1
+   Light is the page. Dark is a component treatment, never a site mode.
+   --------------------------------------------------------------------------- */
+
+@theme {
+  /* Light surfaces */
+  --color-paper: #f7f7f5;
+  --color-surface: #ffffff;
+  --color-ink: #101114;
+  --color-muted: #66686d;
+  --color-line: #e3e3df;
+  --color-line-strong: #cfcfc9;
+
+  /* Status marks — fills, bars, dots */
+  --color-accent: #3d5afe;
+  --color-success: #0f9d58;
+  --color-warn: #e8a317;
+  --color-critical: #dc3c3c;
+
+  /* Status ink — the same hues darkened until they clear 4.5:1 on --paper.
+     A mark can be a fill; text has to be readable. */
+  --color-accent-ink: #2f42cc;
+  --color-success-ink: #0a7a44;
+  --color-warn-ink: #8f5d00;
+  --color-critical-ink: #b42626;
+
+  /* Dark technical surfaces — evidence console, CI/pipeline, release gate */
+  --color-dark-bg: #07080a;
+  --color-dark-panel: #101317;
+  --color-dark-line: #1e2228;
+  --color-dark-text: #e6e8eb;
+  --color-dark-muted: #8b939d;
+  --color-cyan: #5cc4e0;
+  --color-lime: #b8ff3c;
+  --color-amber-console: #e6bd57;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular",
+    "Cascadia Mono", monospace;
+
+  /* Type scale — 1.25 ratio off a 16px base, display sizes clamped (§5.2).
+     These are raw sizes; the utilities that consume them live below as `t-*`
+     rather than `text-*`, because tailwind-merge cannot see a custom
+     `--text-*` theme key and would classify the name as a text colour. */
+  --ts-display-xl: clamp(2.75rem, 6vw, 4.5rem);
+  --ts-display-l: clamp(2rem, 4vw, 3rem);
+  --ts-title: 1.5rem;
+  --ts-body: 1rem;
+  --ts-small: 0.875rem;
+  --ts-data: 0.8125rem;
+
+  --radius-card: 16px;
+  --radius-panel: 8px;
+  --radius-chip: 4px;
+
+  --breakpoint-3xl: 120rem;
+}
+
+@utility t-display-xl {
+  font-size: var(--ts-display-xl);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-weight: 650;
+}
+
+@utility t-display-l {
+  font-size: var(--ts-display-l);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: 650;
+}
+
+@utility t-title {
+  font-size: var(--ts-title);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  font-weight: 650;
+}
+
+@utility t-body {
+  font-size: var(--ts-body);
+  line-height: 1.6;
+}
+
+@utility t-small {
+  font-size: var(--ts-small);
+  line-height: 1.55;
+}
+
+@utility t-data {
+  font-family: var(--font-mono);
+  font-size: var(--ts-data);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --shell: 1240px;
+    --gutter: 20px;
+  }
+
+  @media (min-width: 48rem) {
+    :root {
+      --gutter: 32px;
+    }
+  }
+
+  @media (min-width: 80rem) {
+    :root {
+      --gutter: 48px;
+    }
+  }
+
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* The header is sticky, so an in-page anchor would otherwise land the
+       section title underneath it. */
+    scroll-padding-top: 5.5rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  /* Belt and braces for targets that scroll-padding does not cover. */
+  section[id],
+  [id]:target {
+    scroll-margin-top: 5.5rem;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--ts-body);
+    line-height: 1.6;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Numerals are the memorable typography on this site, so they always align. */
+  body {
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-accent) 18%, transparent);
+  }
+
+  /* Every translucency on the site is decorative. If the OS asks for less
+     transparency, there is none to give back. */
+  @media (prefers-reduced-transparency: reduce) {
+    *,
+    *::before,
+    *::after {
+      backdrop-filter: none !important;
+    }
+  }
+
+  /* AA is the floor. When the OS asks for more, borders and secondary text
+     move up rather than merely getting thicker. */
+  @media (prefers-contrast: more) {
+    :root {
+      --color-muted: #4a4c50;
+      --color-line: #a9a9a2;
+      --color-line-strong: #7c7c75;
+      --color-dark-muted: #b4bbc4;
+      --color-dark-line: #39414b;
+    }
+  }
+}
+
+@layer components {
+  .shell {
+    width: 100%;
+    max-width: var(--shell);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  /* Section rhythm — 128px desktop, 80px mobile (§5.3) */
+  .rhythm {
+    padding-block: 80px;
+  }
+
+  @media (min-width: 64rem) {
+    .rhythm {
+      padding-block: 128px;
+    }
+  }
+
+  .measure {
+    max-width: 80ch;
+  }
+
+  .data {
+    font-family: var(--font-mono);
+    font-size: var(--ts-data);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  .link-underline {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--color-line-strong);
+    transition: text-decoration-color 150ms cubic-bezier(0.2, 0, 0, 1),
+      color 150ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .link-underline:hover {
+    text-decoration-color: var(--color-ink);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   View Transitions — plan §5.6
+   The wordmark is named; everything else cross-fades by default, which is the
+   whole point of not naming everything.
+   --------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 180ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  }
+}
+
+.vt-wordmark {
+  view-transition-name: wordmark;
+}
+
+/* ---------------------------------------------------------------------------
+   Boot veil and scroll progress — page chrome.
+   --------------------------------------------------------------------------- */
+
+/* The veil is an overlay, not a content hider: the page beneath is laid out and
+   painted the whole time. Default is `display: none` so a browser that does not
+   run these animations — including every visitor who asks for reduced motion —
+   gets the page and nothing else, never an opaque panel sitting on top of it. */
+.boot {
+  display: none;
+}
+
+.scroll-progress {
+  /* Without scroll-driven animation this stays collapsed rather than becoming a
+     permanent line across the top of the viewport. */
+  transform: scaleX(0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .boot {
+    display: flex;
+    animation: boot-lift 560ms cubic-bezier(0.2, 0, 0, 1) forwards;
+  }
+
+  .boot-mark {
+    animation: boot-mark-in 300ms cubic-bezier(0.2, 0, 0, 1) forwards;
+  }
+
+  .boot-rule {
+    animation: boot-rule-draw 420ms cubic-bezier(0.2, 0, 0, 1) forwards;
+  }
+}
+
+@keyframes boot-lift {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes boot-mark-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes boot-rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes scroll-run {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-progress {
+      animation: scroll-run linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* The hero's entrance. `both` fill keeps the copy in the DOM before its delay
+   elapses, so nothing is missing for a screen reader or a crawler — it is only
+   not visible yet for the eye. */
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise 300ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+}

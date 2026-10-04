@@ -1,0 +1,133 @@
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# Cancelling a run mid-publish leaves the already-created Pages deployment to
+# finish anyway, under a cancelled run — so the deploy job carries its own
+# concurrency group below with cancel-in-progress disabled. This top-level group
+# is only for the CI half.
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: content, types, lint, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # The site states Mjölnir numbers. This job is the reason those numbers
+      # cannot drift from the report that produced them.
+      - name: Content drift lock
+        run: npm run content:check
+
+      - name: Types
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  lighthouse:
+    name: lighthouse budget
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Bundle budget
+        run: npm run budget
+
+      - name: Serve and audit
+        uses: treosh/lighthouse-ci-action@512cc908a55bfb0ad231facca52adf3d3a651df4 # v12
+        with:
+          uploadArtifacts: false
+          temporaryPublicStorage: false
+          configPath: .lighthouserc.json
+
+      # `lhci assert` writes this only after it has actually asserted. The action
+      # signals failure by reading the file, so a config that aborts before
+      # asserting — an invalid preset, a bad assertion shape — would otherwise
+      # leave the gate green without ever having run.
+      - name: Assertions must have run
+        run: test -f .lighthouseci/assertion-results.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-report
+          path: .lighthouseci
+          retention-days: 14
+
+  deploy:
+    name: pages
+    # Only a push may publish. Without this the job also runs on pull_request and
+    # would attempt to publish refs/pull/N/merge, held back only by remote Pages
+    # configuration that nothing in this repository states.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: [verify, lighthouse]
+    concurrency:
+      group: pages-${{ github.repository }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      # This artifact comes from a build nothing else has inspected. Assert the
+      # files the deployment depends on before anything is uploaded: without
+      # .nojekyll, Jekyll strips _next/ and the published site has no JavaScript.
+      - name: Artifact must be complete
+        run: |
+          test -f out/.nojekyll
+          test -f out/index.html
+          test -f out/projects/index.html
+          test -f out/404.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

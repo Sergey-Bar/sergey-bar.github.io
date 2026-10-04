@@ -1,0 +1,7 @@
+# Normalise line endings on the way in, so a Windows checkout and a Linux CI
+# runner see the same bytes and a diff is never a wall of ^M.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.woff2 binary

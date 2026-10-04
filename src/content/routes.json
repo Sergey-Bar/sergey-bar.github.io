@@ -1,0 +1,14 @@
+[
+  {
+    "href": "/",
+    "file": "index.html",
+    "priority": 1,
+    "label": "Home"
+  },
+  {
+    "href": "/projects/",
+    "file": "projects/index.html",
+    "priority": 0.9,
+    "label": "Projects"
+  }
+]
