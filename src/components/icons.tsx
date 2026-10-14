@@ -41,3 +41,21 @@ export function CloseIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function ArrowDownRightIcon(props: IconProps) {
+  return (
+    <svg {...svgProps(props)}>
+      <path d="M7 7l10 10" />
+      <path d="M17 8v9H8" />
+    </svg>
+  );
+}
+
+export function ArrowUpIcon(props: IconProps) {
+  return (
+    <svg {...svgProps(props)}>
+      <path d="M12 19V5" />
+      <path d="m5 12 7-7 7 7" />
+    </svg>
+  );
+}

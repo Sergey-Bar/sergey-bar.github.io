@@ -5,11 +5,11 @@
 
 export const npmStats = {
   "package": "mjolnir-qa",
-  "downloadsLastMonth": 5903,
-  "downloadsAllTime": 6244,
-  "windowStart": "2026-09-04",
-  "windowEnd": "2026-10-04",
-  "measuredAt": "2026-10-04T20:17:47.473Z",
+  "downloadsLastMonth": 2195,
+  "downloadsAllTime": 6553,
+  "windowStart": "2026-09-14",
+  "windowEnd": "2026-10-14",
+  "measuredAt": "2026-10-14T15:08:34.960Z",
   "stale": false
 } as const;
 

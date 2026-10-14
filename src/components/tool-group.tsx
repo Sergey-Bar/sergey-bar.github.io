@@ -24,24 +24,6 @@ export function ToolGroup({ group }: { group: ToolGroupData }) {
   );
 }
 
-/**
- * A named discipline with what it covers. Rendered as prose rather than tags,
- * because these are claims about how the work is done — a row of chips would
- * read as another noun list.
- */
-export function CompetencyGroup({
-  competency,
-}: {
-  competency: import("@/content/toolbox").Competency;
-}) {
-  return (
-    <div className="border-t border-line pt-5">
-      <h3 className="t-small font-semibold text-ink">{competency.title}</h3>
-      <p className="measure mt-2 t-small text-muted">{competency.body}</p>
-    </div>
-  );
-}
-
 export function ToolboxGrid({
   className,
   children,

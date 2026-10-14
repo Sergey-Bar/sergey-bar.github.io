@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { JetBrains_Mono } from "next/font/google";
 
+import { BackToTop } from "@/components/back-to-top";
 import { PersonJsonLd } from "@/components/person-jsonld";
 import { PageChrome } from "@/components/page-chrome";
 import { site } from "@/content/site";
@@ -77,6 +78,7 @@ export default function RootLayout({
         </a>
         <PersonJsonLd />
         <PageChrome />
+        <BackToTop />
         {children}
       </body>
     </html>

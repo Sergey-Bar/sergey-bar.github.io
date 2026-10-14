@@ -1,38 +1,30 @@
-import {
-  CompetencyGroup,
-  ToolboxGrid,
-  ToolGroup,
-} from "@/components/tool-group";
+import { ToolboxExplorer } from "@/components/toolbox-explorer";
+import { ToolGroup } from "@/components/tool-group";
 import { SectionRule } from "@/components/section-rule";
-import { competencies, toolbox } from "@/content/toolbox";
+import { toolbox } from "@/content/toolbox";
 
 export function Toolbox() {
   return (
     <section id="toolbox" aria-labelledby="toolbox-heading" className="rhythm">
       <div className="shell">
         <SectionRule />
-        <h2 id="toolbox-heading" className="measure mt-6 t-display-l text-ink">
+        <h2
+          id="toolbox-heading"
+          className="measure mt-6 t-display-l text-ink"
+          data-reveal
+        >
           Engineering toolbox
         </h2>
-        <p className="measure mt-5 t-body text-muted">
-          The instruments, then the disciplines. Every entry is one I have used
-          on a release that mattered — a longer list is not a better one.
+        <p className="measure mt-5 t-body text-muted" data-reveal>
+          Grouped by the job they do. Everything here is something I have
+          actually used.
         </p>
 
-        <ToolboxGrid className="mt-12">
-          {toolbox.map((group) => (
-            <ToolGroup key={group.id} group={group} />
-          ))}
-        </ToolboxGrid>
-
-        <div className="mt-20 border-t border-line pt-10">
-          <h3 className="t-title text-ink">Core competencies</h3>
-          <ToolboxGrid className="mt-8 lg:grid-cols-2">
-            {competencies.map((competency) => (
-              <CompetencyGroup key={competency.id} competency={competency} />
-            ))}
-          </ToolboxGrid>
-        </div>
+        <ToolboxExplorer groups={toolbox.map((group) => ({
+          id: group.id,
+          search: [group.title, ...group.items.map((item) => typeof item === "string" ? item : item.label)].join(" ").toLowerCase(),
+          content: <ToolGroup group={group} />,
+        }))} />
       </div>
     </section>
   );

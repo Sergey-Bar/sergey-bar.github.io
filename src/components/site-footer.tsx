@@ -1,10 +1,11 @@
 import Link from "next/link";
 
-import { contact, site } from "@/content/site";
+import { site } from "@/content/site";
 
 const links = [
-  { label: "LinkedIn", href: contact.linkedin },
-  { label: "GitHub", href: contact.github },
+  { label: "Recommendations", href: "/#recommendations" },
+  { label: "Experience", href: "/#experience" },
+  { label: "Toolbox", href: "/#toolbox" },
   { label: "Projects", href: "/projects/" },
 ];
 
@@ -24,27 +25,16 @@ export function SiteFooter() {
           </div>
 
           <ul className="flex flex-wrap gap-x-6 gap-y-2 self-end">
-            {links.map((link) =>
-              link.href.startsWith("/") ? (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="t-small text-muted transition-colors duration-150 hover:text-ink"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ) : (
-                <li key={link.href}>
-                  <a
-                    href={link.href}
-                    className="t-small text-muted transition-colors duration-150 hover:text-ink"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ),
-            )}
+            {links.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="t-small text-muted transition-colors duration-150 hover:text-ink"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
       </div>

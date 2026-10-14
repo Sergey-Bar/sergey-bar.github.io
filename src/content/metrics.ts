@@ -4,9 +4,7 @@
  * that a generated source owns is interpolated from it rather than typed twice.
  */
 
-import { npmStats } from "@/content/npm-stats";
-
-export type Source = "linkedin" | "npm-registry" | "mjolnir-readme";
+export type Source = "linkedin";
 
 export type Metric = {
   value: string;
@@ -16,14 +14,12 @@ export type Metric = {
   source: Source;
 };
 
-const formatted = new Intl.NumberFormat("en-US");
-
 export const proofRow: readonly Metric[] = [
   {
-    value: "5+",
-    label: "years in QA",
+    value: "7+",
+    label: "years in quality",
     detail:
-      "Since 2021. HP Indigo 2015-2017 was QC analysis on industrial print, not software QA.",
+      "Software QA since 2021, counting the HP Indigo QC years (2015–2017) the same way the CV counts them.",
     source: "linkedin",
   },
   {
@@ -31,6 +27,13 @@ export const proofRow: readonly Metric[] = [
     label: "major releases",
     detail:
       "Delivered on United VMS at Teledyne FLIR with zero critical production defects.",
+    source: "linkedin",
+  },
+  {
+    value: "2×",
+    label: "QA built from zero",
+    detail:
+      "First and only QA engineer twice: at Enabley, and as sole quality owner of a classified Air Force platform now in operational use.",
     source: "linkedin",
   },
   {
@@ -46,19 +49,5 @@ export const proofRow: readonly Metric[] = [
     detail:
       "Optimised bug-reporting pipelines plus cross-team triage at FLIR.",
     source: "linkedin",
-  },
-  {
-    value: formatted.format(npmStats.downloadsLastMonth),
-    label: "npm downloads in 30 days",
-    detail: `I wrote Mjolnir, the verification trust engine — it scores whether a test suite can be trusted at all. It has been installed ${formatted.format(
-      npmStats.downloadsLastMonth,
-    )} times in the last 30 days and ${formatted.format(
-      npmStats.downloadsAllTime,
-    )} times in total.${
-      npmStats.stale
-        ? " This is the last reading the build could confirm, because the npm registry was unreachable."
-        : ""
-    }`,
-    source: "npm-registry",
   },
 ];

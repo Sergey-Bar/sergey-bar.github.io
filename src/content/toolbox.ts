@@ -1,10 +1,10 @@
 import type { ToolItem } from "@/components/technical-tag";
 
 /**
- * Engineering toolbox — the instruments, and the disciplines.
+ * Engineering toolbox: the instruments, and the credentials.
  *
- * `toolbox` is the instrument list: names you can check.
- * `competencies` is the practice: what testing is done, and how.
+ * `toolbox` is the instrument list: names you can check, grouped by the job
+ * they do.
  */
 
 export type ToolGroup = {
@@ -15,36 +15,67 @@ export type ToolGroup = {
   items: readonly ToolItem[];
 };
 
-export type Competency = {
-  id: string;
-  title: string;
-  body: string;
-};
-
 export const toolbox: readonly ToolGroup[] = [
   {
     id: "automation",
-    title: "Test automation in production",
+    title: "Test automation",
     items: [
       "Playwright",
-      "Maestro",
-      "Genymotion",
+      "Playwright CLI",
       "pytest",
       "Python",
-      "Bruno",
-      "Postman",
+      "Ranorex",
+      "SoapUI",
+      "Appium",
     ],
   },
   {
     id: "agents",
     title: "AI coding agents",
     note: "Used to build and to review, with the same rule applied to generated code as to any other.",
-    items: ["OpenCode", "Claude Code", "Codex", "Hermes", "Kiro", "Kilo Code"],
+    items: [
+      "OpenCode",
+      "Claude Code",
+      "Codex",
+      "Hermes",
+      "Kiro",
+      "Kilo Code",
+      "Google Antigravity",
+    ],
+  },
+  {
+    id: "ai",
+    title: "AI engineering",
+    items: ["AI Engineering", "RAG", "MCP", "Playwright MCP", "Ollama"],
+  },
+  {
+    id: "mobile",
+    title: "Mobile",
+    items: ["Android", "iOS", "Android Studio", "Maestro", "Genymotion"],
   },
   {
     id: "editors",
     title: "Editors and IDEs",
-    items: ["Visual Studio Code", "IntelliJ IDEA", "Android Studio"],
+    items: ["Visual Studio Code", "IntelliJ IDEA"],
+  },
+  {
+    id: "frontend",
+    title: "Front-end and browser",
+    items: ["HTML", "CSS", "Chrome DevTools", "Figma"],
+  },
+  {
+    id: "api",
+    title: "API and integration",
+    items: [
+      "REST",
+      "GraphQL",
+      "Swagger",
+      "Postman",
+      "Bruno",
+      "RabbitMQ",
+      "JSON",
+      "XML",
+    ],
   },
   {
     id: "windows",
@@ -55,6 +86,8 @@ export const toolbox: readonly ToolGroup[] = [
       "dotMemory",
       "dotTrace",
       "Process Explorer",
+      "WMI",
+      "ETW",
     ],
   },
   {
@@ -77,20 +110,16 @@ export const toolbox: readonly ToolGroup[] = [
     items: ["Camera Analytics", "FFmpeg", "ffprobe", "VLC"],
   },
   {
-    id: "api",
-    title: "API and integration",
-    items: ["REST", "GraphQL", "RabbitMQ", "JSON", "XML"],
-  },
-  {
     id: "infra",
-    title: "CI and infrastructure",
+    title: "Cloud and infrastructure",
     items: [
       "Jenkins",
-      "Azure DevOps",
       "GitHub Actions",
       "Docker",
       "Kubernetes",
       "AWS",
+      "Azure",
+      "GCP",
       "Windows Server",
       "Linux",
     ],
@@ -107,13 +136,30 @@ export const toolbox: readonly ToolGroup[] = [
   },
   {
     id: "performance",
-    title: "Performance and mutation",
-    items: ["k6", "Stryker", "Apollo"],
+    title: "Performance and observability",
+    items: ["k6", "Stryker", "Apollo", "Sentry"],
   },
   {
     id: "quality",
     title: "Quality management",
-    items: ["Jira", "Confluence", "TestRail", "Zephyr", "SonarQube"],
+    items: [
+      "Azure DevOps",
+      "Jira",
+      "Confluence",
+      "TestRail",
+      "Zephyr",
+      "SonarQube",
+    ],
+  },
+  {
+    id: "delivery",
+    title: "Product and delivery",
+    items: ["Trello", "Monday", "Make", "Office"],
+  },
+  {
+    id: "support",
+    title: "Hardware and support",
+    items: ["PC technician", "Computer Guru"],
   },
   {
     id: "languages",
@@ -123,62 +169,20 @@ export const toolbox: readonly ToolGroup[] = [
 ];
 
 /** General testing practice: how the work is done, independent of the product. */
-export const competencies: readonly Competency[] = [
-  {
-    id: "firmware",
-    title: "Firmware QA and test design",
-    body:
-      "Firmware validation · hardware, software and firmware integration testing · architecture and specification review · QA methodologies and risk-based testing · test plan and test case design · functional, regression and integration testing · firmware release and GA sign-off",
-  },
-  {
-    id: "protocol",
-    title: "Protocol and low-level debugging",
-    body:
-      "Wireshark packet analysis · TCP/IP, UDP, HTTP/HTTPS, SSL/TLS, DNS · Ethernet interface bring-up and troubleshooting · switch and server configuration · memory profiling with dotMemory and dotTrace · root cause analysis",
-  },
-  {
-    id: "networks",
-    title: "Networks and security",
-    body:
-      "Configure LAN and WAN · VPNs · firewalls · manage cybersecurity threats",
-  },
-  {
-    id: "automation-scripts",
-    title: "Automation and scripting",
-    body:
-      "Python and Bash · test automation framework development · automated test suite design · test data and fixture management · CI integration with Jenkins, GitHub Actions and Azure DevOps · custom test reporting · JSON, XML and Git",
-  },
-  {
-    id: "defect-release",
-    title: "Defect and release management",
-    body:
-      "Defect lifecycle management · bug reporting with reproduction steps · debugging alongside R&D · fix verification · release readiness and sign-off · quality gates · quality metrics and KPIs",
-  },
-  {
-    id: "environments",
-    title: "Test environments and lab setups",
-    body:
-      "Test setup and topology design · lab environment build · Windows and Linux environments · virtualisation with Hyper-V, KVM and vSphere · Docker · Kubernetes",
-  },
-  {
-    id: "domain",
-    title: "Domain and collaboration",
-    body:
-      "Semiconductor metrology and process control · cross-functional work with R&D, Product and field teams · customer feedback handling · Agile and Scrum",
-  },
-];
-
 export const credentials = {
+  education: [
+    { school: "SVCollege", detail: "QA Engineer", years: "2020–2021" },
+    { school: "Elevation", detail: "Project Management", years: "2026" },
+  ],
   certifications: [
-    { name: "Project Management", issuer: "Elevation", year: "2026" },
-    { name: "QA Engineer (ISTQB-based)", issuer: "SVCollege", year: "2020" },
-    { name: "Generative AI in Testing", issuer: "Online", year: "" },
-    { name: "Introduction to Generative AI", issuer: "Online", year: "" },
-    { name: "Python Programming Bootcamp", issuer: "Online", year: "" },
+    "QA Engineer",
+    "Test Automation Foundations",
+    "Getting Started with DevOps on AWS",
+    "Introduction to Generative AI",
   ],
   languages: [
     { name: "Hebrew", level: "Native" },
-    { name: "English", level: "Full professional proficiency" },
-    { name: "Russian", level: "Limited working proficiency" },
+    { name: "English", level: "Fluent" },
+    { name: "Russian", level: "Conversational" },
   ],
 } as const;

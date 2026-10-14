@@ -1,55 +1,36 @@
-import { Button } from "@/components/ui/button";
-import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
-import { availability, contact, site } from "@/content/site";
+import Link from "next/link";
+import { HeroPortrait } from "@/components/hero-portrait";
+import { EmployerStrip } from "@/sections/employer-strip";
+import { site, availability, contact } from "@/content/site";
 
-/**
- * Hero. The headline is visible at t=0; the two actions fade in at 350ms on a
- * 100ms stagger (plan §6.1). There is no CV — LinkedIn is the contact route and
- * GitHub is the evidence.
- *
- * The fade is a CSS keyframe rather than a library animation: `both` fill keeps
- * the copy in the DOM the whole time, so a screen reader and a reduced-motion
- * visitor get everything immediately.
- */
+export const HERO_HEADLINE = "I make software releases trustworthy.";
+
 export function Hero() {
   return (
-    <section className="shell pb-16 pt-14 lg:pb-24 lg:pt-24">
-      <div className="max-w-[46rem]">
-        <h1 className="t-display-xl text-ink">
-          I make software releases trustworthy.
-        </h1>
-
-        <p className="measure mt-6 t-body text-muted">{site.description}</p>
-
-        <p className="measure mt-5 t-body text-ink">
-          Five years across defence platforms, semiconductor metrology and
-          enterprise security — environments where a failure is not an option, and
-          where quality has to be argued with evidence rather than asserted.
-        </p>
-
-        <p className="rise mt-7 flex flex-wrap items-center gap-2 t-small text-muted" style={{ animationDelay: "350ms" }}>
-          <span aria-hidden="true" className="size-1.5 bg-success" />
-          {availability.text}
-        </p>
-
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <span className="rise inline-flex" style={{ animationDelay: "350ms" }}>
-            <Button asChild size="lg" variant="primary">
-              <a href={contact.linkedin}>
-                <LinkedInIcon size={17} />
-                Connect on LinkedIn
-              </a>
-            </Button>
-          </span>
-          <span className="rise inline-flex" style={{ animationDelay: "450ms" }}>
-            <Button asChild size="lg" variant="secondary">
-              <a href={contact.github}>
-                <GitHubIcon size={17} />
-                Open GitHub
-              </a>
-            </Button>
-          </span>
+    <section aria-labelledby="hero-heading" className="portfolio-hero">
+      <div className="shell">
+        <div className="hero-stage">
+          <div className="cinema-light cinema-light-blue" aria-hidden="true" />
+          <div className="cinema-light cinema-light-warm" aria-hidden="true" />
+          <span className="hero-watermark" aria-hidden="true">SB</span>
+          <div className="hero-copy">
+            <p className="hero-in hero-d1 hero-intro"><span aria-hidden="true" className="availability-dot" />{availability.text}</p>
+            <h1 id="hero-heading" className="hero-in hero-d2 hero-name">{site.name}</h1>
+            <p className="hero-in hero-d3 hero-statement">{HERO_HEADLINE}</p>
+            <p className="hero-in hero-d4 hero-role">{site.role}</p>
+            <p className="hero-in hero-d4 hero-summary">From the first test strategy to the final release gate. 7+ years across defence, semiconductor metrology and enterprise security.</p>
+            <div className="hero-in hero-d5 hero-actions">
+              <Link href="/#projects" className="hero-primary">Explore my work <span aria-hidden="true">↗</span></Link>
+              <a href={contact.linkedin} className="hero-secondary">Connect on LinkedIn <span aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+          <div className="hero-visual hero-in hero-d3">
+            <div className="portrait-orbit" aria-hidden="true" />
+            <HeroPortrait />
+            <div className="portrait-caption"><span>Quality is a decision.</span><span>Make it with evidence.</span></div>
+          </div>
         </div>
+        <div className="hero-employers"><p>Experience across teams at</p><EmployerStrip /></div>
       </div>
     </section>
   );

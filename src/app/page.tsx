@@ -1,12 +1,13 @@
+import { Recommendations } from "@/sections/recommendations";
+import { QualityStory } from "@/sections/quality-story";
 import { CTA } from "@/components/cta";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Experience } from "@/sections/experience";
 import { Hero } from "@/sections/hero";
-import { HowIWork } from "@/sections/how-i-work";
-import { Philosophy } from "@/sections/philosophy";
+import { Profile } from "@/sections/profile";
+import { Projects } from "@/sections/projects";
 import { ProofRow } from "@/sections/proof-row";
-import { QualitySystem } from "@/sections/quality-system";
 import { Toolbox } from "@/sections/toolbox";
 
 export default function HomePage() {
@@ -15,11 +16,12 @@ export default function HomePage() {
       <SiteHeader />
       <main id="main">
         <Hero />
+        <QualityStory />
         <ProofRow />
-        <Philosophy />
-        <QualitySystem />
-        <HowIWork />
+        <Projects />
+        <Profile />
         <Experience />
+        <Recommendations />
         <Toolbox />
         <CTA />
       </main>
