@@ -27,7 +27,7 @@ import {
   topics,
   type TopicId,
 } from "@/chat/topics";
-import { hero } from "@/content/hero";
+import { Typed } from "@/chat/typed";
 import { contact, site } from "@/content/site";
 
 type Entry = { key: number; order: number; node: ReactNode };
@@ -71,6 +71,12 @@ function nextLoaderLine(): string {
   }
   return LOADER_LINES[index];
 }
+
+/** The first thing the chat says, in the first person and a little warm. */
+const OPENING: readonly string[] = [
+  "Hi, and welcome. Allow me to introduce myself: I'm Sergey, a QA Tech Lead who makes sure software deserves to ship.",
+  "Make yourself at home. Press any button below to start, or just ask me something.",
+];
 
 const finePointer = () => window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
@@ -155,6 +161,8 @@ export function ChatDirector({
   topbar: ReactNode;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  /** The opening line types out once per visit; a restart does not repeat it. */
+  const introducedRef = useRef(false);
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const orderRef = useRef(0);
@@ -269,14 +277,16 @@ export function ChatDirector({
         openChat();
         followRef.current = true;
         anchorRef.current = null;
+        // Typed once, on the first entry of this visit; a restart shows it whole.
+        const animate = !introducedRef.current && !motionOff();
+        introducedRef.current = true;
         push(
           <Bubble>
-            <p>{hero.positioning}</p>
-            <p>Ask me anything about my work, or pick a topic below.</p>
+            <Typed paragraphs={OPENING} animate={animate} />
           </Bubble>,
         );
         window.scrollTo({ top: 0, behavior: "auto" });
-        setStatus(`${site.name}: ask me anything about my work, or pick a topic below.`);
+        setStatus(`${site.name}: ${OPENING.join(" ")}`);
         focusComposer();
       }),
     [enqueue, focusComposer, openChat, push],
@@ -446,21 +456,6 @@ export function ChatDirector({
       log.querySelector<HTMLElement>("[data-flow]")?.focus({ preventScroll: true });
     });
   }, [openChat]);
-
-  /** "Start over" arms itself for three seconds; a second press clears. */
-  const [armed, setArmed] = useState(false);
-  const armTimer = useRef(0);
-  const restartGuarded = () => {
-    if (!armed) {
-      setArmed(true);
-      window.clearTimeout(armTimer.current);
-      armTimer.current = window.setTimeout(() => setArmed(false), 3000);
-      return;
-    }
-    window.clearTimeout(armTimer.current);
-    setArmed(false);
-    restart();
-  };
 
   const restart = useCallback(() => {
     runRef.current += 1;
@@ -754,12 +749,6 @@ export function ChatDirector({
           phone it is a drawer behind the menu button. */}
       <aside className="sidebar" id="sidebar" aria-label="Conversation">
         <div className="side-head">
-          <span className="side-brand">
-            <span className="side-mark" aria-hidden="true">
-              S
-            </span>
-            {site.name}
-          </span>
           <button type="button" className="side-close" onClick={() => setDrawer(false)} aria-label="Close menu">
             <CloseIcon size={16} />
           </button>
@@ -909,13 +898,11 @@ export function ChatDirector({
         <button
           type="button"
           className="ghost corner-restart"
-          data-armed={armed ? "" : undefined}
-          onClick={restartGuarded}
-          aria-label={armed ? undefined : "Start over"}
-          title={armed ? "Press again to clear the conversation" : "Back to the intro; the conversation is cleared"}
+          onClick={restart}
+          aria-label="Start over"
+          title="Start over"
         >
           <RestartIcon size={17} />
-          <span className="corner-restart-label">Clear the conversation?</span>
         </button>
       ) : null}
 

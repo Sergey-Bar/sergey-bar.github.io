@@ -829,9 +829,8 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   visibility: hidden;
   transition: transform 420ms var(--ease-out), visibility 0s linear 420ms;
 }
-.side-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 6px 12px; }
-.side-brand { display: inline-flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--color-ink); }
-.side-mark { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--grad); color: #fff; font-size: 12px; font-weight: 800; }
+/* The head holds only the drawer's close button; on a wide screen it is not there. */
+.side-head { display: none; align-items: center; justify-content: flex-end; padding: 2px 6px 12px; }
 .side-close { display: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-line-strong); color: var(--color-muted); place-items: center; cursor: pointer; }
 .side-actions { display: grid; gap: 2px; }
 .side-label { margin: 16px 0 6px; padding-inline: 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.02em; color: var(--color-muted); }
@@ -856,7 +855,6 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 .side-item:active { transform: scale(0.98); }
 .side-item[data-asked] { color: var(--color-ink); }
 .side-check { margin-left: auto; color: var(--color-c-sky) !important; }
-.side-item[data-armed] { background: color-mix(in oklab, var(--color-c-sky) 24%, transparent); color: #fff; }
 .side-foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 12px 8px 0; border-top: 1px solid var(--color-line); font-size: 13px; color: var(--color-ink); }
 .side-foot .msg-avatar { width: 28px; height: 28px; flex-shrink: 0; }
 .side-foot-name { font-weight: 600; white-space: nowrap; }
@@ -876,6 +874,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 /* Narrow screens: a drawer behind the menu button. */
 @media (max-width: 63.99rem) {
   .chat-shell[data-drawer] .sidebar { transform: none; visibility: visible; transition: transform 420ms var(--ease-out), visibility 0s; }
+  .side-head { display: flex; }
   .side-close { display: grid; }
   .chat-shell[data-state="chat"] .identity-menu { display: grid; }
 }
@@ -890,9 +889,6 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   gap: 8px;
   padding: 0;
 }
-.corner-restart-label { display: none; font-size: 13px; font-weight: 500; white-space: nowrap; }
-.corner-restart[data-armed] { display: inline-flex; align-items: center; justify-content: center; width: auto; padding: 0 16px 0 14px; color: #fff; border-color: var(--color-c-sky); background: color-mix(in oklab, var(--color-c-sky) 28%, transparent); }
-.corner-restart[data-armed] .corner-restart-label { display: inline; }
 :root:not([data-motion="off"]) .corner-restart svg { animation: none; }
 .ghost {
   display: grid;
@@ -1010,33 +1006,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   .identity .identity-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .identity .identity-status { display: none; }
   .identity .identity-readall { display: none; }
-  .identity .identity-restart-label { display: none; }
-  .identity .identity-restart { width: 36px; height: 36px; padding: 0; justify-content: center; flex-shrink: 0; }
   .identity .msg-avatar { flex-shrink: 0; }
-}
-.identity-text { flex: 1; min-width: 0; }
-.identity-name { font-size: 15px; font-weight: 600; line-height: 1.2; }
-.identity-status { display: flex; align-items: center; gap: 7px; margin-top: 3px; font-size: 12px; color: var(--color-muted); }
-.identity-status[data-typing] { color: var(--color-c-sky); }
-.identity-restart {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 36px;
-  padding: 0 12px;
-  border-radius: 100px;
-  border: 1px solid var(--color-line-strong);
-  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
-  color: var(--color-muted);
-  font-size: 12px;
-  cursor: pointer;
-  transition: color var(--dur-hover) var(--ease-out), border-color var(--dur-hover) var(--ease-out);
-}
-.identity-restart:hover { color: var(--color-ink); border-color: var(--color-ink); }
-.identity-restart[data-armed] { color: #fff; border-color: var(--color-c-sky); background: color-mix(in oklab, var(--color-c-sky) 28%, transparent); }
-@media (max-width: 47.99rem) {
-  .identity .identity-restart[data-armed] { width: auto; padding: 0 12px; }
-  .identity .identity-restart[data-armed] .identity-restart-label { display: inline; }
 }
 
 /* --- Intro / chat states --------------------------------------------------- */
@@ -1101,6 +1071,13 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   color: var(--color-ink);
 }
 .bubble p + p { margin-top: 10px; }
+/* The typed opening: the untyped rest holds its place, unseen; a caret
+   follows the last letter and goes when the writing is done. */
+.typed-rest { opacity: 0; }
+.typed-caret { display: inline-block; width: 2px; height: 1.05em; margin: 0 1px 0 2px; vertical-align: -0.15em; background: var(--color-c-sky); border-radius: 1px; }
+@media (prefers-reduced-motion: no-preference) {
+  .typed-caret { animation: blink 1s steps(1) infinite; }
+}
 .bubble strong { font-weight: 600; }
 
 .msg.user { grid-template-columns: minmax(0, 1fr); justify-items: end; }

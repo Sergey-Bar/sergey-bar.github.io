@@ -79,15 +79,14 @@ it back. Beside the plus a pill names the model, "Sergey Bar" at "Ultra" effort 
 and the send arrow ends the row. There is no microphone. Replies carry no
 avatar, and the chat has no header beyond the menu button on a phone; the
 portrait and the name stand once, in the sidebar's foot, beside the motion
-control. The corner holds two round buttons in one style: "Start over", which
-asks once ("Clear the conversation?") before it clears, and the ghost, which
-opens the demolition run directly, without the conversation. The loading
+control. The corner holds two round buttons in one style: "Start over", one
+press and no confirmation, and the ghost, which opens the demolition run directly, without the conversation. The loading
 screen shows none of this: no corner buttons and no motion control, only the
 name, the role, the portrait and the loading line. GitHub, LinkedIn and email
 live in the sidebar's "Profiles" list and behind the plus. Text bubbles grow
 as their words arrive, a card
 taller than a phone screen opens folded with a "Show the whole card" button,
-and "Start over" asks once ("Clear the conversation?") before it clears.
+and "Start over" clears the conversation with a single press.
 
 The page opens, once per tab session, on a veil that says "Hello, I'm Sergey"
 and "Welcome" and lifts into the hero; a click or a key ends it early, and it

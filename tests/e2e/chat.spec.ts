@@ -200,9 +200,8 @@ test.describe("conversations", () => {
     await enter(page);
     await pressChip(page, "toolbox");
     await expect(page.locator('[data-flow="toolbox"] .replies')).toBeVisible({ timeout: 20_000 });
+    // One press, no confirmation step.
     await page.getByRole("button", { name: "Start over" }).first().click();
-    await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat");
-    await page.getByRole("button", { name: "Clear the conversation?" }).first().click();
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
     await expect(page.locator("[data-flow][data-sent]")).toHaveCount(0);
     await expect(page.locator(".entry")).toHaveCount(0);
@@ -248,6 +247,9 @@ test.describe("conversations", () => {
     await expect(page.locator(".identity .msg-avatar")).toHaveCount(0);
     await expect(page.locator(".log .msg-avatar")).toHaveCount(0);
     await expect(page.locator(".identity-name")).toHaveCount(0);
+    // The name stands once in the sidebar, at the foot; nothing above it.
+    await expect(page.locator(".sidebar .side-foot-name")).toHaveText("Sergey Bar");
+    await expect(page.locator(".sidebar .side-brand, .sidebar .side-mark")).toHaveCount(0);
     await expect(page.locator(".corner-restart")).toBeVisible();
   });
 
@@ -278,6 +280,21 @@ test.describe("composer", () => {
     await enter(page);
     await page.getByRole("textbox", { name: "Ask about my work" }).fill("tell me about your projects");
     await expect(page.locator(".composer-panel")).toHaveAttribute("data-match", "projects");
+  });
+
+  test("the opening message is typed out letter by letter, once", async ({ page }) => {
+    await enter(page);
+    const typed = page.locator(".entry .typed-line").first();
+    await expect(typed).toBeVisible();
+    // Part of the way through, only a part of the text is shown.
+    const early = await page.locator(".entry .typed-line > span:first-child").first().textContent();
+    expect((early ?? "").length).toBeLessThan(60);
+    await expect(page.locator(".entry .typed-caret")).toHaveCount(1);
+    // The whole message is there for a screen reader from the first frame.
+    await expect(page.locator(".entry .sr-only").first()).toContainText("introduce myself");
+    // When the writing is done the caret is gone and the full text is shown.
+    await expect(page.locator(".entry .typed-caret")).toHaveCount(0, { timeout: 20_000 });
+    await expect(page.locator(".entry .typed-line").last()).toContainText("Press any button below");
   });
 
   test("answers a greeting and admits what it does not know", async ({ page }) => {

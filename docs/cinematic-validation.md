@@ -204,7 +204,7 @@ The panel behind the plus is open when the chat opens, so the first step is
 in view, and it carries GitHub, LinkedIn and email on a second row; the
 sidebar's Profiles list has email too. The pill names "Sergey Bar" at "Ultra", the word shimmering pink to purple.
 "Start over" left the sidebar and the header for the corner, a round button in
-the ghost's style that widens into "Clear the conversation?" when armed. The
+the ghost's style (later made a single press, with no confirmation). The
 header lost the name and the title (a menu button alone, on phones), and the
 sidebar's foot lost the title that was being cut; it shows "typing…" only
 while a reply is composed.
