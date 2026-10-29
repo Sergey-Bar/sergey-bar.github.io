@@ -83,7 +83,10 @@ control. The corner holds two round buttons in one style: "Start over", one
 press and no confirmation, and the ghost, which opens the demolition run directly, without the conversation. The loading
 screen shows none of this: no corner buttons and no motion control, only the
 name, the role, the portrait and the loading line. GitHub, LinkedIn and email
-live in the sidebar's "Profiles" list and behind the plus. Text bubbles grow
+live in the sidebar's "Profiles" list and behind the plus. The chat's first
+message is personal ("Allow me to introduce myself…") and is typed out letter
+by letter, once per visit, with the whole text laid out from the first frame so
+nothing re-wraps; a restart, or motion off, shows it whole. Text bubbles grow
 as their words arrive, a card
 taller than a phone screen opens folded with a "Show the whole card" button,
 and "Start over" clears the conversation with a single press.

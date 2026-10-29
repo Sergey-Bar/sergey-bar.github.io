@@ -237,3 +237,19 @@ Verified: a spec under Playwright's clock reads the line, checks it is the
 same at four and six seconds, that the countdown appears only in the last
 five, and that a reload shows a different line; the ten-second auto-open spec
 still passes.
+
+## A personal opening, typed (2026-10-29, later)
+
+The chat opens with a first-person welcome ("Allow me to introduce myself: I'm
+Sergey, a QA Tech Lead who makes sure software deserves to ship. Make
+yourself at home. Press any button below to start, or just ask me something.")
+typed letter by letter, once per visit, with pauses at commas and sentence
+ends and a caret that goes when the writing is done. The untyped remainder is
+laid out invisibly so the bubble never resizes; a screen reader gets the whole
+message at once. A restart, or motion off, shows it whole. "Start over" is a
+single press, with no confirmation, and the sidebar no longer repeats the
+name at its head (the name stands once, in its foot).
+
+Verified: 64 specs pass, 4 skipped by device; a new spec checks that the text
+is partial early, that the caret shows while typing and goes after, and that
+the sr-only copy holds the whole message.
