@@ -56,7 +56,7 @@ export function Intro() {
       </h1>
 
       <p className="intro-sub" data-stage style={at(520)}>
-        <span className="intro-role">&amp; AI Automation Engineer</span>
+        <span className="intro-role">AI Automation Engineer</span>
         <span className="intro-dot" aria-hidden="true">
           ·
         </span>

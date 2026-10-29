@@ -89,3 +89,18 @@ of 150KB, CSS 13.8KB of 20KB); the veil plays to its own 2.1s lift and ends
 early on a key; typed "tell me about your projects" lights the Projects chip
 and streams the reply; the tilt reports -6.5° off-centre and 0° once the
 pointer leaves the stage.
+
+## Tests, case studies and route pages (2026-10-29, later)
+
+Added a Playwright suite (47 specs across desktop and phone, with axe-core
+audits of each state) that CI runs on every push and whose report the deploy
+publishes at /qa/report/; a case-studies conversation with the recorded Mjolnir
+scan rendered as a transcript; the CV-on-request route by email; colophon and
+accessibility pages; a 404 that answers as a reply; the face as favicon; a
+smaller portrait that settles after six seconds; the round pause control; and
+the role line without the ampersand.
+
+The first full run found one real defect, which the suite now guards: the scan
+transcript scrolled without keyboard access (axe `scrollable-region-focusable`).
+Fixed with a focusable labelled region. The full verify pipeline, including the
+suite, passed before the push.

@@ -196,10 +196,20 @@ export function MotionDirector() {
       className="motion-control"
       type="button"
       aria-pressed={!enabled}
+      title={label}
       disabled={reduced}
       onClick={toggle}
     >
-      <span aria-hidden="true">{enabled ? "Ⅱ" : "▷"}</span>
+      {enabled ? (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+          <rect x="6" y="5" width="4" height="14" rx="1" />
+          <rect x="14" y="5" width="4" height="14" rx="1" />
+        </svg>
+      ) : (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+          <path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5Z" />
+        </svg>
+      )}
       <span className="motion-label">{label}</span>
     </button>
   );

@@ -1,12 +1,13 @@
 # sergey-bar.github.io
 
 Personal site for Sergey Bar, QA Tech Lead & AI Automation Engineer.
-Static export, GitHub Pages, no analytics, no CV, no published email address.
+Static export, GitHub Pages, no analytics, no CV file; the CV is sent on request by email or on LinkedIn.
 
-Two routes: `/` (the site as a conversation) and `/projects` (Mjolnir and
-Automate in long form, each linked to its public repository). LinkedIn is the
-contact route; GitHub is the evidence. There is no contact form, no CV copy and
-no published email address.
+Four routes: `/` (the site as a conversation), `/projects` (Mjolnir and
+Automate in long form, each linked to its public repository), plus `/colophon`
+(how the site is built and tested) and `/accessibility`. LinkedIn is the
+contact route; GitHub is the evidence. There is no contact form and no CV file:
+the CV is sent on request, by email or on LinkedIn.
 
 ## The conversation
 
@@ -126,8 +127,8 @@ in `src/content/routes.json`, and fails closed:
 
 | Budget | Limit | Current |
 |---|---|---|
-| JavaScript, gzip (external + inline, excluding the `noModule` polyfill chunk) | 150KB | 123.8KB |
-| Stylesheet, gzip | 20KB | 9.3KB |
+| JavaScript, gzip (external + inline, excluding the `noModule` polyfill chunk) | 150KB | 138.7KB |
+| Stylesheet, gzip | 20KB | 14.4KB |
 | Self-hosted fonts | 140KB | 132.6KB |
 
 It also fails if the built page set or the Lighthouse URL list disagrees with
@@ -200,6 +201,26 @@ must be set to **GitHub Actions**. It is currently `legacy`, which means a secon
 Jekyll publisher builds the repository root on every push to `main` and races this
 workflow.
 
+
+## Tested like a product
+
+`npm run test:e2e` runs a Playwright suite against the built export, served as
+GitHub Pages serves it: every conversation to its last message, quick replies,
+ordering, the already-answered path, restart, legacy anchors, typed routing,
+the chip preview, greeting and fallback, the keyboard shortcuts, the three
+route pages and the 404, at desktop and phone sizes, with an axe-core audit
+(WCAG 2.2 A and AA) of each state. CI runs it on every push; the deploy job
+downloads the HTML report and publishes it at `/qa/report/`, which the colophon
+links. Traces, screenshots and video are kept on failure. `npm run verify`
+ends with it.
+
+## Case studies
+
+`src/content/case-studies.ts` tells three pieces of work as problem, approach,
+evidence and outcome. It imports the experience, metrics and project modules
+and reads its figures from them rather than restating them, and throws at
+build time if a referenced record is missing. The Mjolnir case renders the
+recorded scan as a transcript, finding by finding, from `data/mjolnir/demo-report.json`.
 
 ## Interaction checks
 

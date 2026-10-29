@@ -9,10 +9,12 @@ import { ExperienceRecord } from "@/components/experience-record";
 import { MjolnirConsole } from "@/components/mjolnir-console";
 import { RecommendationCard } from "@/components/recommendation-card";
 import { RedButton } from "@/components/red-button";
+import { ScanTranscript } from "@/components/scan-transcript";
 import { StatusChip } from "@/components/status-chip";
 import { TechnicalTag } from "@/components/technical-tag";
 import { ToolGroup } from "@/components/tool-group";
 import { ToolboxExplorer } from "@/components/toolbox-explorer";
+import { caseStudies } from "@/content/case-studies";
 import { roles } from "@/content/experience";
 import { employers, hero } from "@/content/hero";
 import { proofRow } from "@/content/metrics";
@@ -138,7 +140,78 @@ function AboutFlow() {
           ))}
         </ul>
       </Card>
-      <QuickReplies lead="Want the detail?" ids={["experience", "projects", "contact"]} />
+      <QuickReplies lead="Want the detail?" ids={["cases", "projects", "contact"]} />
+    </Flow>
+  );
+}
+
+function CasesFlow() {
+  return (
+    <Flow id="cases">
+      <Bubble>
+        <p>
+          Three pieces of work, each told the same way: the problem, what I did, the evidence a
+          stranger can check, and the outcome. Every figure is read from the record, not retyped.
+        </p>
+      </Bubble>
+      {caseStudies.map((study, index) => (
+        <Card key={study.slug} eyebrow={`case ${index + 1} of ${caseStudies.length}`} title={study.title}>
+          <p className="case-context">{study.context}</p>
+          <dl className="case">
+            <div>
+              <dt>Problem</dt>
+              <dd>{study.problem}</dd>
+            </div>
+            <div>
+              <dt>Approach</dt>
+              <dd>
+                <ul>
+                  {study.approach.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+            <div>
+              <dt>Evidence</dt>
+              <dd>
+                <ul className="case-evidence">
+                  {study.evidence.map((item) => (
+                    <li key={item.label}>
+                      <strong>
+                        {item.href ? (
+                          <a href={item.href} className="link-underline">
+                            {item.label}
+                          </a>
+                        ) : (
+                          item.label
+                        )}
+                      </strong>
+                      <span>{item.detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+            <div>
+              <dt>Outcome</dt>
+              <dd className="case-outcome">{study.outcome}</dd>
+            </div>
+          </dl>
+          {study.artifact === "scan" ? <ScanTranscript /> : null}
+        </Card>
+      ))}
+      <Bubble first={false}>
+        <p>
+          This site is tested the same way: a Playwright suite runs every conversation, the
+          router and an accessibility audit on each deploy, and the{" "}
+          <Link href="/colophon/" className="link-underline">
+            colophon
+          </Link>{" "}
+          links the latest report.
+        </p>
+      </Bubble>
+      <QuickReplies ids={["projects", "experience", "contact"]} />
     </Flow>
   );
 }
@@ -211,7 +284,7 @@ function ProjectsFlow() {
           .
         </p>
       </Bubble>
-      <QuickReplies ids={["toolbox", "experience", "contact"]} />
+      <QuickReplies ids={["cases", "toolbox", "contact"]} />
     </Flow>
   );
 }
@@ -337,8 +410,13 @@ function ContactFlow() {
     <Flow id="contact">
       <Bubble>
         <p>
-          LinkedIn is the route. There is no contact form and no published email address: the
-          record lives on LinkedIn and the work lives on GitHub.
+          LinkedIn is the route, and the work lives on GitHub. There is no contact form. My CV is
+          sent on request: write to{" "}
+          <a href={`mailto:${contact.email}?subject=CV%20request`} className="link-underline">
+            {contact.email}
+          </a>{" "}
+          or message me on LinkedIn, and it comes back as a file rather than sitting here for
+          anyone to lift.
         </p>
       </Bubble>
       <Card eyebrow="open to" first={false}>
@@ -354,13 +432,16 @@ function ContactFlow() {
             <LinkedInIcon size={16} />
             Connect on LinkedIn
           </a>
+          <a href={`mailto:${contact.email}?subject=CV%20request`} className="action action-secondary">
+            Request my CV by email
+          </a>
           <a href={contact.github} className="action action-secondary">
             <GitHubIcon size={16} />
             Explore GitHub
           </a>
         </div>
       </Card>
-      <QuickReplies ids={["projects", "recommendations", "fun"]} />
+      <QuickReplies ids={["cases", "recommendations", "fun"]} />
     </Flow>
   );
 }
@@ -384,6 +465,7 @@ export function Flows() {
     <>
       <AboutFlow />
       <ProjectsFlow />
+      <CasesFlow />
       <ExperienceFlow />
       <RecommendationsFlow />
       <ToolboxFlow />

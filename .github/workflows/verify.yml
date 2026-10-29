@@ -84,6 +84,39 @@ jobs:
           path: .lighthouseci
           retention-days: 14
 
+  e2e:
+    name: playwright
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Browser
+        run: npx playwright install --with-deps chromium
+
+      # The suite runs against the export exactly as Pages serves it: every
+      # conversation, the router, the fallback, restart, hash links, the route
+      # pages, the phone layout, and an axe audit of each state.
+      - name: Tests
+        run: npm run test:e2e
+
+      # The report is published next to the pages by the deploy job, so the
+      # site can link the evidence it claims. Uploaded on failure too.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 30
+
   deploy:
     name: pages
     # Only a push may publish. Without this the job also runs on pull_request and
@@ -91,7 +124,7 @@ jobs:
     # configuration that nothing in this repository states.
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    needs: [verify, lighthouse]
+    needs: [verify, lighthouse, e2e]
     concurrency:
       group: pages-${{ github.repository }}
       cancel-in-progress: false
@@ -116,12 +149,23 @@ jobs:
       # This artifact comes from a build nothing else has inspected. Assert the
       # files the deployment depends on before anything is uploaded: without
       # .nojekyll, Jekyll strips _next/ and the published site has no JavaScript.
+      # The Playwright report from this run ships at /qa/report/. It is added
+      # after the build and after the budget script has run elsewhere, so its
+      # own index.html files never count as routes.
+      - uses: actions/download-artifact@v4
+        with:
+          name: playwright-report
+          path: out/qa/report
+
       - name: Artifact must be complete
         run: |
           test -f out/.nojekyll
           test -f out/index.html
           test -f out/projects/index.html
+          test -f out/colophon/index.html
+          test -f out/accessibility/index.html
           test -f out/404.html
+          test -f out/qa/report/index.html
 
       - uses: actions/configure-pages@v5
 

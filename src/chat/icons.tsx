@@ -124,6 +124,16 @@ export function CheckIcon(props: IconProps) {
   );
 }
 
+export function CaseIcon(props: IconProps) {
+  return (
+    <svg {...svgProps(props)}>
+      <path d="M6 3h8l5 5v13H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+      <path d="M14 3v5h5" />
+      <path d="M9 13h7M9 17h7" />
+    </svg>
+  );
+}
+
 export function ChatIcon(props: IconProps) {
   return (
     <svg {...svgProps(props)}>
@@ -138,6 +148,8 @@ export function TopicIcon({ id, size }: { id: TopicId; size?: number }) {
       return <UserIcon size={size} />;
     case "projects":
       return <LayersIcon size={size} />;
+    case "cases":
+      return <CaseIcon size={size} />;
     case "experience":
       return <BriefcaseIcon size={size} />;
     case "recommendations":

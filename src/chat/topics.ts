@@ -8,6 +8,7 @@
 export type TopicId =
   | "about"
   | "projects"
+  | "cases"
   | "experience"
   | "recommendations"
   | "toolbox"
@@ -54,6 +55,18 @@ export const topics: readonly Topic[] = [
       "scanner", "npm", "product", "show me", "what have you made", "side project",
     ],
     hashes: ["projects"],
+  },
+  {
+    id: "cases",
+    label: "Case studies",
+    prompt: "Walk me through your work",
+    description: "Case studies: the problem, the approach, the evidence and the outcome",
+    keywords: [
+      "case stud", "case-stud", "walk me", "deep dive", "example", "story", "how did you",
+      "memory leak", "from zero", "green build", "evidence", "proof", "outcome", "impact",
+      "problem you solved", "hardest", "proud",
+    ],
+    hashes: ["cases", "case-studies", "work"],
   },
   {
     id: "experience",
@@ -183,6 +196,7 @@ export function topicForHash(hash: string): TopicId | null {
 /** Placeholder prompts the composer types out while it waits. */
 export const placeholderPrompts = [
   "Ask about my projects…",
+  "Walk me through your work",
   "Where have you worked?",
   "What's in your toolbox?",
   "How do I reach you?",

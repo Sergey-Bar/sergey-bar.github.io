@@ -377,42 +377,37 @@
   z-index: 45;
   bottom: 20px;
   left: 20px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 40px;
-  padding: 8px 14px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   background: color-mix(in oklab, var(--color-surface) 88%, transparent);
-  color: var(--color-ink);
+  color: var(--color-muted);
   border: 1px solid var(--color-line-strong);
-  border-radius: 100px;
-  box-shadow: 0 4px 20px #0006;
-  font-size: 12px;
+  border-radius: 50%;
   cursor: pointer;
   backdrop-filter: blur(12px);
-  transition: border-color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
+  transition: border-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
 }
-.motion-control:hover { border-color: var(--color-ink); }
-.motion-control:active { transform: scale(0.96); }
-.motion-control:disabled { cursor: default; opacity: 0.7; }
-/* On the chat page the composer owns the bottom edge, so the control moves to
-   the top-left corner as a glyph alone; the identity bar leaves it room. */
-main:has(.chat-shell) ~ .motion-control {
-  top: 14px;
-  left: 14px;
-  bottom: auto;
-  width: 40px;
-  padding: 0;
-  justify-content: center;
-}
-/* The label stays in the accessible name; only its pixels go. */
-main:has(.chat-shell) ~ .motion-control .motion-label {
+.motion-control:hover { border-color: var(--color-ink); color: var(--color-ink); }
+.motion-control:active { transform: scale(0.94); }
+.motion-control:disabled { cursor: default; opacity: 0.6; }
+.motion-control[aria-pressed="true"] { color: var(--color-c-sky); border-color: color-mix(in oklab, var(--color-c-sky) 50%, var(--color-line-strong)); }
+.motion-label {
   position: absolute;
   width: 1px;
   height: 1px;
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+/* On the chat page the composer owns the bottom edge, so the control moves to
+   the top-left corner as a glyph alone; the identity bar leaves it room. */
+main:has(.chat-shell) ~ .motion-control {
+  top: 14px;
+  left: 14px;
+  bottom: auto;
 }
 @media (max-width: 84.99rem) {
   .chat-shell[data-state="chat"] .identity { padding-left: 46px; }
@@ -616,12 +611,23 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
 .intro-quote figcaption { margin-top: 12px; font-size: 12px; line-height: 1.5; color: var(--color-muted); }
 .intro-quote figcaption strong { color: var(--color-ink); font-weight: 600; }
 
+/* Smaller than a hero portrait on purpose, and after a few seconds it settles:
+   the ring goes, the photo dims a little, and the words carry the screen. A
+   pointer over it, or focus near it, brings it back. */
 .intro-portrait {
   position: relative;
-  width: clamp(200px, min(26vw, 30vh), 300px);
+  width: clamp(168px, min(20vw, 24vh), 232px);
   aspect-ratio: 1;
   perspective: 900px;
 }
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="off"]) .portrait-disc { animation: portrait-settle-dim 1200ms var(--ease-out) 6s both; }
+  :root:not([data-motion="off"]) .portrait-ring { animation: ring-spin 14s linear infinite, portrait-settle-ring 1200ms var(--ease-out) 6s both; }
+  .intro-stage:hover .portrait-disc, .intro-stage:focus-within .portrait-disc { animation: none; opacity: 1; filter: none; }
+  .intro-stage:hover .portrait-ring, .intro-stage:focus-within .portrait-ring { animation: ring-spin 14s linear infinite; opacity: 1; }
+}
+@keyframes portrait-settle-dim { to { opacity: 0.78; filter: saturate(0.85); } }
+@keyframes portrait-settle-ring { to { opacity: 0.25; } }
 .portrait-glow {
   position: absolute;
   inset: -22%;
@@ -1018,6 +1024,74 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
   }
 }
 
+/* --- Case studies and the scan transcript ------------------------------------ */
+
+.case-context { font-size: 14px; line-height: 1.6; color: var(--color-muted); }
+.case { display: grid; gap: 18px; margin-top: 18px; }
+.case > div { display: grid; gap: 6px; padding-top: 14px; border-top: 1px solid var(--color-line); }
+.case dt { font-family: var(--font-mono); font-size: var(--ts-data); letter-spacing: -0.01em; color: var(--topic); }
+.case dd { font-size: 15px; line-height: 1.65; color: var(--color-ink); }
+.case dd ul { padding-left: 18px; list-style: disc; }
+.case dd li + li { margin-top: 8px; }
+.case-evidence { list-style: none !important; padding-left: 0 !important; }
+.case-evidence li { display: grid; gap: 3px; }
+.case-evidence strong { font-weight: 600; }
+.case-evidence span { font-size: 14px; line-height: 1.6; color: var(--color-muted); }
+.case-outcome { font-weight: 500; }
+@media (min-width: 48rem) {
+  .case > div { grid-template-columns: 9rem minmax(0, 1fr); gap: 24px; }
+}
+
+.transcript {
+  margin-top: 22px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: #07080c;
+  overflow: hidden;
+}
+.transcript-head { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--color-line); color: var(--color-muted); }
+.transcript-dots { display: inline-flex; gap: 5px; }
+.transcript-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--color-line-strong); }
+.transcript-dots i:first-child { background: var(--color-c-sky); }
+.transcript-body { max-height: 420px; overflow: auto; padding: 16px 18px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6; color: var(--color-muted); white-space: pre; }
+.t-ink { color: var(--color-ink); }
+.t-muted { color: var(--color-muted); }
+.t-ok { color: var(--color-c-sky); font-weight: 600; }
+.t-warn { color: var(--color-c-ice); }
+.t-line { display: block; }
+.t-sev { font-weight: 600; }
+.t-sev-error { color: var(--color-ink); }
+.t-sev-warning { color: var(--color-c-ice); }
+.t-sev-info { color: var(--color-muted); }
+.t-rule { color: var(--color-c-sky); }
+.t-loc { color: var(--color-ink); }
+.t-msg { color: var(--color-muted); white-space: pre-wrap; }
+@media (max-width: 47.99rem) {
+  .transcript-body { font-size: 11.5px; padding: 12px; }
+}
+
+/* --- Route pages: colophon, accessibility, 404 -------------------------------- */
+
+.colophon-grid { display: grid; gap: 18px; }
+@media (min-width: 48rem) { .colophon-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.colophon-card {
+  padding: 22px 24px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  position: relative;
+  overflow: clip;
+}
+.colophon-card::before { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, var(--color-c-sky), transparent 70%); }
+.colophon-card h2 { font-size: 1.15rem; font-weight: 650; letter-spacing: -0.02em; }
+.colophon-card p { margin-top: 10px; font-size: 15px; line-height: 1.65; color: var(--color-muted); }
+.colophon-list { margin-top: 10px; padding-left: 18px; list-style: disc; font-size: 15px; line-height: 1.65; color: var(--color-muted); }
+.colophon-list li + li { margin-top: 8px; }
+
+.lost { display: grid; align-content: center; min-height: 100dvh; padding-block: 80px; }
+.lost-column { display: grid; gap: 18px; }
+.lost .replies-list { margin-top: 4px; }
+
 /* --- Composer ---------------------------------------------------------------- */
 
 .composer {
@@ -1125,7 +1199,7 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
   .intro-stage { grid-template-columns: 1fr; justify-items: center; gap: 30px; margin-top: 36px; }
   .intro-quote { justify-self: center; max-width: 42ch; }
   .intro-actions { justify-self: center; flex-direction: row; flex-wrap: wrap; justify-content: center; }
-  .intro-portrait { order: -1; width: clamp(180px, 44vw, 250px); }
+  .intro-portrait { order: -1; width: clamp(150px, 36vw, 200px); }
 }
 @media (max-width: 47.99rem) {
   .intro { padding-top: 64px; }

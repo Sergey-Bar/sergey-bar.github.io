@@ -18,12 +18,16 @@ export const site = {
 } as const;
 
 /**
- * There is no CV page and no published email address or phone number on this
- * site. LinkedIn is the contact route; the repositories are the evidence.
+ * There is no CV page on this site. LinkedIn is the contact route and the
+ * repositories are the evidence; the CV is sent on request, by email or on
+ * LinkedIn, so it is never a file a crawler can lift.
  */
 export const contact = {
   linkedin: "https://www.linkedin.com/in/sergeybar",
   github: "https://github.com/Sergey-Bar",
+  email: "Sergeybaris@gmail.com",
+  /** Where a barrier or a mistake on the site can be reported in the open. */
+  questions: "https://github.com/Sergey-Bar/sergey-bar.github.io/issues/new",
 } as const;
 
 export type NavItem = { label: string; href: string };
@@ -31,9 +35,9 @@ export type NavItem = { label: string; href: string };
 export const nav: readonly NavItem[] = [
   { label: "Chat", href: "/" },
   { label: "Projects", href: "/projects/" },
+  { label: "Case studies", href: "/#cases" },
   { label: "Experience", href: "/#experience" },
-  { label: "Recommendations", href: "/#recommendations" },
-  { label: "Toolbox", href: "/#toolbox" },
+  { label: "Colophon", href: "/colophon/" },
 ];
 export const availability = {
   /**

@@ -4,10 +4,10 @@ import { site } from "@/content/site";
 
 const links = [
   { label: "Chat", href: "/" },
-  { label: "Experience", href: "/#experience" },
-  { label: "Recommendations", href: "/#recommendations" },
-  { label: "Toolbox", href: "/#toolbox" },
+  { label: "Case studies", href: "/#cases" },
   { label: "Projects", href: "/projects/" },
+  { label: "Colophon", href: "/colophon/" },
+  { label: "Accessibility", href: "/accessibility/" },
 ];
 
 export function SiteFooter() {

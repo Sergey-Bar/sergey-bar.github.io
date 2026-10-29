@@ -23,7 +23,7 @@ import {
   topics,
   type TopicId,
 } from "@/chat/topics";
-import { availability, site } from "@/content/site";
+import { availability, contact, site } from "@/content/site";
 
 type Entry = { key: number; order: number; node: ReactNode };
 
@@ -386,6 +386,13 @@ export function ChatDirector({
             <p>
               I don&apos;t have an answer for that one yet. This is a lookup, not a model, so
               it only knows the topics below.
+            </p>
+            <p>
+              If it matters, ask me on{" "}
+              <a href={contact.linkedin} className="link-underline">
+                LinkedIn
+              </a>
+              .
             </p>
           </Bubble>
           <QuickReplies ids={topics.map((t) => t.id)} />
