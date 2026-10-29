@@ -68,7 +68,7 @@ function AboutFlow() {
           {site.location}. {hero.positioning}
         </p>
       </Bubble>
-      <Bubble first={false}>
+      <Bubble>
         <p>{profile.distinction}</p>
       </Bubble>
       <Card eyebrow="the record at a glance">
@@ -209,7 +209,7 @@ function CasesFlow() {
           {study.artifact === "scan" ? <ScanTranscript /> : null}
         </Card>
       ))}
-      <Bubble first={false}>
+      <Bubble>
         <p>
           This site is tested the same way: a Playwright suite runs every conversation, the
           router and an accessibility audit on each deploy, and the{" "}
@@ -292,7 +292,7 @@ function ProjectsFlow() {
           </div>
         </Card>
       ))}
-      <Bubble first={false}>
+      <Bubble>
         <p>
           The long version, with each repository&apos;s full design argument, is on the{" "}
           <Link href="/projects/" className="link-underline">
@@ -316,11 +316,11 @@ function ExperienceFlow() {
         </p>
       </Bubble>
       {roles.map((role) => (
-        <Card key={`${role.company}-${role.period}`} first={false}>
+        <Card key={`${role.company}-${role.period}`}>
           <ExperienceRecord role={role} />
         </Card>
       ))}
-      <Card eyebrow="education and languages" first={false}>
+      <Card eyebrow="education and languages">
         <div className="grid gap-8 sm:grid-cols-2">
           <div>
             <h4 className="data text-muted">education</h4>
@@ -365,11 +365,11 @@ function RecommendationsFlow() {
         </p>
       </Bubble>
       {featured.map((recommendation) => (
-        <Card key={recommendation.name} first={false}>
+        <Card key={recommendation.name}>
           <RecommendationCard recommendation={recommendation} />
         </Card>
       ))}
-      <Card first={false}>
+      <Card>
         <details className="recommendations-more">
           <summary>
             <span className="recommendations-show">Read the other {rest.length}</span>
@@ -403,7 +403,7 @@ function ToolboxFlow() {
           Search covers all {toolbox.length} groups.
         </p>
       </Bubble>
-      <Card first={false}>
+      <Card>
         <ToolboxExplorer
           groups={toolbox.map((group) => ({
             id: group.id,
@@ -436,7 +436,7 @@ function ContactFlow() {
           anyone to lift.
         </p>
       </Bubble>
-      <Card eyebrow="open to" first={false}>
+      <Card eyebrow="open to">
         <ul className="flex flex-wrap gap-1.5" aria-label="Open to">
           {availability.roles.map((role) => (
             <li key={role}>
@@ -469,7 +469,7 @@ function FunFlow() {
       <Bubble>
         <p>Not everything here is a release gate. This one is for after hours.</p>
       </Bubble>
-      <Card eyebrow="after hours" title="A stress-relief toy" first={false}>
+      <Card eyebrow="after hours" title="A stress-relief toy">
         <p className="t-body text-muted">
           A small canvas game that hands you nine tools and this page&apos;s own headline to take
           them to. It downloads only when the button is pressed, and Escape brings you back.

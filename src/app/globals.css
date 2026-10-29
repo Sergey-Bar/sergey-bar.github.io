@@ -406,22 +406,40 @@
    the top-left corner as a glyph alone; the identity bar leaves it room. */
 main:has(.chat-shell) ~ .motion-control {
   top: 14px;
-  left: 14px;
+  right: 64px;
+  left: auto;
   bottom: auto;
+  width: 42px;
+  height: 42px;
 }
-/* Beside the sidebar the control sits in the sidebar's head, at its right
-   corner, where the drawer's close button would be on a phone. */
+.chat-shell[data-state="intro"] .social { margin-right: 50px; }
+/* Once the chat is open the control lives in the sidebar's foot, beside the
+   person: the chat's own header stays clear. */
 @media (min-width: 64rem) {
   main:has(.chat-shell[data-state="chat"]) ~ .motion-control {
-    left: calc(var(--sidebar-w) - 14px - 36px);
+    top: auto;
+    right: auto;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    left: calc(var(--sidebar-w) - 12px - 36px);
     width: 36px;
     height: 36px;
-    transition: left 420ms var(--ease-out), border-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
   }
+  .chat-shell[data-state="chat"] .side-foot { padding-right: 44px; }
 }
-/* While the drawer is open the corner controls go under its backdrop. */
+/* On a narrow screen it is in the drawer, so it shows with the drawer. */
 @media (max-width: 63.99rem) {
-  main:has(.chat-shell[data-drawer]) ~ .motion-control { z-index: 34; }
+  main:has(.chat-shell[data-state="chat"]) ~ .motion-control {
+    top: auto;
+    right: auto;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    left: calc(var(--sidebar-w) - 12px - 36px);
+    z-index: 37;
+    width: 36px;
+    height: 36px;
+    visibility: hidden;
+  }
+  main:has(.chat-shell[data-drawer]) ~ .motion-control { visibility: visible; }
+  .chat-shell[data-drawer] .side-foot { padding-right: 44px; }
   .chat-shell[data-drawer] .topbar { z-index: 34; }
 }
 @media (min-width: 64rem) and (max-width: 84.99rem) {
@@ -752,14 +770,9 @@ main:has(.chat-shell) ~ .motion-control {
   list-style: none;
 }
 .chips::-webkit-scrollbar { display: none; }
-.chips-more-item { display: none; }
 @media (max-width: 47.99rem) {
   .chips { gap: 6px; }
   .chips .chip { min-height: 34px; padding: 0 11px; font-size: 12.5px; gap: 6px; }
-  .chips .chip svg { display: none; }
-  .chips-more-item { display: block; }
-  .chips[data-collapsed] > li:nth-child(n + 4):not(.chips-more-item) { display: none; }
-  .chips-more { color: var(--color-muted); }
 }
 .chip {
   display: inline-flex;
@@ -781,10 +794,15 @@ main:has(.chat-shell) ~ .motion-control {
 .chip:hover { border-color: var(--topic); background: color-mix(in oklab, var(--topic) 16%, transparent); transform: translateY(-1px); }
 .chip:hover svg { transform: scale(1.25) rotate(-6deg); }
 .chip:active { transform: scale(0.96); }
-/* The composer row: no overflow, ever. Eight chips fit one line from 64rem up
-   at this size; narrower screens wrap to two lines; phones fold (below). */
-.composer .chips { flex-wrap: wrap; overflow: visible; gap: 6px; }
-.composer .chip { font-size: 12px; min-height: 34px; padding: 0 10px 0 9px; gap: 6px; }
+/* The topics panel behind the plus: every chip, wrapped, no overflow. */
+.composer-topics { padding: 6px 4px 8px; margin-bottom: 2px; border-bottom: 1px solid var(--color-line); }
+.composer-topics[hidden] { display: none; }
+.composer .chips { flex-wrap: wrap; overflow: visible; gap: 6px; padding: 2px; }
+.composer .chip { font-size: 12.5px; min-height: 34px; padding: 0 11px 0 9px; gap: 6px; }
+@media (prefers-reduced-motion: no-preference) {
+  .composer-topics .chip { animation: chip-in 320ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 0ms); }
+}
+@keyframes chip-in { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
 
 /* --- Sidebar ----------------------------------------------------------------- */
 
@@ -849,15 +867,12 @@ main:has(.chat-shell) ~ .motion-control {
   .chat-shell[data-state="chat"] .composer { left: var(--sidebar-w); }
   .chat-shell[data-state="chat"] .watermark-l { display: none; }
   .chat-shell[data-state="chat"] .identity-restart { display: none; }
-  .chat-shell[data-state="chat"] .identity .msg-avatar { display: none; }
-  .composer .chips { display: none; }
 }
 /* Narrow screens: a drawer behind the menu button. */
 @media (max-width: 63.99rem) {
   .chat-shell[data-drawer] .sidebar { transform: none; visibility: visible; transition: transform 420ms var(--ease-out), visibility 0s; }
   .side-close { display: grid; }
   .chat-shell[data-state="chat"] .identity-menu { display: grid; }
-  .chat-shell[data-state="chat"] .identity { padding-left: 50px; }
 }
 
 /* GitHub and LinkedIn move into the sidebar once the chat is open; the ghost
@@ -890,16 +905,41 @@ main:has(.chat-shell) ~ .motion-control {
   50% { translate: 0 -2.5px; }
 }
 
-/* The status row under the field: what this chat runs on. */
-.composer-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 4px 12px 2px; font-family: var(--font-mono); font-size: 11px; color: var(--color-muted); }
-.meta-pill { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.meta-k { color: var(--color-muted); }
-.meta-v { color: var(--color-ink); }
-.meta-caret { opacity: 0.6; }
-@media (max-width: 47.99rem) {
-  .meta-wide, .meta-mode { display: none; }
-  .composer-meta { padding-inline: 8px; }
+/* The bar under the field: plus, model pill, send. */
+.composer-bar { display: flex; align-items: center; gap: 8px; padding: 4px 2px 0; }
+.composer-plus {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: border-color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
 }
+.composer-plus svg { transition: transform var(--dur-ui) var(--ease-out); }
+.composer-plus:hover { border-color: var(--color-ink); background: #ffffff0a; }
+.composer-plus:active { transform: scale(0.94); }
+.composer-plus[aria-expanded="true"] { border-color: var(--color-c-sky); color: var(--color-c-sky); }
+.composer-plus[aria-expanded="true"] svg { transform: rotate(45deg); }
+.model-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 13px;
+  border-radius: 100px;
+  border: 1px solid var(--color-line-strong);
+  background: #ffffff05;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: default;
+}
+.model-name { font-weight: 600; color: var(--color-ink); }
+.model-effort { color: var(--color-muted); }
+.composer-bar .composer-send { margin-left: auto; }
 
 /* --- Identity bar (chat state) ------------------------------------------- */
 
@@ -935,7 +975,7 @@ main:has(.chat-shell) ~ .motion-control {
 /* On a phone the bar is one line: avatar, name, restart. The reading-mode
    button and the status line go; the corner controls get the room they need. */
 @media (max-width: 47.99rem) {
-  .chat-shell[data-state="chat"] .identity { padding-left: 50px; padding-right: 56px; gap: 8px; }
+  .chat-shell[data-state="chat"] .identity { padding-right: 56px; gap: 8px; }
   .identity .identity-text { min-width: 0; }
   .identity .identity-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .identity .identity-status { display: none; }
@@ -1003,7 +1043,7 @@ main:has(.chat-shell) ~ .motion-control {
 
 .msg {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   align-items: start;
 }
@@ -1019,7 +1059,6 @@ main:has(.chat-shell) ~ .motion-control {
 /* The same picture, the same crop and the same ring as the intro portrait,
    at 36px. */
 .msg-avatar img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: 50% 50%; filter: saturate(0.95) contrast(1.02); }
-.msg-avatar-gap { border: 0; background: transparent; }
 
 .bubble {
   max-width: 68ch;
@@ -1515,8 +1554,7 @@ main:has(.chat-shell) ~ .motion-control {
   .intro-sub { margin-top: 14px; font-size: 1rem; }
   .intro-stage { margin-top: 22px; gap: 22px; }
   .intro-quote { display: none; }
-  .msg { grid-template-columns: 30px minmax(0, 1fr); gap: 10px; }
-  .msg-avatar { width: 30px; height: 30px; }
+  .msg { gap: 10px; }
   .msg-card .bubble { padding: 18px 16px; }
   .bubble { padding: 12px 15px; font-size: 14.5px; }
   .card-title { font-size: 1.3rem; }

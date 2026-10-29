@@ -25,7 +25,7 @@ async function enter(page: Page) {
 
 /**
  * Asks a topic the way the layout offers it: the sidebar item on a wide screen,
- * the composer chip on a phone (opening the fold first when needed).
+ * the composer chip behind the plus (opening the panel first when needed).
  */
 async function pressChip(page: Page, id: string) {
   const side = page.locator(`.sidebar .side-item[data-ask="${id}"]`);
@@ -34,7 +34,7 @@ async function pressChip(page: Page, id: string) {
     return;
   }
   const chip = page.locator(`.composer .chip[data-ask="${id}"]`);
-  if (!(await chip.isVisible())) await page.locator(".composer .chips-more").click();
+  if (!(await chip.isVisible())) await page.getByRole("button", { name: "Show every topic" }).click();
   await chip.click();
 }
 
@@ -203,12 +203,25 @@ test.describe("conversations", () => {
     await expectAxeClean(page);
   });
 
-  test("a phone folds the chip row behind a count", async ({ page, isMobile }) => {
-    test.skip(!isMobile, "the fold is a phone layout");
+  test("the plus under the field opens every topic and a chip closes it", async ({ page }) => {
     await enter(page);
-    await expect(page.locator('.composer .chip[data-ask="experience"]')).toBeHidden();
-    await page.locator(".composer .chips-more").click();
-    await expect(page.locator('.composer .chip[data-ask="experience"]')).toBeVisible();
+    const chips = page.locator(".composer .chip[data-ask]");
+    await expect(chips.first()).toBeHidden();
+    await page.getByRole("button", { name: "Show every topic" }).click();
+    await expect(chips).toHaveCount(TOPICS.length);
+    for (let i = 0; i < TOPICS.length; i++) await expect(chips.nth(i)).toBeInViewport();
+    await page.locator('.composer .chip[data-ask="experience"]').click();
+    await expect(page.locator('[data-flow="experience"]')).toHaveAttribute("data-sent", "");
+    await expect(chips.first()).toBeHidden();
+  });
+
+  test("the bar under the field reads like a model's and has no microphone", async ({ page }) => {
+    await enter(page);
+    await expect(page.locator(".composer .model-name")).toHaveText("Jarvis");
+    await expect(page.locator(".composer .model-effort")).toHaveText("Max");
+    await expect(page.getByRole("button", { name: /microphone|dictate|voice/i })).toHaveCount(0);
+    await expect(page.locator(".identity .msg-avatar")).toHaveCount(0);
+    await expect(page.locator(".log .msg-avatar")).toHaveCount(0);
   });
 
   test("a legacy anchor opens its conversation on arrival", async ({ page }) => {

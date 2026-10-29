@@ -178,3 +178,22 @@ the ghost's width.
 Verified: two new specs (the links move, the ghost opens the game and leaves
 the intro as it was) pass on both devices with the rest of the suite;
 screenshots of the intro corner, the chat at 1440×900 and the phone drawer.
+
+## A chat like a model's (2026-10-29, later)
+
+The composer took the shape of a chat with a model: the field on top, and
+under it a plus that opens every topic as chips above the field, a "Jarvis ·
+Max" pill, and the send arrow; no microphone, no status row, no folded chip
+row. A chip asks and closes the panel; Escape closes it; asking from the
+sidebar, reading everything or starting over closes it too. Replies, the typing
+indicator, quick replies and the header lost their avatar: the portrait stands
+once, in the sidebar's foot. The motion control left the header: it sits
+beside the ghost on the intro, in the sidebar's foot beside the chat, and in
+the drawer's foot on a phone, where it shows with the drawer.
+
+Verified: 60 specs pass, 4 skipped by device (two new: the plus opens every
+topic in the viewport and a chip closes it; the bar names Jarvis at Max, has no
+microphone, and the header and log carry no avatar); screenshots at 1440×900
+with the panel open, on a Pixel 7 closed and open, and of the drawer's foot.
+A phone-only rule that kept a 30px avatar column had squeezed bubbles to
+nothing; it is gone.

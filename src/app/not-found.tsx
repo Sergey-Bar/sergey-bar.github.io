@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { TopicIcon } from "@/chat/icons";
-import { BotAvatar } from "@/chat/message";
 import { topics } from "@/chat/topics";
 import { site } from "@/content/site";
 
@@ -20,7 +19,6 @@ export default function NotFound() {
       <div className="chat-column lost-column">
         <p className="data text-muted">404</p>
         <article className="msg">
-          <BotAvatar />
           <div className="bubble">
             <p>
               That URL does not resolve. Nothing here, which is at least honest. Everything I can

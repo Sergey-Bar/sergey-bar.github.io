@@ -6,8 +6,9 @@ import { images } from "@/content/hero";
 import { site } from "@/content/site";
 
 /**
- * The avatar beside a reply. The portrait is the same file the intro paints,
- * so this is a cache hit, cropped to the face.
+ * The portrait at avatar size, the same file the intro paints (a cache hit),
+ * cropped to the face. It stands in the sidebar; replies carry no avatar,
+ * the way a chat with a model reads.
  */
 export function BotAvatar() {
   return (
@@ -23,10 +24,9 @@ export function BotAvatar() {
  * messages of a flow one at a time; without JavaScript every message is
  * simply present, in order.
  */
-export function Bubble({ children, first = true }: { children: ReactNode; first?: boolean }) {
+export function Bubble({ children }: { children: ReactNode }) {
   return (
     <article className="msg" data-msg>
-      {first ? <BotAvatar /> : <span className="msg-avatar msg-avatar-gap" aria-hidden="true" />}
       <div className="bubble">{children}</div>
     </article>
   );
@@ -38,18 +38,15 @@ export function Card({
   eyebrow,
   stat,
   children,
-  first = false,
 }: {
   title?: string;
   eyebrow?: string;
   /** One figure the card leads with: the hierarchy is title, number, detail. */
   stat?: { value: string; label: string };
   children: ReactNode;
-  first?: boolean;
 }) {
   return (
     <article className="msg msg-card" data-msg>
-      {first ? <BotAvatar /> : <span className="msg-avatar msg-avatar-gap" aria-hidden="true" />}
       <div className="bubble card">
         {eyebrow || title ? (
           <header className="card-head">
@@ -80,7 +77,6 @@ export function Card({
 export function QuickReplies({ ids, lead }: { ids: readonly TopicId[]; lead?: string }) {
   return (
     <article className="msg msg-replies" data-msg>
-      <span className="msg-avatar msg-avatar-gap" aria-hidden="true" />
       <div className="replies">
         {lead ? <p className="replies-lead">{lead}</p> : null}
         <ul className="replies-list">

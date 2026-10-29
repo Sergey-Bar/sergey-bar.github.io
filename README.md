@@ -69,11 +69,12 @@ coding agent lays out its session: "Start over" and "Read everything", every
 topic with a check once it has been asked, the three pages, and the person at
 the bottom with the typing state. On narrower screens the same sidebar is a
 drawer behind the menu button in the identity bar, with a backdrop and Escape
-to close; there the composer keeps a compact chip row (three topics and a
-count on a phone). Under the text field a status row reads like an agent's:
-model (the person), effort (the years), mode (evidence-first) and context (the
-topics, recommendations and recorded scan behind the answers). Every value is
-true and none is a setting. GitHub and LinkedIn sit in the corner on the intro
+to close. Under the text field the bar reads like a chat with a model: a plus
+that opens every topic as chips above the field (a chip asks and closes the
+panel; Escape closes it), a pill that names the model, "Jarvis" at "Max"
+effort, and the send arrow. There is no microphone. Replies carry no avatar
+and neither does the header; the portrait stands once, in the sidebar's foot,
+beside the motion control. GitHub and LinkedIn sit in the corner on the intro
 and move into the sidebar's "Profiles" list once the chat is open; the ghost
 that stays in the corner opens the demolition run directly, without the
 conversation. Text bubbles grow as their words arrive, a card

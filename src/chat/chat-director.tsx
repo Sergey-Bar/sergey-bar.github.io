@@ -17,7 +17,7 @@ import Link from "next/link";
 
 import { CaseIcon, CheckIcon, LayersIcon, ReadIcon, RestartIcon, SendIcon, TopicIcon } from "@/chat/icons";
 import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
-import { CloseIcon, MenuIcon } from "@/components/icons";
+import { CloseIcon, MenuIcon, PlusIcon } from "@/components/icons";
 import { BotAvatar, Bubble, QuickReplies, UserBubble } from "@/chat/message";
 import {
   placeholderPrompts,
@@ -342,6 +342,7 @@ export function ChatDirector({
         flow.dataset.sent = "";
         setAsked((prev) => new Set(prev).add(id));
         setDrawer(false);
+        setChipsOpen(false);
         anchorRef.current = anchor;
         follow(true);
         setStatus(`${site.name} is answering: ${topicById[id].description}.`);
@@ -409,6 +410,7 @@ export function ChatDirector({
     orderRef.current = log.querySelectorAll("[data-flow]").length + 1;
     setAsked(new Set(topics.map((t) => t.id)));
     setDrawer(false);
+    setChipsOpen(false);
     rootRef.current?.setAttribute("data-mode", "read");
     window.scrollTo({ top: 0, behavior: "auto" });
     setStatus("Everything, in order.");
@@ -455,6 +457,7 @@ export function ChatDirector({
     rootRef.current?.removeAttribute("data-mode");
     setAsked(new Set());
     setDrawer(false);
+    setChipsOpen(false);
     history.replaceState(null, "", location.pathname);
     window.scrollTo({ top: 0, behavior: motionOff() ? "auto" : "smooth" });
     setStatus("Back at the start.");
@@ -504,6 +507,7 @@ export function ChatDirector({
         input.blur();
       } else if (event.key === "Escape") {
         setDrawer(false);
+        setChipsOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -849,7 +853,6 @@ export function ChatDirector({
             >
               <MenuIcon size={16} />
             </button>
-            <BotAvatar />
             <div className="identity-text">
               <p className="identity-name">{site.name}</p>
               <p className="identity-status" data-typing={typing ? "" : undefined}>
@@ -879,7 +882,6 @@ export function ChatDirector({
             ))}
             {typing ? (
               <div className="msg typing" style={{ order: 1_000_000 }} role="status">
-                <BotAvatar />
                 <div className="bubble" aria-hidden="true">
                   <span />
                   <span />
@@ -917,6 +919,19 @@ export function ChatDirector({
 
       <form className="composer" onSubmit={onSubmit}>
         <div className="composer-panel" data-match={match ?? undefined}>
+          {/* Every topic, behind the plus. Pressing one asks it and closes the panel. */}
+          <div className="composer-topics" id="composer-topics" hidden={!chipsOpen}>
+            <ul className="chips" aria-label="Topics">
+              {topics.map((topic) => (
+                <li key={topic.id}>
+                  <a href={`#${topic.id}`} className="chip" data-ask={topic.id} data-topic={topic.id}>
+                    <TopicIcon id={topic.id} size={15} />
+                    {topic.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
           <div className="composer-row">
             <label htmlFor="ask" className="sr-only">
               Ask about my work
@@ -934,51 +949,29 @@ export function ChatDirector({
               onInput={onInput}
             />
             <kbd className="composer-kbd" aria-hidden="true">/</kbd>
+          </div>
+          {/* The bar under the field, the way a chat with a model lays it out:
+              the plus opens every topic, the pill names the model, the arrow
+              sends. There is no microphone. */}
+          <div className="composer-bar">
+            <button
+              type="button"
+              className="composer-plus"
+              aria-label={chipsOpen ? "Hide the topics" : "Show every topic"}
+              aria-expanded={chipsOpen}
+              aria-controls="composer-topics"
+              onClick={() => setChipsOpen((v) => !v)}
+            >
+              <PlusIcon size={18} />
+            </button>
+            <span className="model-pill" title="Jarvis, at maximum effort. The answers are written, not generated.">
+              <span className="model-name">Jarvis</span>
+              <span className="model-effort">Max</span>
+            </span>
             <button type="submit" className="composer-send" aria-label="Send" data-sent={sent ? "" : undefined}>
               <SendIcon size={17} />
             </button>
           </div>
-          {/* The status row, the way a coding agent shows what it is running
-              with. Every value here is true; none of them is a setting. */}
-          <div className="composer-meta" aria-hidden="true">
-            <span className="meta-pill">
-              <span className="meta-k">model</span>
-              <span className="meta-v">{site.name} · human</span>
-              <span className="meta-caret">⌄</span>
-            </span>
-            <span className="meta-pill">
-              <span className="meta-k">effort</span>
-              <span className="meta-v">7+ years</span>
-            </span>
-            <span className="meta-pill meta-mode">
-              <span className="meta-k">mode</span>
-              <span className="meta-v">evidence-first</span>
-            </span>
-            <span className="meta-pill meta-wide">
-              <span className="meta-k">context</span>
-              <span className="meta-v">{topics.length} topics · 14 recommendations · 1 recorded scan</span>
-            </span>
-          </div>
-          <ul className="chips" aria-label="Topics" data-collapsed={chipsOpen ? undefined : ""}>
-            {topics.map((topic) => (
-              <li key={topic.id}>
-                <a href={`#${topic.id}`} className="chip" data-ask={topic.id} data-topic={topic.id}>
-                  <TopicIcon id={topic.id} size={15} />
-                  {topic.label}
-                </a>
-              </li>
-            ))}
-            <li className="chips-more-item">
-              <button
-                type="button"
-                className="chip chips-more"
-                aria-expanded={chipsOpen}
-                onClick={() => setChipsOpen((v) => !v)}
-              >
-                {chipsOpen ? "Fewer" : `+${topics.length - 3}`}
-              </button>
-            </li>
-          </ul>
         </div>
         <p className="composer-hint">
           You can ask about: projects · experience · toolbox · recommendations · contact
