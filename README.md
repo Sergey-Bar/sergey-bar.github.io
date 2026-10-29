@@ -87,12 +87,15 @@ ease-in on a control, interaction feedback under 300ms, and the longer
 durations reserved for the page-load sequence (the name and role rise word by
 word through a mask; the portrait, quote and actions follow) and for message
 arrivals, which are CSS animations and run off the main thread. The portrait
-tilts a few degrees toward a fine pointer, with its glow following, written as
-custom properties in one animation frame per move. Looping ambience (the
-portrait ring, the status pulse, the background light) pauses off screen and
-stops entirely under `prefers-reduced-motion` or the visitor's own "Pause
-motion" control, which persists in localStorage and is applied before first
-paint. With motion off the chat still works; replies simply appear at once.
+itself does not move: it arrives once and settles after a few seconds, and
+only the thin ring around it turns. A soft light follows a fine pointer across
+the page, moved on the compositor from window-level events so it can never be
+left behind; it fades when the pointer leaves the document and does not exist
+on touch screens. Looping ambience (the ring, the status
+pulse, the background light) stops entirely under `prefers-reduced-motion` or
+the visitor's own "Pause motion" control, which persists in localStorage and
+is applied before first paint. With motion off the chat still works; replies
+simply appear at once.
 
 The toolbox has a small search island, matching disciplines and tool names.
 Group content is server-rendered, with a live result count and clear empty state.

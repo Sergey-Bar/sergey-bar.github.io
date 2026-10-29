@@ -554,6 +554,7 @@ export function ChatDirector({
         <span className="orb orb-1" />
         <span className="orb orb-2" />
         <span className="orb orb-3" />
+        <span className="cursor-glow" data-cursor-glow />
         <span className="grain chat-grain" />
       </div>
       <span className="watermark watermark-l" aria-hidden="true">

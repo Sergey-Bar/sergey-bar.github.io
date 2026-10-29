@@ -41,9 +41,9 @@ const OPENERS = [
 /**
  * The first screen is already the conversation: the name and the role, then
  * the first message, with the ways in as quick replies beneath it. The
- * portrait sits beside it, smaller than a hero and settling after a moment,
- * so the words carry the screen. It leaves once a topic is chosen and comes
- * back with "Start over".
+ * portrait sits beside it, smaller than a hero, still, and settling after a
+ * moment so the words carry the screen. It leaves once a topic is chosen and
+ * comes back with "Start over".
  */
 export function Intro() {
   const titleLine1: Word[] = [{ text: "I'm" }, { text: `${site.name.split(" ")[0]},`, className: "name" }];
@@ -64,7 +64,7 @@ export function Intro() {
         <span>{hero.headline}</span>
       </p>
 
-      <div className="intro-stage" data-stage-tilt>
+      <div className="intro-stage">
         <div className="intro-chat" data-stage style={at(680)}>
           <article className="msg">
             <BotAvatar />
@@ -90,7 +90,7 @@ export function Intro() {
           </p>
         </div>
 
-        <div className="intro-portrait" data-tilt-focus>
+        <div className="intro-portrait">
           <span className="portrait-glow" aria-hidden="true" />
           <span className="portrait-ring" aria-hidden="true" />
           <span className="portrait-disc">

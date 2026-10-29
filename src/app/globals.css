@@ -420,6 +420,7 @@ main:has(.chat-shell) ~ .motion-control {
 .chat-shell {
   position: relative;
   min-height: 100dvh;
+  overflow-x: clip;
 }
 
 .chat-bg {
@@ -457,6 +458,28 @@ main:has(.chat-shell) ~ .motion-control {
   left: -36vmax;
   top: 10vmax;
   background: radial-gradient(circle, #0b3ea82a 0%, #0b3ea800 60%);
+}
+
+/* The light that follows the pointer: painted once, moved on the compositor,
+   faded by the director when the pointer is gone. Never on touch screens. */
+.cursor-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 620px;
+  height: 620px;
+  margin: -310px 0 0 -310px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2d8cff30 0%, #0a66c218 32%, transparent 64%);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cursor-glow { transition: opacity 500ms var(--ease-out), transform 110ms linear; }
+}
+@media (hover: none) {
+  .cursor-glow { display: none; }
 }
 
 .watermark {
@@ -612,7 +635,6 @@ main:has(.chat-shell) ~ .motion-control {
   position: relative;
   width: clamp(168px, min(20vw, 24vh), 232px);
   aspect-ratio: 1;
-  perspective: 900px;
 }
 @media (prefers-reduced-motion: no-preference) {
   :root:not([data-motion="off"]) .portrait-disc { animation: portrait-settle-dim 1200ms var(--ease-out) 6s both; }
@@ -626,12 +648,9 @@ main:has(.chat-shell) ~ .motion-control {
   position: absolute;
   inset: -22%;
   border-radius: 50%;
-  background: radial-gradient(circle, #2d8cff66 0%, #0a66c23a 35%, transparent 65%);
-  transform: translate3d(calc(var(--mx, 50%) - 50%), calc(var(--my, 50%) - 50%), 0) scale(0.75);
-  transform-origin: center;
+  background: radial-gradient(circle, #2d8cff55 0%, #0a66c230 35%, transparent 65%);
   opacity: 0.9;
 }
-[data-spot="on"] .portrait-glow { transform: translate3d(calc(var(--mx) - 50%), calc(var(--my) - 50%), 0) scale(1); }
 .portrait-ring {
   position: absolute;
   inset: -5px;
@@ -646,7 +665,6 @@ main:has(.chat-shell) ~ .motion-control {
   overflow: hidden;
   background: var(--color-surface-2);
   box-shadow: 0 30px 80px #0009, inset 0 0 0 1px #ffffff14;
-  transform: rotateY(var(--pointer-x, 0deg)) rotateX(var(--pointer-y, 0deg));
 }
 /* The file is already cropped to the face: no transform scaling, which would
    enlarge a rasterised texture and blur it. */
@@ -757,18 +775,30 @@ main:has(.chat-shell) ~ .motion-control {
 
 /* --- Identity bar (chat state) ------------------------------------------- */
 
+/* The identity bar does not cut the page: a full-width fade from the ground
+   colour into nothing, with a blur that weakens downwards, so the conversation
+   dissolves under it as it scrolls instead of hitting an edge. */
 .identity {
   position: sticky;
   top: 0;
   z-index: 20;
+  isolation: isolate;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 0;
+  padding: 12px 0 16px;
   margin-bottom: 6px;
-  border-bottom: 1px solid var(--color-line);
-  background: color-mix(in oklab, var(--color-paper) 88%, transparent);
-  backdrop-filter: blur(14px);
+}
+.identity::before {
+  content: "";
+  position: absolute;
+  inset: -1px -50vw -22px;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--color-paper) 0%, color-mix(in oklab, var(--color-paper) 88%, transparent) 55%, transparent 100%);
+  backdrop-filter: blur(12px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
 }
 /* The fixed corner links share the top edge; leave them room on narrow screens. */
 @media (max-width: 84.99rem) {
@@ -1276,9 +1306,6 @@ main:has(.chat-shell) ~ .motion-control {
   :root:not([data-motion="off"]) .orb-1 { animation: orb-drift-1 26s ease-in-out infinite alternate; }
   :root:not([data-motion="off"]) .orb-2 { animation: orb-drift-2 32s ease-in-out infinite alternate; }
   :root:not([data-motion="off"]) .orb-3 { animation: orb-drift-3 28s ease-in-out infinite alternate; }
-  [data-visible="false"] .portrait-ring { animation-play-state: paused; }
-  .portrait-disc { transition: transform 420ms var(--ease-out); }
-  .portrait-glow { transition: transform 600ms var(--ease-out), opacity 400ms var(--ease-out); }
 
   /* Each message arrives once, the moment the director shows it, and the
      words of a reply follow one another the way a model's output does. In
@@ -1345,12 +1372,10 @@ main:has(.chat-shell) ~ .motion-control {
 
 /* A real stop control, not merely paused at an invisible animation frame. */
 :root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-:root[data-motion="off"] .portrait-disc { transform: none; }
 :root[data-motion="off"] { scroll-behavior: auto !important; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-  .portrait-disc { transform: none; }
 }
 
 /* ---------------------------------------------------------------------------

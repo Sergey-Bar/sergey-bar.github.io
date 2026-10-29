@@ -6,9 +6,8 @@ import { usePathname } from "next/navigation";
 const STORAGE_KEY = "motion";
 
 /**
- * One shared motion preference, plus the two things on this site that need
- * JavaScript to happen at all: the scroll reveals and the hero's pointer
- * response. Everything else is CSS.
+ * One shared motion preference, plus the one thing on this site that needs
+ * JavaScript to happen at all: the scroll reveals. Everything else is CSS.
  *
  * The preference is three-way. The OS can ask for reduced motion, in which
  * case the control is disabled and says so. Otherwise the visitor can pause
@@ -103,89 +102,61 @@ export function MotionDirector() {
   }, [enabled, pathname]);
 
   /**
-   * The intro portrait answers a fine pointer by tilting a few degrees toward
-   * it, with its glow following. Both are written in one animation frame per
-   * pointer move, as custom properties the stylesheet turns into transforms,
-   * so nothing here forces a layout or a repaint. Its looping ring is paused
-   * while the portrait is off screen.
+   * A soft light that follows a fine pointer across the page. It is one
+   * pre-painted radial inside the fixed background, moved on the compositor
+   * from window-level pointer events, so it cannot be left behind by a
+   * swallowed leave event: it fades the moment the pointer leaves the document
+   * or the window loses focus, and it does not exist on touch screens.
    */
   useEffect(() => {
     if (!enabled) return;
-    const stage = document.querySelector<HTMLElement>("[data-stage-tilt]");
-    if (!stage) return;
-    const focus = stage.querySelector<HTMLElement>("[data-tilt-focus]") ?? stage;
+    const glow = document.querySelector<HTMLElement>("[data-cursor-glow]");
+    if (!glow || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
 
-    const finePointer = matchMedia("(hover: hover) and (pointer: fine)");
     let frame = 0;
-    let clientX = -1;
-    let clientY = -1;
-    let inside = false;
-
-    /* The pointer is tracked on the window, and the geometry is read once per
-       frame: whether the pointer is over the stage is decided from its
-       position, never from a leave event that a repaint or a layer change can
-       swallow. The tilt is relative to the portrait, so it looks at the hand. */
+    let x = -1;
+    let y = -1;
+    let shown = false;
     const render = () => {
       frame = 0;
-      const rect = stage.getBoundingClientRect();
-      const over =
-        clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
-      if (over) {
-        const target = focus.getBoundingClientRect();
-        const dx = (clientX - target.left) / target.width - 0.5;
-        const dy = (clientY - target.top) / target.height - 0.5;
-        const clamp = (v: number) => Math.max(-0.8, Math.min(0.8, v));
-        stage.style.setProperty("--pointer-x", `${clamp(dx) * 14}deg`);
-        stage.style.setProperty("--pointer-y", `${clamp(dy) * -11}deg`);
-        stage.style.setProperty("--mx", `${clientX - target.left}px`);
-        stage.style.setProperty("--my", `${clientY - target.top}px`);
-        stage.dataset.spot = "on";
-        inside = true;
-      } else if (inside) {
-        stage.style.setProperty("--pointer-x", "0deg");
-        stage.style.setProperty("--pointer-y", "0deg");
-        stage.dataset.spot = "off";
-        inside = false;
+      if (x < 0) {
+        glow.style.opacity = "0";
+        shown = false;
+        return;
+      }
+      glow.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      if (!shown) {
+        glow.style.opacity = "1";
+        shown = true;
       }
     };
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(render);
     };
     const move = (event: PointerEvent) => {
-      if (!finePointer.matches) return;
-      clientX = event.clientX;
-      clientY = event.clientY;
+      x = event.clientX;
+      y = event.clientY;
       schedule();
     };
     const gone = () => {
-      clientX = -1;
-      clientY = -1;
+      x = -1;
+      y = -1;
       schedule();
     };
-
-    const observer = new IntersectionObserver(([entry]) => {
-      stage.dataset.visible = String(entry.isIntersecting);
-    });
-    observer.observe(stage);
     window.addEventListener("pointermove", move, { passive: true });
     window.addEventListener("pointercancel", gone);
     window.addEventListener("blur", gone);
     document.addEventListener("pointerleave", gone);
-    window.addEventListener("scroll", schedule, { passive: true });
-
+    document.addEventListener("visibilitychange", gone);
     return () => {
       cancelAnimationFrame(frame);
-      observer.disconnect();
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointercancel", gone);
       window.removeEventListener("blur", gone);
       document.removeEventListener("pointerleave", gone);
-      window.removeEventListener("scroll", schedule);
-      for (const name of ["--pointer-x", "--pointer-y", "--mx", "--my"]) {
-        stage.style.removeProperty(name);
-      }
-      delete stage.dataset.spot;
-      delete stage.dataset.visible;
+      document.removeEventListener("visibilitychange", gone);
+      glow.style.opacity = "";
+      glow.style.transform = "";
     };
   }, [enabled, pathname]);
 
