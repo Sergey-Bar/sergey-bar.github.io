@@ -108,50 +108,74 @@ export function MotionDirector() {
     if (!enabled) return;
     const stage = document.querySelector<HTMLElement>("[data-stage-tilt]");
     if (!stage) return;
+    const focus = stage.querySelector<HTMLElement>("[data-tilt-focus]") ?? stage;
 
     const finePointer = matchMedia("(hover: hover) and (pointer: fine)");
     let frame = 0;
-    let tiltX = 0;
-    let tiltY = 0;
-    let spotX = 0;
-    let spotY = 0;
+    let clientX = -1;
+    let clientY = -1;
+    let inside = false;
 
+    /* The pointer is tracked on the window, and the geometry is read once per
+       frame: whether the pointer is over the stage is decided from its
+       position, never from a leave event that a repaint or a layer change can
+       swallow. The tilt is relative to the portrait, so it looks at the hand. */
     const render = () => {
       frame = 0;
-      stage.style.setProperty("--pointer-x", `${tiltX}deg`);
-      stage.style.setProperty("--pointer-y", `${tiltY}deg`);
-      stage.style.setProperty("--mx", `${spotX}px`);
-      stage.style.setProperty("--my", `${spotY}px`);
+      const rect = stage.getBoundingClientRect();
+      const over =
+        clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+      if (over) {
+        const target = focus.getBoundingClientRect();
+        const dx = (clientX - target.left) / target.width - 0.5;
+        const dy = (clientY - target.top) / target.height - 0.5;
+        const clamp = (v: number) => Math.max(-0.8, Math.min(0.8, v));
+        stage.style.setProperty("--pointer-x", `${clamp(dx) * 14}deg`);
+        stage.style.setProperty("--pointer-y", `${clamp(dy) * -11}deg`);
+        stage.style.setProperty("--mx", `${clientX - target.left}px`);
+        stage.style.setProperty("--my", `${clientY - target.top}px`);
+        stage.dataset.spot = "on";
+        inside = true;
+      } else if (inside) {
+        stage.style.setProperty("--pointer-x", "0deg");
+        stage.style.setProperty("--pointer-y", "0deg");
+        stage.dataset.spot = "off";
+        inside = false;
+      }
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(render);
     };
     const move = (event: PointerEvent) => {
       if (!finePointer.matches) return;
-      const rect = stage.getBoundingClientRect();
-      spotX = event.clientX - rect.left;
-      spotY = event.clientY - rect.top;
-      tiltX = (spotX / rect.width - 0.5) * 10;
-      tiltY = (spotY / rect.height - 0.5) * -8;
-      stage.dataset.spot = "on";
-      if (!frame) frame = requestAnimationFrame(render);
+      clientX = event.clientX;
+      clientY = event.clientY;
+      schedule();
     };
-    const leave = () => {
-      tiltX = 0;
-      tiltY = 0;
-      stage.dataset.spot = "off";
-      if (!frame) frame = requestAnimationFrame(render);
+    const gone = () => {
+      clientX = -1;
+      clientY = -1;
+      schedule();
     };
 
     const observer = new IntersectionObserver(([entry]) => {
       stage.dataset.visible = String(entry.isIntersecting);
     });
     observer.observe(stage);
-    stage.addEventListener("pointermove", move);
-    stage.addEventListener("pointerleave", leave);
+    window.addEventListener("pointermove", move, { passive: true });
+    window.addEventListener("pointercancel", gone);
+    window.addEventListener("blur", gone);
+    document.addEventListener("pointerleave", gone);
+    window.addEventListener("scroll", schedule, { passive: true });
 
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
-      stage.removeEventListener("pointermove", move);
-      stage.removeEventListener("pointerleave", leave);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointercancel", gone);
+      window.removeEventListener("blur", gone);
+      document.removeEventListener("pointerleave", gone);
+      window.removeEventListener("scroll", schedule);
       for (const name of ["--pointer-x", "--pointer-y", "--mx", "--my"]) {
         stage.style.removeProperty(name);
       }

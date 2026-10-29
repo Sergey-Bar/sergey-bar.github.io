@@ -493,26 +493,52 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
   align-items: center;
   gap: 8px;
 }
-.topbar-link,
-.topbar-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
+/* Two routes in one pill. A white highlight sits behind LinkedIn at rest and
+   slides to whichever half is hovered or focused; the icon over it turns dark. */
+.social {
+  position: relative;
+  display: flex;
+  padding: 3px;
   border-radius: 100px;
   border: 1px solid var(--color-line-strong);
   background: color-mix(in oklab, var(--color-surface) 88%, transparent);
   backdrop-filter: blur(12px);
-  color: var(--color-ink);
-  font-size: 13px;
-  transition: border-color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
+  --social-at: 1;
 }
-.topbar-link { padding: 0 16px; }
-.topbar-icon { width: 40px; }
-.topbar-icon-primary { background: var(--color-ink); color: var(--color-paper); border-color: transparent; }
-.topbar-link:hover, .topbar-icon:hover { border-color: var(--color-ink); }
-.topbar-icon-primary:hover { background: #fff; }
-.topbar-link:active, .topbar-icon:active { transform: scale(0.96); }
+.social::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-ink);
+  transform: translateX(calc(var(--social-at) * 38px));
+  transition: transform 280ms var(--ease-out);
+}
+.social:has(.social-link:first-child:hover),
+.social:has(.social-link:first-child:focus-visible) { --social-at: 0; }
+.social:has(.social-link:last-child:hover),
+.social:has(.social-link:last-child:focus-visible) { --social-at: 1; }
+.social-link {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--color-ink);
+  transition: color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
+}
+.social-link:last-child { margin-left: 2px; }
+.social-link:last-child { color: var(--color-paper); }
+.social:has(.social-link:first-child:hover) .social-link:first-child,
+.social:has(.social-link:first-child:focus-visible) .social-link:first-child { color: var(--color-paper); }
+.social:has(.social-link:first-child:hover) .social-link:last-child,
+.social:has(.social-link:first-child:focus-visible) .social-link:last-child { color: var(--color-ink); }
+.social-link:active { transform: scale(0.94); }
+.social-link:focus-visible { outline-offset: -2px; }
 
 .chat-column {
   position: relative;
@@ -523,32 +549,20 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
 
 /* --- Intro ---------------------------------------------------------------- */
 
+/* Centred in the room above the composer, then lifted: the extra bottom
+   padding pulls the centre up without pinning the block to the top edge. */
 .intro {
   display: grid;
   align-content: center;
   justify-items: center;
   text-align: center;
   min-height: 100dvh;
-  padding-top: 72px;
-  padding-bottom: var(--composer-space);
+  padding-top: 64px;
+  padding-bottom: calc(var(--composer-space) + 56px);
 }
-
-.hello {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px 6px 10px;
-  border-radius: 100px;
-  border: 1px solid var(--color-line-strong);
-  background: color-mix(in oklab, var(--color-surface) 80%, transparent);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-ink);
-}
-.wave { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--grad); color: #fff; transform-origin: 50% 60%; }
 
 .intro-title {
-  margin-top: 26px;
+  margin-top: 0;
   font-size: clamp(2.6rem, 7vw, 5.5rem);
   font-weight: 750;
   letter-spacing: -0.05em;
@@ -617,7 +631,7 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
   transform-origin: center;
   opacity: 0.9;
 }
-.intro-portrait[data-spot="on"] .portrait-glow { transform: translate3d(calc(var(--mx) - 50%), calc(var(--my) - 50%), 0) scale(1); }
+[data-spot="on"] .portrait-glow { transform: translate3d(calc(var(--mx) - 50%), calc(var(--my) - 50%), 0) scale(1); }
 .portrait-ring {
   position: absolute;
   inset: -5px;
@@ -1077,14 +1091,13 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
   .intro-portrait { order: -1; width: clamp(180px, 44vw, 250px); }
 }
 @media (max-width: 47.99rem) {
-  .intro { padding-top: 72px; }
-  .intro-title { font-size: clamp(2.4rem, 12vw, 3.4rem); margin-top: 18px; }
+  .intro { padding-top: 64px; }
+  .intro-title { font-size: clamp(2.4rem, 12vw, 3.4rem); }
   .intro-sub { margin-top: 14px; font-size: 1rem; }
   .intro-stage { margin-top: 22px; gap: 22px; }
   .intro-quote { display: none; }
   .intro-actions { width: 100%; flex-direction: column; }
   .intro-actions .action { width: 100%; }
-  .topbar-link { display: none; }
   .msg { grid-template-columns: 30px minmax(0, 1fr); gap: 10px; }
   .msg-avatar { width: 30px; height: 30px; }
   .msg-card .bubble { padding: 18px 16px; }
@@ -1113,7 +1126,8 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
 @keyframes orb-drift-1 { to { transform: translate3d(12vmax, 8vmax, 0) scale(1.12); } }
 @keyframes orb-drift-2 { to { transform: translate3d(-10vmax, 10vmax, 0) scale(1.08); } }
 @keyframes orb-drift-3 { to { transform: translate3d(8vmax, -8vmax, 0) scale(1.15); } }
-@keyframes wave { 0%, 60%, 100% { transform: rotate(0); } 10%, 30% { transform: rotate(16deg); } 20%, 40% { transform: rotate(-8deg); } }
+@keyframes boot-out { from { opacity: 1; visibility: visible; } to { opacity: 0; visibility: hidden; transform: translateY(-2%); } }
+@keyframes boot-rule { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes dots { 0%, 80%, 100% { opacity: 0.35; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
 @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-c-sky) 25%, transparent); } 50% { box-shadow: 0 0 0 7px color-mix(in oklab, var(--color-c-sky) 8%, transparent); } }
 
@@ -1121,13 +1135,12 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
   :root:not([data-motion="off"]) [data-stage] { animation: stage-rise var(--dur-stage) var(--ease-out) both; animation-delay: var(--d, 0ms); }
   :root:not([data-motion="off"]) .mask > span { animation: mask-rise 1000ms var(--ease-out) both; animation-delay: calc(var(--d, 0ms) + var(--w, 0) * 55ms); }
   :root:not([data-motion="off"]) .intro-portrait { animation: pop 1100ms var(--ease-out) 380ms both; }
-  :root:not([data-motion="off"]) .wave { animation: wave 2.4s ease-in-out 900ms 2; }
   :root:not([data-motion="off"]) .portrait-ring { animation: ring-spin 14s linear infinite; }
   :root:not([data-motion="off"]) .status-dot { animation: pulse 2.2s ease-in-out infinite; }
   :root:not([data-motion="off"]) .orb-1 { animation: orb-drift-1 26s ease-in-out infinite alternate; }
   :root:not([data-motion="off"]) .orb-2 { animation: orb-drift-2 32s ease-in-out infinite alternate; }
   :root:not([data-motion="off"]) .orb-3 { animation: orb-drift-3 28s ease-in-out infinite alternate; }
-  .intro-portrait[data-visible="false"] .portrait-ring { animation-play-state: paused; }
+  [data-visible="false"] .portrait-ring { animation-play-state: paused; }
   .portrait-disc { transition: transform 420ms var(--ease-out); }
   .portrait-glow { transition: transform 600ms var(--ease-out), opacity 400ms var(--ease-out); }
 
@@ -1137,6 +1150,52 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
   .typing .bubble span:nth-child(2) { animation-delay: 150ms; }
   .typing .bubble span:nth-child(3) { animation-delay: 300ms; }
 }
+
+/* ---------------------------------------------------------------------------
+   The opening. A veil in the page's own black carries two lines, "Hello, I'm
+   Sergey" and "Welcome", then lifts; the hero's own entrance follows it. It
+   plays once per tab session, never with motion off, and a click or a key
+   ends it early. Without the flag it is simply not displayed.
+   --------------------------------------------------------------------------- */
+
+.boot { display: none; }
+:root[data-boot=""] .boot {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  background: var(--color-paper);
+  cursor: pointer;
+  animation: boot-out 700ms var(--ease-out) 2100ms both;
+}
+.boot-line {
+  font-size: clamp(2.2rem, 6.5vw, 5rem);
+  font-weight: 750;
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+  color: var(--color-ink);
+}
+.boot-line .mask + .mask { margin-left: 0.22em; }
+.boot-line .name {
+  background: var(--grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-inline: 0.04em;
+}
+.boot-line-2 { font-size: clamp(1.2rem, 2.6vw, 1.9rem); font-weight: 500; letter-spacing: -0.02em; color: var(--color-muted); }
+.boot-rule { width: 64px; height: 2px; margin-top: 18px; background: var(--grad); transform-origin: left center; }
+:root[data-boot=""] .boot-line .mask > span { animation: mask-rise 900ms var(--ease-out) both; animation-delay: calc(160ms + var(--w, 0) * 70ms); }
+:root[data-boot=""] .boot-line-2 .mask > span { animation-delay: 720ms; }
+:root[data-boot=""] .boot-rule { animation: boot-rule 1500ms var(--ease-out) 900ms both; }
+/* The hero waits behind the veil and rises as it lifts. */
+:root[data-boot=""] .intro [data-stage] { animation-delay: calc(var(--d, 0ms) + 2250ms); }
+:root[data-boot=""] .intro .mask > span { animation-delay: calc(var(--d, 0ms) + var(--w, 0) * 55ms + 2250ms); }
+:root[data-boot=""] .intro-portrait { animation-delay: 2550ms; }
+:root[data-boot=""] .intro-portrait .portrait-badge { animation-delay: calc(900ms + 2250ms); }
 
 /* A real stop control, not merely paused at an invisible animation frame. */
 :root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

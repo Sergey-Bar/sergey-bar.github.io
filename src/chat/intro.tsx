@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { ArrowRightIcon, ChatIcon, LayersIcon, UserIcon } from "@/chat/icons";
+import { ArrowRightIcon, LayersIcon, UserIcon } from "@/chat/icons";
 import { hero, images } from "@/content/hero";
 import { recommendations } from "@/content/recommendations";
 import { availability, site } from "@/content/site";
@@ -50,13 +50,6 @@ export function Intro() {
 
   return (
     <section className="intro" aria-labelledby="intro-heading">
-      <p className="hello" data-stage style={at(0)}>
-        <span className="wave" aria-hidden="true">
-          <ChatIcon size={12} />
-        </span>
-        Hello!
-      </p>
-
       <h1 id="intro-heading" className="intro-title" aria-label={`I'm ${site.name}, ${site.role}`}>
         <MaskedLine words={titleLine1} delay={120} />
         <MaskedLine words={titleLine2} delay={260} />
@@ -70,7 +63,7 @@ export function Intro() {
         <span>{hero.headline}</span>
       </p>
 
-      <div className="intro-stage">
+      <div className="intro-stage" data-stage-tilt>
         <figure className="intro-quote" data-stage style={at(760)}>
           <span className="intro-quote-mark" aria-hidden="true">
             &ldquo;
@@ -83,7 +76,7 @@ export function Intro() {
           </figcaption>
         </figure>
 
-        <div className="intro-portrait" data-stage-tilt>
+        <div className="intro-portrait" data-tilt-focus>
           <span className="portrait-glow" aria-hidden="true" />
           <span className="portrait-ring" aria-hidden="true" />
           <span className="portrait-disc">

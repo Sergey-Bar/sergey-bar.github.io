@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent,
@@ -221,7 +222,28 @@ export function ChatDirector({
 
   /* ------------------------------------------------------------ events */
 
+  /** The opening veil ends on a click or any key; the hero then rises at once. */
+  const skipBoot = useCallback(() => {
+    if (document.documentElement.dataset.boot === "") {
+      document.documentElement.dataset.boot = "skip";
+    }
+  }, []);
+
+  useEffect(() => {
+    if (document.documentElement.dataset.boot !== "") return;
+    window.addEventListener("keydown", skipBoot, { once: true });
+    const timer = window.setTimeout(skipBoot, 3400);
+    return () => {
+      window.removeEventListener("keydown", skipBoot);
+      window.clearTimeout(timer);
+    };
+  }, [skipBoot]);
+
   const onClick = (event: MouseEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest(".boot")) {
+      skipBoot();
+      return;
+    }
     const target = (event.target as HTMLElement).closest<HTMLElement>("[data-ask]");
     if (!target) return;
     event.preventDefault();
@@ -351,6 +373,21 @@ export function ChatDirector({
 
   return (
     <div ref={rootRef} className="chat-shell" data-state={stage} onClick={onClick}>
+      <div className="boot" aria-hidden="true">
+        <p className="boot-line">
+          {["Hello,", "I'm", site.name.split(" ")[0]].map((word, index) => (
+            <span key={word} className="mask" style={{ "--w": index } as CSSProperties}>
+              <span className={index === 2 ? "name" : undefined}>{word}</span>
+            </span>
+          ))}
+        </p>
+        <p className="boot-line boot-line-2">
+          <span className="mask" style={{ "--w": 0 } as CSSProperties}>
+            <span>Welcome</span>
+          </span>
+        </p>
+        <span className="boot-rule" />
+      </div>
       <div className="chat-bg" aria-hidden="true">
         <span className="orb orb-1" />
         <span className="orb orb-2" />

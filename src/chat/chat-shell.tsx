@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { ChatDirector } from "@/chat/chat-director";
 import { Flows, TopicChips } from "@/chat/flows";
 import { Intro } from "@/chat/intro";
@@ -19,16 +17,17 @@ export function ChatShell() {
       flows={<Flows />}
       chips={<TopicChips />}
       topbar={
-        <nav className="topbar" aria-label="Links">
-          <Link href="/projects/" className="topbar-link">
-            Projects
-          </Link>
-          <a href={contact.github} className="topbar-icon" aria-label="GitHub" title="GitHub">
-            <GitHubIcon size={16} />
-          </a>
-          <a href={contact.linkedin} className="topbar-icon topbar-icon-primary" aria-label="LinkedIn" title="LinkedIn">
-            <LinkedInIcon size={16} />
-          </a>
+        <nav className="topbar" aria-label="Profiles">
+          {/* One pill, two routes. The filled half follows the pointer (or
+              keyboard focus) and rests on LinkedIn, the contact route. */}
+          <div className="social">
+            <a href={contact.github} className="social-link" aria-label="GitHub" title="GitHub">
+              <GitHubIcon size={16} />
+            </a>
+            <a href={contact.linkedin} className="social-link" aria-label="LinkedIn" title="LinkedIn">
+              <LinkedInIcon size={16} />
+            </a>
+          </div>
         </nav>
       }
     />
