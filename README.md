@@ -160,7 +160,7 @@ deploy over a third-party API.
 optimisation or generation runtime, so the OG image is a static 1200×630 PNG by
 necessity; `python scripts/og-image.py` regenerates it on the site's theme from
 the portrait and the content modules (Pillow, Windows system fonts).
-`public/portrait.webp` is the LinkedIn profile photo, 400×400. `public/favicon.svg` is the vector form of the same mark.
+`public/portrait.webp` is the LinkedIn profile photo, 800×800 from the 1254×1254 original. `public/favicon.svg` is the vector form of the same mark.
 
 There is deliberately no `src/app/favicon.ico`: Next emits that convention file
 ahead of the explicit `metadata.icons` list, so a leftover one silently wins the
