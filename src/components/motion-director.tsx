@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const STORAGE_KEY = "motion";
@@ -36,8 +36,13 @@ export function MotionDirector() {
 
   const enabled = !paused && !reduced;
 
+  const wasOffRef = useRef(false);
   useEffect(() => {
-    document.documentElement.dataset.motion = enabled ? "on" : "off";
+    const root = document.documentElement;
+    root.dataset.motion = enabled ? "on" : "off";
+    // Turning motion back on must not replay the page-load sequence.
+    if (enabled && wasOffRef.current) root.dataset.resumed = "";
+    if (!enabled) wasOffRef.current = true;
   }, [enabled]);
 
   const toggle = () => {

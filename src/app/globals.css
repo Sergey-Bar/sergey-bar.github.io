@@ -780,6 +780,7 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
 .identity-text { flex: 1; min-width: 0; }
 .identity-name { font-size: 15px; font-weight: 600; line-height: 1.2; }
 .identity-status { display: flex; align-items: center; gap: 7px; margin-top: 3px; font-size: 12px; color: var(--color-muted); }
+.identity-status[data-typing] { color: var(--color-c-sky); }
 .identity-restart {
   display: inline-flex;
   align-items: center;
@@ -1058,6 +1059,42 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
   font-size: 15px;
 }
 .composer input::placeholder { color: var(--color-muted); }
+/* The "/" hint shows on pointer devices while the field is idle. */
+.composer-kbd {
+  display: none;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 7px;
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
+  transition: opacity var(--dur-hover) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .composer-kbd { display: block; }
+  .composer-panel:focus-within .composer-kbd { opacity: 0; }
+}
+/* An empty field has nothing to send. */
+.composer-panel:has(input:placeholder-shown) .composer-send { opacity: 0.55; box-shadow: none; }
+/* While the visitor types, the chip the router would answer with lights up. */
+.composer-panel[data-match] .chip { opacity: 0.55; }
+.composer-panel[data-match="about"] .chip[data-topic="about"],
+.composer-panel[data-match="projects"] .chip[data-topic="projects"],
+.composer-panel[data-match="experience"] .chip[data-topic="experience"],
+.composer-panel[data-match="recommendations"] .chip[data-topic="recommendations"],
+.composer-panel[data-match="toolbox"] .chip[data-topic="toolbox"],
+.composer-panel[data-match="contact"] .chip[data-topic="contact"],
+.composer-panel[data-match="fun"] .chip[data-topic="fun"] {
+  opacity: 1;
+  border-color: var(--topic);
+  background: color-mix(in oklab, var(--topic) 18%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--topic) 16%, transparent);
+}
+.chip { transition: border-color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out), box-shadow var(--dur-ui) var(--ease-out), opacity var(--dur-ui) var(--ease-out), transform var(--dur-press) var(--ease-out); }
 .composer-send {
   display: grid;
   place-items: center;
@@ -1122,6 +1159,7 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
 @keyframes stage-rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
 @keyframes mask-rise { from { transform: translateY(130%); } to { transform: none; } }
 @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes word-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 @keyframes ring-spin { to { transform: rotate(360deg); } }
 @keyframes orb-drift-1 { to { transform: translate3d(12vmax, 8vmax, 0) scale(1.12); } }
 @keyframes orb-drift-2 { to { transform: translate3d(-10vmax, 10vmax, 0) scale(1.08); } }
@@ -1144,8 +1182,10 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
   .portrait-disc { transition: transform 420ms var(--ease-out); }
   .portrait-glow { transition: transform 600ms var(--ease-out), opacity 400ms var(--ease-out); }
 
-  /* Each message arrives once, the moment the director shows it. */
+  /* Each message arrives once, the moment the director shows it, and the
+     words of a reply follow one another the way a model's output does. */
   .log .msg { animation: pop 460ms var(--ease-out) both; }
+  .w { display: inline-block; animation: word-in 320ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 24ms); }
   .typing .bubble span { animation: dots 1.2s ease-in-out infinite; }
   .typing .bubble span:nth-child(2) { animation-delay: 150ms; }
   .typing .bubble span:nth-child(3) { animation-delay: 300ms; }
@@ -1168,7 +1208,7 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
   justify-items: center;
   gap: 10px;
   background: var(--color-paper);
-  cursor: pointer;
+  pointer-events: none;
   animation: boot-out 700ms var(--ease-out) 2100ms both;
 }
 .boot-line {
@@ -1196,6 +1236,12 @@ main:has(.chat-shell) ~ .motion-control .motion-label {
 :root[data-boot=""] .intro .mask > span { animation-delay: calc(var(--d, 0ms) + var(--w, 0) * 55ms + 2250ms); }
 :root[data-boot=""] .intro-portrait { animation-delay: 2550ms; }
 :root[data-boot=""] .intro-portrait .portrait-badge { animation-delay: calc(900ms + 2250ms); }
+
+/* Motion turned back on after a pause: the page is already here, so the
+   entrance does not play again. */
+:root[data-resumed] [data-stage],
+:root[data-resumed] .mask > span,
+:root[data-resumed] .intro-portrait { animation: none !important; }
 
 /* A real stop control, not merely paused at an invisible animation frame. */
 :root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

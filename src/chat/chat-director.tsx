@@ -11,12 +11,14 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
+import { flushSync } from "react-dom";
 
 import { RestartIcon, SendIcon } from "@/chat/icons";
 import { BotAvatar, Bubble, QuickReplies, UserBubble } from "@/chat/message";
 import {
   placeholderPrompts,
   routeInput,
+  topicById,
   topicForHash,
   topics,
   type TopicId,
@@ -26,6 +28,44 @@ import { availability, site } from "@/content/site";
 type Entry = { key: number; order: number; node: ReactNode };
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+const finePointer = () => window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+/**
+ * Streams a reply the way a model would: every word of a text bubble becomes
+ * a span with its index, and the stylesheet fades them in one after another.
+ * Cards and quick replies are left whole. The split happens once, on the
+ * server-rendered markup React never reconciles again, and only when motion
+ * is on; with it off the text is simply there.
+ */
+function streamWords(message: HTMLElement) {
+  if ("streamed" in message.dataset || motionOff()) return;
+  if (!message.classList.contains("msg") || message.classList.contains("msg-card")) return;
+  const bubble = message.querySelector<HTMLElement>(".bubble");
+  if (!bubble) return;
+  message.dataset.streamed = "";
+  const walker = document.createTreeWalker(bubble, NodeFilter.SHOW_TEXT);
+  const nodes: Text[] = [];
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) nodes.push(node as Text);
+  let index = 0;
+  for (const node of nodes) {
+    if (!node.data.trim()) continue;
+    const fragment = document.createDocumentFragment();
+    for (const part of node.data.split(/(\s+)/)) {
+      if (!part) continue;
+      if (/^\s+$/.test(part)) {
+        fragment.appendChild(document.createTextNode(part));
+        continue;
+      }
+      const word = document.createElement("span");
+      word.className = "w";
+      word.style.setProperty("--i", String(Math.min(index++, 70)));
+      word.textContent = part;
+      fragment.appendChild(word);
+    }
+    node.replaceWith(fragment);
+  }
+}
 
 /** True when the visitor, or the OS, has asked this site not to move. */
 function motionOff() {
@@ -72,7 +112,10 @@ export function ChatDirector({
   const [stage, setStage] = useState<"intro" | "chat">("intro");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [typing, setTyping] = useState(false);
-  const [placeholder, setPlaceholder] = useState<string>(placeholderPrompts[0]);
+  /** One short line for assistive technology, instead of a live region over the whole log. */
+  const [status, setStatus] = useState("");
+  /** The topic the router would answer with, previewed on the chips as the visitor types. */
+  const [match, setMatch] = useState<TopicId | null>(null);
 
   /* ----------------------------------------------------------- helpers */
 
@@ -89,19 +132,23 @@ export function ChatDirector({
     const anchor = anchorRef.current;
     if (anchor) {
       const bar = rootRef.current?.querySelector<HTMLElement>(".identity");
-      const offset = (bar?.offsetHeight ?? 64) + 10;
+      const offset = (bar?.offsetHeight || 64) + 10;
       top = Math.min(max, anchor.getBoundingClientRect().top + window.scrollY - offset);
     }
     if (Math.abs(top - window.scrollY) < 2) return;
     window.scrollTo({ top, behavior: motionOff() ? "auto" : "smooth" });
   }, []);
 
-  /** Appends a client-rendered message and resolves with its element once committed. */
-  const push = useCallback(async (node: ReactNode) => {
+  /** Appends a client-rendered message and returns its element, committed synchronously. */
+  const push = useCallback((node: ReactNode) => {
     const key = ++keyRef.current;
-    setEntries((list) => [...list, { key, order: ++orderRef.current, node }]);
-    await sleep(0);
+    flushSync(() => setEntries((list) => [...list, { key, order: ++orderRef.current, node }]));
     return logRef.current?.querySelector<HTMLElement>(`[data-entry="${key}"]`) ?? null;
+  }, []);
+
+  /** Switches to the chat synchronously, so the log is laid out before anything measures it. */
+  const openChat = useCallback(() => {
+    flushSync(() => setStage("chat"));
   }, []);
 
   /** Shows the typing indicator for about as long as the reply takes to read. */
@@ -118,7 +165,12 @@ export function ChatDirector({
   /** Serialises conversations so two chips pressed in a row play in order. */
   const enqueue = useCallback((job: () => Promise<void>) => {
     const run = runRef.current;
-    queueRef.current = queueRef.current.then(() => (run === runRef.current ? job() : undefined));
+    queueRef.current = queueRef.current
+      .then(() => (run === runRef.current ? job() : undefined))
+      .catch((error: unknown) => {
+        // One failed answer must not silence every later one.
+        console.error(error);
+      });
     return queueRef.current;
   }, []);
 
@@ -130,16 +182,18 @@ export function ChatDirector({
         const run = runRef.current;
         const flow = logRef.current?.querySelector<HTMLElement>(`[data-flow="${id}"]`);
         if (!flow) return;
-        setStage("chat");
+        openChat();
         followRef.current = true;
 
         if ("sent" in flow.dataset) {
           // Already on screen: a second question gets the visitor's own words
           // echoed and a pointer back to the answer, not a duplicate of it.
-          anchorRef.current = typed ? await push(<UserBubble>{typed}</UserBubble>) : null;
+          anchorRef.current = typed ? push(<UserBubble>{typed}</UserBubble>) : null;
           follow(true);
           await think(run, 10);
-          await push(
+          if (run !== runRef.current) return;
+          setStatus(`${site.name}: that answer is already above.`);
+          push(
             <Bubble>
               <p>
                 That one is above.{" "}
@@ -158,42 +212,49 @@ export function ChatDirector({
         let anchor: HTMLElement | null = canned;
         if (typed) {
           if (canned) canned.hidden = true;
-          anchor = await push(<UserBubble>{typed}</UserBubble>);
+          anchor = push(<UserBubble>{typed}</UserBubble>);
         }
 
         flow.style.order = String(++orderRef.current);
         flow.dataset.sent = "";
         anchorRef.current = anchor;
         follow(true);
+        setStatus(`${site.name} is answering: ${topicById[id].description}.`);
 
         const messages = Array.from(
           flow.querySelectorAll<HTMLElement>(":scope > [data-msg]:not(.user)"),
         );
-        for (const message of messages) {
+        for (const [index, message] of messages.entries()) {
           if (run !== runRef.current) return;
           await think(run, message.textContent?.length ?? 0);
           if (run !== runRef.current) return;
+          streamWords(message);
           message.dataset.sent = "";
           follow();
+          // The reading cursor lands on the answer as its first message arrives.
+          if (index === 0 && !finePointer()) flow.focus({ preventScroll: true });
+          else if (index === 0 && document.activeElement === document.body) flow.focus({ preventScroll: true });
         }
+        if (run === runRef.current) setStatus(`${site.name} finished answering about ${topicById[id].label.toLowerCase()}.`);
       }),
-    [enqueue, follow, push, think],
+    [enqueue, follow, openChat, push, think],
   );
 
   const reply = useCallback(
     (typed: string, answer: ReactNode) =>
       enqueue(async () => {
         const run = runRef.current;
-        setStage("chat");
+        openChat();
         followRef.current = true;
-        anchorRef.current = await push(<UserBubble>{typed}</UserBubble>);
+        anchorRef.current = push(<UserBubble>{typed}</UserBubble>);
         follow(true);
         await think(run, 40);
         if (run !== runRef.current) return;
-        await push(answer);
+        const node = push(answer);
         follow();
+        setStatus(`${site.name}: ${node?.textContent?.slice(0, 160) ?? "replied"}`);
       }),
-    [enqueue, follow, push, think],
+    [enqueue, follow, openChat, push, think],
   );
 
   const restart = useCallback(() => {
@@ -218,32 +279,62 @@ export function ChatDirector({
     }
     history.replaceState(null, "", location.pathname);
     window.scrollTo({ top: 0, behavior: motionOff() ? "auto" : "smooth" });
+    setStatus("Back at the start.");
+    // The button that was pressed is gone with the identity bar; focus the heading.
+    requestAnimationFrame(() => {
+      rootRef.current?.querySelector<HTMLElement>("#intro-heading")?.focus({ preventScroll: true });
+    });
   }, []);
 
   /* ------------------------------------------------------------ events */
+
+  /** On a device with a pointer the composer takes focus, like any chat. */
+  const focusComposer = useCallback(() => {
+    if (finePointer()) inputRef.current?.focus({ preventScroll: true });
+  }, []);
 
   /** The opening veil ends on a click or any key; the hero then rises at once. */
   const skipBoot = useCallback(() => {
     if (document.documentElement.dataset.boot === "") {
       document.documentElement.dataset.boot = "skip";
     }
-  }, []);
+    focusComposer();
+  }, [focusComposer]);
 
   useEffect(() => {
-    if (document.documentElement.dataset.boot !== "") return;
+    if (document.documentElement.dataset.boot !== "") {
+      focusComposer();
+      return;
+    }
     window.addEventListener("keydown", skipBoot, { once: true });
+    window.addEventListener("pointerdown", skipBoot, { once: true });
     const timer = window.setTimeout(skipBoot, 3400);
     return () => {
       window.removeEventListener("keydown", skipBoot);
+      window.removeEventListener("pointerdown", skipBoot);
       window.clearTimeout(timer);
     };
-  }, [skipBoot]);
+  }, [focusComposer, skipBoot]);
+
+  /** "/" focuses the composer from anywhere; Escape hands focus back to the page. */
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const input = inputRef.current;
+      if (!input) return;
+      const target = event.target as HTMLElement | null;
+      const editing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (event.key === "/" && !editing && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        event.preventDefault();
+        input.focus();
+      } else if (event.key === "Escape" && document.activeElement === input) {
+        input.blur();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const onClick = (event: MouseEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest(".boot")) {
-      skipBoot();
-      return;
-    }
     const target = (event.target as HTMLElement).closest<HTMLElement>("[data-ask]");
     if (!target) return;
     event.preventDefault();
@@ -263,11 +354,17 @@ export function ChatDirector({
     submit();
   };
 
+  const onInput = () => {
+    const route = routeInput(inputRef.current?.value ?? "");
+    setMatch(route.kind === "topic" ? route.id : null);
+  };
+
   const submit = () => {
     const input = inputRef.current;
     const text = input?.value.trim() ?? "";
     if (!text || !input) return;
     input.value = "";
+    setMatch(null);
     const route = routeInput(text);
     if (route.kind === "topic") {
       void ask(route.id, text);
@@ -308,7 +405,11 @@ export function ChatDirector({
     if (initial) void ask(initial);
     const onHash = () => {
       const id = fromUrl();
-      if (id) void ask(id);
+      if (!id) return;
+      const flow = logRef.current?.querySelector<HTMLElement>(`[data-flow="${id}"]`);
+      // An answer already on screen: the browser's own jump to it is the whole response.
+      if (flow && "sent" in flow.dataset) return;
+      void ask(id);
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
@@ -321,12 +422,16 @@ export function ChatDirector({
 
   /** A wheel, a swipe or an arrow key means the visitor is reading: stop following. */
   useEffect(() => {
-    const stop = () => {
+    const inComposer = (event: Event) =>
+      (event.target as HTMLElement | null)?.closest?.(".composer") != null;
+    const stop = (event: Event) => {
+      if (inComposer(event)) return;
       followRef.current = false;
     };
     const onKey = (event: KeyboardEvent) => {
+      if (inComposer(event)) return;
       if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) {
-        stop();
+        followRef.current = false;
       }
     };
     window.addEventListener("wheel", stop, { passive: true });
@@ -339,18 +444,26 @@ export function ChatDirector({
     };
   }, []);
 
-  /** The composer types its own suggestions while it waits. */
+  /**
+   * The composer types its own suggestions while it waits. It writes the
+   * placeholder attribute directly (React's prop never changes, so it never
+   * fights it): no re-render per character. It stops the moment motion is
+   * turned off, and resumes when it is turned back on.
+   */
   useEffect(() => {
-    if (motionOff()) {
-      setPlaceholder(placeholderPrompts[0]);
-      return;
-    }
+    const input = inputRef.current;
+    if (!input) return;
     let index = 0;
     let timer = 0;
     let cancelled = false;
     const run = (text: string, length: number, deleting: boolean) => {
       if (cancelled) return;
-      setPlaceholder(text.slice(0, length));
+      if (motionOff()) {
+        input.placeholder = placeholderPrompts[0];
+        timer = window.setTimeout(() => run(placeholderPrompts[index], placeholderPrompts[index].length, false), 1500);
+        return;
+      }
+      input.placeholder = text.slice(0, length);
       if (!deleting && length < text.length) {
         timer = window.setTimeout(() => run(text, length + 1, false), 42);
       } else if (!deleting) {
@@ -410,9 +523,9 @@ export function ChatDirector({
           <BotAvatar />
           <div className="identity-text">
             <p className="identity-name">{site.name}</p>
-            <p className="identity-status">
+            <p className="identity-status" data-typing={typing ? "" : undefined}>
               <span className="status-dot" aria-hidden="true" />
-              {availability.text}
+              {typing ? "typing…" : availability.text}
             </p>
           </div>
           <button type="button" className="identity-restart" onClick={restart} aria-label="Start over">
@@ -421,7 +534,7 @@ export function ChatDirector({
           </button>
         </header>
 
-        <div ref={logRef} className="log" role="log" aria-live="polite">
+        <div ref={logRef} className="log">
           {flows}
           {entries.map((entry) => (
             <div key={entry.key} className="entry" data-entry={entry.key} style={{ order: entry.order }}>
@@ -429,20 +542,24 @@ export function ChatDirector({
             </div>
           ))}
           {typing ? (
-            <div className="msg typing" style={{ order: 1_000_000 }} aria-label={`${site.name} is typing`}>
+            <div className="msg typing" style={{ order: 1_000_000 }} role="status">
               <BotAvatar />
-              <div className="bubble">
+              <div className="bubble" aria-hidden="true">
                 <span />
                 <span />
                 <span />
               </div>
+              <span className="sr-only">{site.name} is typing</span>
             </div>
           ) : null}
         </div>
+        <p className="sr-only" role="status" aria-live="polite">
+          {status}
+        </p>
       </div>
 
       <form className="composer" onSubmit={onSubmit}>
-        <div className="composer-panel">
+        <div className="composer-panel" data-match={match ?? undefined}>
           <div className="composer-row">
             <label htmlFor="ask" className="sr-only">
               Ask about my work
@@ -454,10 +571,12 @@ export function ChatDirector({
               type="text"
               autoComplete="off"
               enterKeyHint="send"
-              placeholder={placeholder}
+              placeholder={placeholderPrompts[0]}
               maxLength={140}
               onKeyDown={onKeyDown}
+              onInput={onInput}
             />
+            <kbd className="composer-kbd" aria-hidden="true">/</kbd>
             <button type="submit" className="composer-send" aria-label="Send">
               <SendIcon size={17} />
             </button>

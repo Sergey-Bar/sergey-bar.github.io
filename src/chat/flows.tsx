@@ -40,6 +40,7 @@ function Flow({ id, children }: { id: TopicId; children: React.ReactNode }) {
       data-flow={id}
       data-topic={id}
       aria-label={topic.description}
+      tabIndex={-1}
     >
       <UserBubble>{topic.prompt}</UserBubble>
       {children}

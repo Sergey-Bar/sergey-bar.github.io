@@ -71,3 +71,21 @@ Not performed: physical devices, Safari and Firefox, OS-level reduced-motion
 emulation, and screen-reader runs. The live-region announcements and the
 `interpolate-size` disclosure transitions were reasoned from the specification
 rather than observed with assistive technology.
+
+## Polish pass (2026-10-29, later)
+
+Added the opening veil, the merged profile pill (chat corner and projects
+header), streamed replies, the router preview on the chips, the "/" shortcut,
+composer autofocus after the opening, "typing…" in the identity bar, a
+dark-theme favicon and icon set, and the full-resolution portrait cropped in
+the file. Fixed: the portrait tilt sticking when a leave event was swallowed
+(pointer now tracked at window level), a hash link to an answer already on
+screen producing a second "that one is above" reply, and the chat switching
+state asynchronously so the first scroll measured a hidden log (state changes
+now flush synchronously before measuring).
+
+Validated locally against the static export: verify passes (home JS 137.5KB
+of 150KB, CSS 13.8KB of 20KB); the veil plays to its own 2.1s lift and ends
+early on a key; typed "tell me about your projects" lights the Projects chip
+and streams the reply; the tilt reports -6.5° off-centre and 0° once the
+pointer leaves the stage.

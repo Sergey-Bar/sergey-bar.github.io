@@ -35,10 +35,11 @@ export const topics: readonly Topic[] = [
     prompt: "Tell me about yourself",
     description: "About Sergey: the record at a glance and verified outcomes",
     keywords: [
-      "about", "who", "yourself", "profile", "background", "based", "where are you",
-      "location", "language", "israel", "bio", "intro", "record", "achiev",
-      "outcome", "result", "number", "metric", "years", "education", "study",
-      "open to", "available", "availability", "role", "position", "title",
+      "about you", "about yourself", "yourself", "who are you", "who is", "profile",
+      "background", "based", "where are you", "location", "language", "israel",
+      "bio", "intro", "record", "achiev", "outcome", "result", "number", "metric",
+      "years", "education", "study", "open to", "available", "availability",
+      "position", "title", "introduce",
     ],
     hashes: ["profile", "about"],
   },
@@ -123,6 +124,23 @@ const GREETINGS = ["hi", "hello", "hey", "yo", "shalom", "hola", "good morning",
 
 export type Route = { kind: "topic"; id: TopicId } | { kind: "greeting" } | { kind: "unknown" };
 
+const matchers = new Map<string, RegExp>();
+
+/**
+ * A keyword matches at the start of a word, so "project" catches "projects";
+ * a phrase must also end on a whole word, so "about you" does not catch
+ * "about your projects". Compiled once per keyword.
+ */
+function matcher(keyword: string): RegExp {
+  let re = matchers.get(keyword);
+  if (!re) {
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    re = new RegExp(keyword.includes(" ") ? `\\b${escaped}\\b` : `\\b${escaped}`);
+    matchers.set(keyword, re);
+  }
+  return re;
+}
+
 /**
  * Routes a typed question. Each topic scores per keyword found in the text, a
  * phrase outweighing a single word and a long word outweighing a short one;
@@ -136,15 +154,21 @@ export function routeInput(raw: string): Route {
   if (words.length <= 3 && GREETINGS.some((g) => text.trim() === g || text.startsWith(` ${g} `))) {
     return { kind: "greeting" };
   }
-  let best: { id: TopicId; score: number } | null = null;
+  let best: { id: TopicId; score: number; longest: number } | null = null;
   for (const topic of topics) {
     let score = 0;
+    let longest = 0;
     for (const keyword of topic.keywords) {
-      if (!text.includes(keyword)) continue;
+      if (!matcher(keyword).test(text)) continue;
       const phrase = keyword.includes(" ");
       score += phrase ? 4 : keyword.length > 4 ? 2 : 1;
+      longest = Math.max(longest, keyword.length);
     }
-    if (score > 0 && (!best || score > best.score)) best = { id: topic.id, score };
+    if (score === 0) continue;
+    // A tie goes to the topic whose evidence is the most specific word.
+    if (!best || score > best.score || (score === best.score && longest > best.longest)) {
+      best = { id: topic.id, score, longest };
+    }
   }
   return best ? { kind: "topic", id: best.id } : { kind: "unknown" };
 }

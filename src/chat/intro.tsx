@@ -50,7 +50,7 @@ export function Intro() {
 
   return (
     <section className="intro" aria-labelledby="intro-heading">
-      <h1 id="intro-heading" className="intro-title" aria-label={`I'm ${site.name}, ${site.role}`}>
+      <h1 id="intro-heading" className="intro-title" aria-label={`I'm ${site.name}, ${site.role}`} tabIndex={-1}>
         <MaskedLine words={titleLine1} delay={120} />
         <MaskedLine words={titleLine2} delay={260} />
       </h1>

@@ -12,8 +12,8 @@
  * defeats the browser cache and the social-preview caches, which key on the URL.
  */
 export const images = {
-  portrait: "/portrait.webp?v=20261029c",
-  og: "/og.png?v=20261029c",
+  portrait: "/portrait.webp?v=20261029d",
+  og: "/og.png?v=20261029d",
 } as const;
 
 export const hero = {

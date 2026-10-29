@@ -62,6 +62,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: "#050608",
   colorScheme: "dark",
+  // The composer is fixed to the bottom; the virtual keyboard must shrink the
+  // layout viewport rather than cover it.
+  interactiveWidget: "resizes-content",
 };
 
 /**

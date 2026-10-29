@@ -43,6 +43,20 @@ pinned under the identity bar and replies fill the screen beneath it; once they
 overflow the view stops moving, and any wheel, swipe or arrow key stops it for
 good. "Start over" returns to the intro and clears the log.
 
+Replies stream. When a text bubble is revealed the director splits its words
+into spans, once, and the stylesheet fades them in one after another at the
+pace of a model's output; cards and quick replies arrive whole, and with motion
+off the text is simply there. While the visitor types, the chip the router
+would answer with lights up, so the lookup shows its intent before it is
+asked; the identity bar reads "typing…" while a reply is composed. On a device
+with a pointer the composer takes focus after the opening, "/" focuses it from
+anywhere and Escape hands focus back to the page.
+
+The page opens, once per tab session, on a veil that says "Hello, I'm Sergey"
+and "Welcome" and lifts into the hero; a click or a key ends it early, and it
+never plays with motion off. GitHub and LinkedIn share one pill in the corner
+whose white highlight slides to the hovered or focused half.
+
 ## Palette
 
 Blue, white and black, after the LinkedIn profile. Near-black ground, a dark
@@ -160,7 +174,7 @@ deploy over a third-party API.
 optimisation or generation runtime, so the OG image is a static 1200×630 PNG by
 necessity; `python scripts/og-image.py` regenerates it on the site's theme from
 the portrait and the content modules (Pillow, Windows system fonts).
-`public/portrait.webp` is the LinkedIn profile photo, cropped to the face and resized to 900×900 from the 1254×1254 original (the crop lives in the file, not in CSS, so nothing is scaled up on screen). `public/favicon.svg` is the vector form of the same mark.
+`public/portrait.webp` is the LinkedIn profile photo, cropped to the face and resized to 900×900 from the 1254×1254 original, with a natural finish applied in the file (the upscaler's skin texture filtered, colour eased, fine grain); the crop lives in the file, not in CSS, so nothing is scaled up on screen. `public/favicon.svg` is the vector form of the same mark.
 
 There is deliberately no `src/app/favicon.ico`: Next emits that convention file
 ahead of the explicit `metadata.icons` list, so a leftover one silently wins the
@@ -189,12 +203,12 @@ workflow.
 
 ## Interaction checks
 
-Regression command: `node --test scripts/qa/navigation.test.mjs`.
-This covers section selection before the first section, in gaps, at boundaries,
-and after the final section, which the projects route's header still uses.
 The game uses a native modal dialog with keyboard cycling and focus
 restoration. Hidden Back to top controls are disabled and do not intercept
-pointer input.
+pointer input. The chat announces one short status line per answer to
+assistive technology rather than exposing the whole log as a live region, moves
+the reading cursor to each answer as it arrives, and keeps the count-up figures
+decorative with the final value exposed alongside.
 
 See `docs/cinematic-validation.md` for the dated validation log, including the
 chat redesign.

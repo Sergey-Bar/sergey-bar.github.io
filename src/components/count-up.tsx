@@ -61,6 +61,13 @@ export function CountUp({ value }: { value: string }) {
     };
   }, [parsed, value]);
 
-  return <span ref={ref}>{shown}</span>;
+  return (
+    <>
+      <span ref={ref} aria-hidden="true">
+        {shown}
+      </span>
+      <span className="sr-only">{value}</span>
+    </>
+  );
 }
 
