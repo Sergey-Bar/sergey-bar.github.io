@@ -10,14 +10,14 @@ export function CTA({
     <section id="contact" aria-labelledby="cta-heading" className="rhythm">
       <div className="shell contact-layout">
         <div>
-          <h2 id="cta-heading" className="t-display-l">{heading}</h2>
-          <p className="mt-6 t-body text-muted contact-description">{body}</p>
-          <div className="contact-actions">
+          <h2 id="cta-heading" className="t-display-l" data-reveal>{heading}</h2>
+          <p className="mt-6 t-body text-muted contact-description" data-reveal>{body}</p>
+          <div className="contact-actions" data-reveal>
             <a href={contact.linkedin} className="contact-primary"><LinkedInIcon size={18} />Connect on LinkedIn</a>
             <a href={contact.github} className="contact-secondary"><GitHubIcon size={18} />Explore GitHub</a>
           </div>
         </div>
-        <div className="playground-panel">
+        <div className="playground-panel" data-reveal>
           <p className="t-small text-muted">A little after-hours experiment</p>
           <p className="mt-3 t-small text-muted">An interactive stress-relief toy. Press Escape to return.</p>
           <div className="mt-5"><RedButton /></div>

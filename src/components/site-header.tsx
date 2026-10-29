@@ -24,7 +24,7 @@ function actionClass(tone: "primary" | "secondary", iconOnly = false) {
     "transition-[background-color,border-color,color] duration-150 ease-[cubic-bezier(0.2,0,0,1)]",
     "active:scale-[0.96] motion-reduce:active:scale-100",
     tone === "primary"
-      ? "border border-transparent bg-ink text-white hover:bg-[#000]"
+      ? "border border-transparent bg-ink text-paper hover:bg-[#fff]"
       : "border border-line-strong bg-surface text-ink hover:border-ink",
   ].join(" ");
 }
@@ -169,7 +169,7 @@ export function SiteHeader() {
                     }}
                     aria-current={active ? (isHome ? "location" : "page") : undefined}
                     className={`relative z-10 block rounded-full px-3.5 py-1.5 t-small transition-colors duration-150 ${
-                      active ? "text-white" : "text-muted hover:text-ink"
+                      active ? "text-paper" : "text-muted hover:text-ink"
                     }`}
                   >
                     {item.label}
@@ -218,7 +218,7 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <div id={menuId} hidden={!open} className="border-t border-line lg:hidden">
+      <div id={menuId} hidden={!open} className="menu-sheet border-t border-line lg:hidden">
         <nav aria-label="Sections" className="shell flex flex-col py-2">
           {nav.map((item) => (
             <Link

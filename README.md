@@ -3,33 +3,72 @@
 Personal site for Sergey Bar, QA Tech Lead & AI Automation Engineer.
 Static export, GitHub Pages, no analytics, no CV, no published email address.
 
-Two routes: `/` (the career site) and `/projects` (Mjolnir and Automate, each
-linked to its public repository). LinkedIn is the contact route; GitHub is the
-evidence. There is no contact form, no CV copy and no published email
-address.
+Two routes: `/` (the site as a conversation) and `/projects` (Mjolnir and
+Automate in long form, each linked to its public repository). LinkedIn is the
+contact route; GitHub is the evidence. There is no contact form, no CV copy and
+no published email address.
 
-## Experience and contact
+## The conversation
 
-The home page opens with a cinematic hero and a naturally colored portrait,
-followed by a normal-flow statement, evidence metrics and the two projects.
-The profile, experience, toolbox and contact section follow. Projects share
-one neutral background; the recorded scan and architecture overview make
-the work easier to inspect without presenting simulated screens as products.
+The home page is a chat. It opens on an intro screen (greeting, name, role,
+portrait, one line of proof, two ways in) with a composer fixed to the bottom
+of the viewport: a text field plus one chip per topic. Pressing a chip, or
+typing a question, sends a bubble on the visitor's behalf and the answer
+arrives as a sequence of replies: short bubbles for sentences, full-width cards
+for the record at a glance, the verified outcomes, the two projects with the
+recorded Mjolnir scan and its worthiness meter, the five roles with their
+native disclosures, the fourteen recommendations, the searchable toolbox, and
+the contact routes. Every answer ends with quick replies to the next topics.
 
-Experience details use native disclosures. The toolbox initially shows six
-groups; search covers all eighteen and visitors can expand the complete list.
-LinkedIn is available in the header, hero and closing contact section. GitHub
-remains the source of project evidence. No CV, email or phone is published.
-The interactive red-button game is visible after the contact links so it is easy to discover.
+The answers are not fetched and not generated. `src/chat/flows.tsx` renders
+all seven of them on the server from the content modules, in a fixed logical
+order, so a crawler or a visitor without JavaScript reads the intro followed by
+every answer. `src/chat/chat-director.tsx` is the client island that turns
+that document into a chat: it hides unsent answers (only once an inline flag in
+the layout has set `data-js`, so nothing is ever hidden without the script to
+show it), reveals a flow one message at a time behind a typing indicator, and
+reorders flows visually with flex `order` so the conversation reads in the
+order the visitor asked. The log is `role="log" aria-live="polite"`, so each
+reply is announced as it lands.
+
+Typed questions are routed by `routeInput` in `src/chat/topics.ts`: a keyword
+and phrase lookup, phrases outweighing words. A greeting gets a greeting; a
+question it cannot place gets an honest "I don't have an answer for that one"
+and the full list of topics. It is a lookup, not a model, and the reply says
+so. Legacy anchors (`/#projects`, `/#experience`, …) and `?topic=` open the
+matching conversation on arrival, so links to the old sections still land.
+
+The view follows the conversation the way a reader would: the question is
+pinned under the identity bar and replies fill the screen beneath it; once they
+overflow the view stops moving, and any wheel, swipe or arrow key stops it for
+good. "Start over" returns to the intro and clears the log.
+
+## Palette
+
+Blue, white and black, after the LinkedIn profile. Near-black ground, a dark
+grey panel, LinkedIn blue for fills, a brighter blue for text and glows on
+black, and white type. Every status mark is a blue; there is no second hue.
+The ambient light is three pre-blurred radial gradients moved on the
+compositor, placed to echo the profile banner's glow.
+
 ## Stack
 
 Next.js 15 App Router · TypeScript · Tailwind v4 · one shadcn/ui primitive
 (`button`). `output: "export"`, `images.unoptimized`, `trailingSlash`, and
 `.nojekyll` emitted into `out/`.
 
-No animation library. The hero has a short CSS entrance and portrait settle;
-button arrows respond to hover. All new motion respects reduced-motion settings.
-Reading progress uses scroll-driven CSS where supported. Body text stays fully visible in both motion modes. Count-up figures retain their final values in the server render.
+No animation library. Motion is one vocabulary in `globals.css`: `--ease-out`
+for anything entering, `--ease-in-out` for anything moving on screen, never
+ease-in on a control, interaction feedback under 300ms, and the longer
+durations reserved for the page-load sequence (the name and role rise word by
+word through a mask; the portrait, quote and actions follow) and for message
+arrivals, which are CSS animations and run off the main thread. The portrait
+tilts a few degrees toward a fine pointer, with its glow following, written as
+custom properties in one animation frame per move. Looping ambience (the
+portrait ring, the status pulse, the background light) pauses off screen and
+stops entirely under `prefers-reduced-motion` or the visitor's own "Pause
+motion" control, which persists in localStorage and is applied before first
+paint. With motion off the chat still works; replies simply appear at once.
 
 The toolbox has a small search island, matching disciplines and tool names.
 Group content is server-rendered, with a live result count and clear empty state.
@@ -146,18 +185,17 @@ Jekyll publisher builds the repository root on every push to `main` and races th
 workflow.
 
 
-## Cinematic motion and interaction checks
-
-The hero now uses a dark photographic stage with moving blue/ember light,
-a pointer-responsive portrait, and a floating caption. A normal-flow statement separates the hero from the profile on all screens. Motion runs continuously, with the operating system's reduced-motion preference respected for accessibility.
-CSS motion and pointer effects; system reduced-motion preferences take priority.
-Ambient hero motion pauses when the hero leaves the viewport.
+## Interaction checks
 
 Regression command: `node --test scripts/qa/navigation.test.mjs`.
 This covers section selection before the first section, in gaps, at boundaries,
-and after the final section. The game uses a native modal dialog with keyboard
-cycling and focus restoration. Hidden Back to top controls are disabled and do
-not intercept pointer input.
+and after the final section, which the projects route's header still uses.
+The game uses a native modal dialog with keyboard cycling and focus
+restoration. Hidden Back to top controls are disabled and do not intercept
+pointer input.
+
+See `docs/cinematic-validation.md` for the dated validation log, including the
+chat redesign.
 
 ## LinkedIn recommendations
 

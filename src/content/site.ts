@@ -29,8 +29,8 @@ export const contact = {
 export type NavItem = { label: string; href: string };
 
 export const nav: readonly NavItem[] = [
+  { label: "Chat", href: "/" },
   { label: "Projects", href: "/projects/" },
-  { label: "Profile", href: "/#profile" },
   { label: "Experience", href: "/#experience" },
   { label: "Recommendations", href: "/#recommendations" },
   { label: "Toolbox", href: "/#toolbox" },

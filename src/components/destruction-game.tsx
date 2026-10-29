@@ -4,7 +4,9 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import { cn } from "@/lib/utils";
 import { CloseIcon } from "@/components/icons";
 import { availability, contact, site } from "@/content/site";
-import { HERO_HEADLINE } from "@/sections/hero";
+import { hero } from "@/content/hero";
+
+const HERO_HEADLINE = hero.headline;
 import {
   HammerIcon,
   TOOLS,

@@ -22,7 +22,7 @@ export function ToolboxExplorer({ groups }: { groups: Group[] }) {
         </div>
         <p role="status" className="t-small text-muted">Showing {visible.length} of {groups.length} groups</p>
       </div>
-      <div id={`${inputId}-results`} className="mt-8 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+      <div id={`${inputId}-results`} className="mt-8 grid gap-10 sm:grid-cols-2 lg:grid-cols-3" data-reveal-stagger>
         {visible.map((group) => <div key={group.id}>{group.content}</div>)}
       </div>
       {!term && <button className="toolbox-expand" type="button" aria-expanded={expanded} aria-controls={`${inputId}-results`} onClick={() => setExpanded(!expanded)}>{expanded ? "Show essential groups" : `Explore all ${groups.length} groups`}</button>}

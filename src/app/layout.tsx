@@ -2,9 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { JetBrains_Mono } from "next/font/google";
 
-import { BackToTop } from "@/components/back-to-top";
+import { MotionDirector } from "@/components/motion-director";
 import { PersonJsonLd } from "@/components/person-jsonld";
-import { PageChrome } from "@/components/page-chrome";
 import { site } from "@/content/site";
 
 import "./globals.css";
@@ -60,9 +59,19 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#F7F7F5",
-  colorScheme: "light",
+  themeColor: "#050608",
+  colorScheme: "dark",
 };
+
+/**
+ * Runs before the body parses. `data-js` is the switch that lets the stylesheet
+ * hold scroll-reveal targets hidden at all: without it a visitor who never runs
+ * JavaScript sees the finished page. The stored motion preference is applied in
+ * the same breath so a visitor who paused motion never sees a frame of it.
+ */
+const motionFlag =
+  'try{var d=document.documentElement;d.dataset.js="";' +
+  'if(localStorage.getItem("motion")==="off")d.dataset.motion="off"}catch(e){}';
 
 export default function RootLayout({
   children,
@@ -70,6 +79,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable} ${mono.variable}`}>
       <body className="min-h-dvh antialiased">
+        <script dangerouslySetInnerHTML={{ __html: motionFlag }} />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-[var(--radius-chip)] focus:border focus:border-ink focus:bg-surface focus:px-3 focus:py-2 focus:t-small"
@@ -77,9 +87,8 @@ export default function RootLayout({
           Skip to content
         </a>
         <PersonJsonLd />
-        <PageChrome />
-        <BackToTop />
         {children}
+        <MotionDirector />
       </body>
     </html>
   );

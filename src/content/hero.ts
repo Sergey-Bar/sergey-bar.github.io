@@ -7,6 +7,8 @@
  */
 
 export const hero = {
+  /** The one-line promise under the name. */
+  headline: "I make software releases trustworthy.",
   /** The LinkedIn summary's opening line, verbatim. */
   positioning: "Most teams test software. I make sure it deserves to ship.",
   /** The clause after the role line, in the portfolio's `//` convention. */

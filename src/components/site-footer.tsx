@@ -3,8 +3,9 @@ import Link from "next/link";
 import { site } from "@/content/site";
 
 const links = [
-  { label: "Recommendations", href: "/#recommendations" },
+  { label: "Chat", href: "/" },
   { label: "Experience", href: "/#experience" },
+  { label: "Recommendations", href: "/#recommendations" },
   { label: "Toolbox", href: "/#toolbox" },
   { label: "Projects", href: "/projects/" },
 ];

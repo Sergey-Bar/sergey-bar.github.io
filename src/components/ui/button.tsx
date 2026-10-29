@@ -14,7 +14,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "border border-transparent bg-ink text-white hover:bg-[#000] focus-visible:outline-offset-2",
+          "border border-transparent bg-ink text-paper hover:bg-[#fff] focus-visible:outline-offset-2",
         secondary:
           "border border-line-strong bg-surface text-ink hover:border-ink focus-visible:outline-offset-2",
         ghost:

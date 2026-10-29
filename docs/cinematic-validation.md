@@ -39,3 +39,35 @@ This is a local change, not a public deployment. No physical-device or Safari/Fi
 - Checked 320px and 1440px layouts, keyboard expansion, search expansion/collapse, focus restoration, and contact destinations without submitting external actions. No horizontal overflow in inspected views.
 
 The limitations above still apply. This is not certification by Apple or Netflix, and no unperformed usability/accessibility/device tests are implied.
+
+## Chat redesign (2026-10-29)
+
+The home page became a conversation in the style of a chat-portfolio template:
+an intro screen with the composer fixed below it, seven server-rendered answer
+flows revealed on request, a keyword router for typed questions, and a blue,
+white and black palette after the LinkedIn profile. The projects route kept its
+long form on the same theme.
+
+Validated locally against the static production export, served from `out/`:
+
+- Typecheck, lint and the static export completed; `npm run budget` passed with
+  home JS 136.0KB gzip of the 150KB budget, CSS 13.1KB of 20KB, fonts unchanged
+  at 132.6KB.
+- Lighthouse 12, desktop preset, headless Chrome: home and projects both score
+  1.00 for performance, accessibility, best practices and SEO. Home LCP 0.6s,
+  CLS 0.001, TBT 0ms; projects LCP 0.5s, CLS 0.
+- Browser checks at 1440×900 and 375×812: intro load sequence, both intro
+  actions, every composer chip, quick replies inside a flow, a typed question
+  routed to Experience, a greeting, an unknown question and its fallback,
+  "Start over", `/#experience` opening the experience conversation on arrival,
+  the mobile chip row scrolling, no horizontal overflow, no console errors.
+- The router was exercised directly with eleven sample questions, including
+  "where did you work before?" (Experience), "show me your work" (Projects)
+  and "what is the meaning of life" (unknown).
+- The pause-motion control was exercised: with motion off every answer is
+  shown at once with no typing indicator, and the choice survives a reload.
+
+Not performed: physical devices, Safari and Firefox, OS-level reduced-motion
+emulation, and screen-reader runs. The live-region announcements and the
+`interpolate-size` disclosure transitions were reasoned from the specification
+rather than observed with assistive technology.
