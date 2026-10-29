@@ -268,3 +268,16 @@ The loading line's wait was halved, from ten seconds to five, and the
 countdown from the last five seconds to the last three ("Ready in 3…1"). The
 opening veil on a first visit is unchanged. The auto-open spec and the
 loading-line spec run to the new times under Playwright's clock.
+
+## The game on a phone (2026-10-29, later)
+
+The game already worked by touch (taps hit, drags gouge, hold-and-drag fires
+the guns); what a phone lacked was room. On a narrow screen the target window
+now fills the width between the HUD and the toolbox with the browser chrome
+simplified, the toolbox is one row of nine icons with the selected tool named
+above it and a round close button, the HUD drops its long labels, the start
+card carries touch copy and sits above the toolbox, and the keyboard hints are
+gone. From the small breakpoint up nothing changed.
+
+Verified: all nine tools driven by real touch events on a Pixel 7 profile
+changed the integrity, with no page errors; 64 specs pass.

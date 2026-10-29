@@ -271,6 +271,9 @@ type Rect = { x: number; y: number; w: number; h: number };
 
 function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number): Rect {
   const showIcons = w >= 640;
+  // On a phone the window fills the width, between the HUD above and the
+  // compact toolbox below, and the browser chrome drops its tab.
+  const narrow = w < 640;
 
   // The site's own ground: near-black, one blue light low on the right.
   g.fillStyle = "#050608";
@@ -301,10 +304,10 @@ function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number): Rect {
     drawDesktopIcon(g, iconX, 26 + step * 3, docGlyph, "release-gate.yml");
   }
 
-  const ww = Math.round(Math.min(Math.max(w * 0.6, 330), 860));
-  const wh = Math.round(Math.min(Math.max(h * 0.7, 360), 700));
-  const wx = Math.round((w - ww) / 2 + (showIcons ? Math.min(72, w * 0.05) : 0));
-  const wy = Math.round((h - 40 - wh) / 2);
+  const ww = narrow ? w - 24 : Math.round(Math.min(Math.max(w * 0.6, 330), 860));
+  const wh = narrow ? Math.max(300, h - 64 - 132) : Math.round(Math.min(Math.max(h * 0.7, 360), 700));
+  const wx = narrow ? 12 : Math.round((w - ww) / 2 + (showIcons ? Math.min(72, w * 0.05) : 0));
+  const wy = narrow ? 60 : Math.round((h - 40 - wh) / 2);
   const titlebar = 34;
   const chrome = 42;
 
@@ -344,7 +347,7 @@ function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number): Rect {
   g.font = `600 12px ${SANS}`;
   g.textAlign = "center";
   g.fillStyle = "#a3acb8";
-  g.fillText(site.title, wx + ww / 2 + 20, wy + titlebar / 2 + 4);
+  g.fillText(narrow ? site.name : site.title, wx + ww / 2 + 20, wy + titlebar / 2 + 4);
 
   g.fillStyle = "#14171c";
   g.fillRect(wx, wy + titlebar + 1, ww, chrome);
@@ -353,28 +356,30 @@ function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number): Rect {
 
   const tabX = wx + 12;
   const tabY = wy + titlebar + 7;
-  const tabW = Math.min(200, ww - 150);
+  const tabW = narrow ? 0 : Math.min(200, ww - 150);
   const tabH = chrome - 14;
-  rr(g, tabX, tabY, tabW, tabH, 8);
-  g.fillStyle = "#1c2026";
-  g.fill();
-  g.strokeStyle = "rgba(255,255,255,0.1)";
-  g.lineWidth = 1;
-  g.stroke();
-  g.fillStyle = "#2d8cff";
-  g.beginPath();
-  g.arc(tabX + 15, tabY + tabH / 2, 7, 0, PI2);
-  g.fill();
-  g.font = `700 9px ${SANS}`;
-  g.textAlign = "center";
-  g.fillStyle = "#ffffff";
-  g.fillText("S", tabX + 15, tabY + tabH / 2 + 3.5);
-  g.font = `500 11px ${SANS}`;
-  g.textAlign = "left";
-  g.fillStyle = "#e6e8eb";
-  g.fillText(DOMAIN, tabX + 28, tabY + tabH / 2 + 4);
+  if (!narrow) {
+    rr(g, tabX, tabY, tabW, tabH, 8);
+    g.fillStyle = "#1c2026";
+    g.fill();
+    g.strokeStyle = "rgba(255,255,255,0.1)";
+    g.lineWidth = 1;
+    g.stroke();
+    g.fillStyle = "#2d8cff";
+    g.beginPath();
+    g.arc(tabX + 15, tabY + tabH / 2, 7, 0, PI2);
+    g.fill();
+    g.font = `700 9px ${SANS}`;
+    g.textAlign = "center";
+    g.fillStyle = "#ffffff";
+    g.fillText("S", tabX + 15, tabY + tabH / 2 + 3.5);
+    g.font = `500 11px ${SANS}`;
+    g.textAlign = "left";
+    g.fillStyle = "#e6e8eb";
+    g.fillText(DOMAIN, tabX + 28, tabY + tabH / 2 + 4);
+  }
 
-  const urlX = tabX + tabW + 10;
+  const urlX = narrow ? tabX : tabX + tabW + 10;
   const urlW = ww - (urlX - wx) - 12;
   const urlY = tabY + 1;
   const urlH = tabH - 2;
@@ -396,7 +401,7 @@ function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number): Rect {
   g.fillText(site.domain, urlX + 27, urlY + urlH / 2 + 4);
 
   // The page itself: the chat, as it looks today.
-  const pad = 26;
+  const pad = narrow ? 16 : 26;
   const cx = wx + pad;
   const cw = ww - pad * 2;
   const contentTop = wy + titlebar + 1 + chrome;
@@ -2424,7 +2429,7 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
 
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-3 sm:p-4">
         <span className="flex items-center gap-3 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[11px] text-white/60 tabular-nums">
-          <span className="text-white/80">demolition run</span>
+          <span className="hidden text-white/80 sm:inline">demolition run</span>
           <span>
             time <span className="text-white">{clock(stats.elapsed)}</span>
           </span>
@@ -2440,16 +2445,20 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
               style={{ width: `${Math.max(0, Math.min(100, integrity))}%` }}
             />
           </span>
-          integrity {integrity >= 99.95 ? "100" : integrity.toFixed(1)}%
+          <span className="hidden sm:inline">integrity</span> {integrity >= 99.95 ? "100" : integrity.toFixed(1)}%
         </span>
       </div>
 
       {stats.state === "idle" && hint ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 max-sm:items-end max-sm:pb-36">
           <div className="pointer-events-auto max-w-[24rem] rounded-2xl border border-white/10 bg-[#0d0f14]/92 p-5 text-center shadow-2xl shadow-black/70 backdrop-blur-md">
             <p className="font-mono text-[11px] text-[#2d8cff]">after hours</p>
             <h2 className="mt-1 text-xl font-bold tracking-tight">Demolition run</h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-white/70">
+            <p className="mt-2 text-[13px] leading-relaxed text-white/70 sm:hidden">
+              Tap and drag to bring this screen&apos;s integrity to zero as fast as you can. Pick
+              a tool below. Quick taps build a combo; squash a bug for a second back.
+            </p>
+            <p className="mt-2 hidden text-[13px] leading-relaxed text-white/70 sm:block">
               Bring this screen&apos;s integrity to zero as fast as you can. Nine tools, keys 1 to 9.
               Rapid hits build a combo. Squash a bug for a second back. R rebuilds, Esc leaves.
             </p>
@@ -2499,7 +2508,7 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
 
       <div
         className={cn(
-          "pointer-events-none absolute inset-x-0 bottom-64 flex justify-center transition-opacity duration-700",
+          "pointer-events-none absolute inset-x-0 bottom-40 flex justify-center transition-opacity duration-700 sm:bottom-64",
           quip && stats.state !== "done" ? "opacity-100" : "opacity-0",
         )}
         role="status"
@@ -2520,36 +2529,40 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
         <div className="pointer-events-auto w-full max-w-[27rem] rounded-2xl border border-white/10 bg-[#14171c]/95 p-2.5 shadow-2xl shadow-black/70 backdrop-blur-md sm:p-3">
           <div className="flex items-center gap-2 px-1 pb-2.5">
             <HammerIcon className="size-3.5 text-white/80" />
-            <span className="text-[13px] font-bold tracking-[0.14em] text-white uppercase">
+            <span className="text-[13px] font-bold tracking-[0.14em] text-white uppercase max-sm:hidden">
               3x3 Toolbox
+            </span>
+            <span className="text-[13px] font-semibold text-white sm:hidden">
+              {TOOLS.find((item) => item.id === tool)?.label}
             </span>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close stress reducer"
-              className="ml-auto rounded-md p-1 text-white/70 transition-colors duration-150 hover:bg-white/10 hover:text-white"
+              className="ml-auto grid size-9 place-items-center rounded-full border border-white/15 text-white/80 transition-colors duration-150 hover:bg-white/10 hover:text-white sm:size-auto sm:rounded-md sm:border-0 sm:p-1"
             >
-              <CloseIcon size={14} />
+              <CloseIcon size={16} />
             </button>
           </div>
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+          <div className="grid grid-cols-9 gap-1 sm:grid-cols-3 sm:gap-2">
             {TOOLS.map((item, index) => (
               <button
                 key={item.id}
                 type="button"
                 aria-pressed={item.id === tool}
+                aria-label={item.label}
                 onClick={() => select(item.id)}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-lg border px-1 py-2 transition-[background-color,border-color,box-shadow] duration-150 sm:py-2.5",
+                  "flex flex-col items-center gap-1.5 rounded-lg border px-0.5 py-2.5 transition-[background-color,border-color,box-shadow] duration-150 sm:px-1 sm:py-2.5",
                   item.id === tool
                     ? "border-[#2d8cff] bg-[#2d8cff]/20 shadow-[0_0_16px_rgba(45,140,255,0.35)]"
                     : "border-white/10 bg-white/[0.04] hover:bg-white/10",
                 )}
               >
-                <item.Icon className="size-6 sm:size-7" />
+                <item.Icon className="size-5 sm:size-7" />
                 <span
                   className={cn(
-                    "text-[10px] leading-none sm:text-[11px]",
+                    "text-[10px] leading-none max-sm:hidden sm:text-[11px]",
                     item.id === tool ? "text-white" : "text-white/60",
                   )}
                 >
@@ -2560,7 +2573,7 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
               </button>
             ))}
           </div>
-          <div className="flex items-center justify-between gap-2 px-1 pt-2.5 text-[10px] font-medium tracking-wider text-white/45 uppercase">
+          <div className="flex items-center justify-between gap-2 px-1 pt-2.5 text-[10px] font-medium tracking-wider text-white/45 uppercase max-sm:hidden">
             <span>1–9 / Right click = tool</span>
             <span>R = Rebuild</span>
             <span>Esc = Chat</span>
