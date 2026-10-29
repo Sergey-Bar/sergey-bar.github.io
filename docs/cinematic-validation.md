@@ -132,3 +132,18 @@ one and a half times so the face reads at 36px.
 Verified: the suite (52 specs) passes; the engine reacts to dispatched pointer
 events (integrity 100 to 96.4 after three hammer hits); the spec for the
 auto-opening intro uses Playwright's clock.
+
+## The loading line and the demolition run (2026-10-29, later)
+
+The intro's composer gave way to a bottom line that pretends to boot the chat
+with twelve steps over ten seconds and counts down from five; a click skips.
+The opening greeting is one bubble, the topics only in the composer. The chat
+avatar is the intro portrait's crop and ring at 36px. The game became a timed
+run (start card, clock from the first hit, combo, floating points, bugs worth a
+second, result card with rank and best time); integrity is measured on the
+mock's window only and the run ends at 4 percent.
+
+Verified: 52 specs pass (conversation specs now enter the chat through the
+loading line first); a scripted run of 160 hammer hits produced a live clock,
+score and combo, crawling bugs and floating points; the auto-open spec uses
+Playwright's clock across the ten-second line.

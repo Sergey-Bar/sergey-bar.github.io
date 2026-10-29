@@ -81,7 +81,8 @@ type ParticleKind =
   | "chip"
   | "arc"
   | "streak"
-  | "heat";
+  | "heat"
+  | "score";
 
 type Particle = {
   kind: ParticleKind;
@@ -96,6 +97,21 @@ type Particle = {
   vr: number;
   color: string;
   gravity: number;
+  /** Floating text, for the "score" kind. */
+  text?: string;
+};
+
+/** A bug crawling over the screen; squashing one buys a second back. */
+type Bug = { x: number; y: number; angle: number; speed: number; phase: number; born: number };
+
+export type RunState = "idle" | "running" | "done";
+export type RunStats = {
+  state: RunState;
+  /** Milliseconds since the first hit, minus the bonus earned by squashing bugs. */
+  elapsed: number;
+  score: number;
+  combo: number;
+  bugs: number;
 };
 
 type Termite = {
@@ -251,7 +267,9 @@ function drawDesktopIcon(
   g.shadowBlur = 0;
 }
 
-function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number) {
+type Rect = { x: number; y: number; w: number; h: number };
+
+function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number): Rect {
   const showIcons = w >= 640;
 
   // The site's own ground: near-black, one blue light low on the right.
@@ -604,6 +622,8 @@ function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number) {
   g.font = `400 9.5px ${SANS}`;
   g.fillStyle = "#8b939d";
   g.fillText(`${dd}.${mo}.${now.getFullYear()}`, w - 16, barY + 30);
+
+  return { x: wx, y: wy, w: ww, h: wh };
 }
 
 function mustContext(canvas: HTMLCanvasElement) {
@@ -615,6 +635,23 @@ function mustContext(canvas: HTMLCanvasElement) {
 class Engine {
   tool: ToolId = "hammer";
   onIntegrity: (value: number) => void;
+  onStats: (stats: RunStats) => void;
+
+  /** The run: a timer from the first hit, a score with a combo, and bugs. */
+  private state: RunState = "idle";
+  private startedAt = 0;
+  private bonus = 0;
+  private score = 0;
+  private combo = 0;
+  private comboAt = 0;
+  private pendingScore = 0;
+  private pendingAt = { x: 0, y: 0 };
+  private lastScoreFx = 0;
+  private statsAt = 0;
+  private bugs: Bug[] = [];
+  private nextBugAt = 0;
+  /** The browser window on the desktop: integrity is measured there, not on the wallpaper. */
+  private target: Rect = { x: 0, y: 0, w: 1, h: 1 };
 
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -648,7 +685,11 @@ class Engine {
 
   constructor(
     canvas: HTMLCanvasElement,
-    options: { reduced: boolean; onIntegrity: (value: number) => void },
+    options: {
+      reduced: boolean;
+      onIntegrity: (value: number) => void;
+      onStats: (stats: RunStats) => void;
+    },
   ) {
     this.canvas = canvas;
     this.ctx = mustContext(canvas);
@@ -662,6 +703,7 @@ class Engine {
     this.sctx = mustContext(this.surface);
     this.reduced = options.reduced;
     this.onIntegrity = options.onIntegrity;
+    this.onStats = options.onStats;
   }
 
   start() {
@@ -711,7 +753,7 @@ class Engine {
     this.hctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.gctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.sctx.setTransform(1, 0, 0, 1, 0, 0);
-    paintDesktop(this.dctx, this.w, this.h);
+    this.target = paintDesktop(this.dctx, this.w, this.h);
     this.hctx.clearRect(0, 0, this.w, this.h);
     this.gctx.clearRect(0, 0, this.w, this.h);
     this.particles = [];
@@ -729,8 +771,112 @@ class Engine {
     this.gctx.clearRect(0, 0, this.w, this.h);
     this.particles = [];
     this.termites = [];
+    this.bugs = [];
     this.surfaceDirty = true;
+    this.state = "idle";
+    this.startedAt = 0;
+    this.bonus = 0;
+    this.score = 0;
+    this.combo = 0;
+    this.pendingScore = 0;
+    this.nextBugAt = 0;
     this.onIntegrity(100);
+    this.emitStats(true);
+  }
+
+  /** Milliseconds on the clock: time since the first hit, less the bug bonus. */
+  private clock() {
+    if (this.state === "idle") return 0;
+    const end = this.state === "done" ? this.doneAt : performance.now();
+    return Math.max(0, end - this.startedAt - this.bonus);
+  }
+  private doneAt = 0;
+
+  private emitStats(force = false) {
+    const now = performance.now();
+    if (!force && now - this.statsAt < 100) return;
+    this.statsAt = now;
+    this.onStats({
+      state: this.state,
+      elapsed: this.clock(),
+      score: Math.round(this.score),
+      combo: this.combo,
+      bugs: this.bugs.length,
+    });
+  }
+
+  /**
+   * Every tool action lands here with a rough power. The first hit starts the
+   * clock; hits within 700ms of each other build a combo that multiplies the
+   * score; the number floats up from the impact, batched so the machine gun
+   * does not spray text; and any bug within reach of the impact is squashed.
+   */
+  private hit(x: number, y: number, power: number) {
+    if (this.state === "done") return;
+    const now = performance.now();
+    if (this.state === "idle") {
+      this.state = "running";
+      this.startedAt = now;
+      this.nextBugAt = now + 2500;
+      this.emitStats(true);
+    }
+    this.combo = now - this.comboAt < 700 ? Math.min(this.combo + 1, 99) : 1;
+    this.comboAt = now;
+    const multiplier = 1 + Math.min(this.combo, 20) * 0.1;
+    const gained = power * multiplier;
+    this.score += gained;
+    this.pendingScore += gained;
+    this.pendingAt = { x, y };
+    if (now - this.lastScoreFx > 160 && this.pendingScore >= 8) {
+      this.lastScoreFx = now;
+      this.floatText(this.pendingAt.x, this.pendingAt.y, `+${Math.round(this.pendingScore)}`, "#ffffff");
+      this.pendingScore = 0;
+    }
+    for (let i = this.bugs.length - 1; i >= 0; i--) {
+      const bug = this.bugs[i];
+      if (Math.hypot(bug.x - x, bug.y - y) < 22) {
+        this.bugs.splice(i, 1);
+        this.bonus += 1000;
+        this.score += 250;
+        this.spawn("pop", bug.x, bug.y, 0, 0, 0.35, 10, "#8fd14f");
+        this.floatText(bug.x, bug.y - 8, "bug squashed · −1.0s", "#8fd14f");
+        this.buzz(10);
+      }
+    }
+    this.emitStats();
+  }
+
+  private floatText(x: number, y: number, text: string, color: string) {
+    if (this.reduced) return;
+    this.particles.push({
+      kind: "score",
+      x,
+      y,
+      vx: rand(-6, 6),
+      vy: -46,
+      life: 0.9,
+      maxLife: 0.9,
+      size: 13,
+      color,
+      gravity: -20,
+      rot: 0,
+      vr: 0,
+      text,
+    });
+  }
+
+  private finish() {
+    if (this.state !== "running") return;
+    this.state = "done";
+    this.doneAt = performance.now();
+    this.pointer.down = false;
+    this.kick(14);
+    for (let i = 0; i < (this.reduced ? 10 : 48); i++) {
+      const a = Math.random() * PI2;
+      const sp = rand(120, 420);
+      this.spawn("spark", this.w / 2, this.h / 2, Math.cos(a) * sp, Math.sin(a) * sp, rand(0.5, 1.1), 2, Math.random() < 0.5 ? "#2d8cff" : "#ffffff");
+    }
+    this.emitStats(true);
   }
 
   setTool(tool: ToolId) {
@@ -749,6 +895,7 @@ class Engine {
   }
 
   press(x: number, y: number) {
+    if (this.state === "done") return;
     this.pointer.down = true;
     this.pointer.x = x;
     this.pointer.y = y;
@@ -850,9 +997,41 @@ class Engine {
       }
     }
 
-    if (now - this.integrityAt > 1000) {
+    // Bugs: one every few seconds while the run is on, up to six, crawling the
+    // screen. They are worth a second each when squashed by any impact.
+    if (this.state === "running") {
+      if (now >= this.nextBugAt && this.bugs.length < (this.reduced ? 3 : 6)) {
+        this.bugs.push({
+          x: rand(this.w * 0.2, this.w * 0.8),
+          y: rand(this.h * 0.15, this.h * 0.7),
+          angle: Math.random() * PI2,
+          speed: rand(40, 90),
+          phase: Math.random() * 10,
+          born: now,
+        });
+        this.nextBugAt = now + rand(2500, 4500);
+      }
+      for (const bug of this.bugs) {
+        bug.angle += rand(-1, 1) * dt * 3;
+        const nx = bug.x + Math.cos(bug.angle) * bug.speed * dt;
+        const ny = bug.y + Math.sin(bug.angle) * bug.speed * dt;
+        if (nx < 30 || nx > this.w - 30) bug.angle = Math.PI - bug.angle;
+        else bug.x = nx;
+        if (ny < 30 || ny > this.h - 90) bug.angle = -bug.angle;
+        else bug.y = ny;
+      }
+      if (this.combo > 0 && now - this.comboAt > 900) {
+        this.combo = 0;
+        this.emitStats(true);
+      }
+      this.emitStats();
+    }
+
+    if (now - this.integrityAt > (this.state === "running" ? 400 : 1000)) {
       this.integrityAt = now;
-      this.onIntegrity(this.measureIntegrity());
+      const integrity = this.measureIntegrity();
+      this.onIntegrity(integrity);
+      if (integrity <= 4) this.finish();
     }
   }
 
@@ -962,6 +1141,7 @@ class Engine {
     this.crack(x, y, r);
     this.spawn("flash", x, y, 0, 0, 0.09, r * 1.6, "#fff6d8");
     this.kick(11);
+    this.hit(x, y, 30);
     for (let i = 0; i < 12; i++) {
       const a = Math.random() * PI2;
       const sp = rand(120, 420);
@@ -1077,6 +1257,7 @@ class Engine {
     }
     this.kerf(x0, y0, x1, y1);
     this.kick(0.6);
+    this.hit(x1, y1, Math.min(12, 2 + dist * 0.15));
     if (Math.random() < 0.8) {
       const a = Math.atan2(dy, dx) + Math.PI / 2 + rand(-0.5, 0.5);
       const sp = rand(60, 220);
@@ -1140,6 +1321,7 @@ class Engine {
     this.bulletHole(x, y);
     this.spawn("flash", x, y, 0, 0, 0.06, 13, "#ffe9a8");
     this.kick(1.1);
+    this.hit(x, y, 4);
     this.recoil = 5;
     const a = Math.random() * PI2;
     this.spawn("spark", x, y, Math.cos(a) * 200, Math.sin(a) * 200, 0.12, 1.4, "#ffe9a8");
@@ -1191,6 +1373,7 @@ class Engine {
     this.char(x, y, rand(17, 27));
     this.spawn("heat", x, y, 0, 0, 0.35, rand(34, 48), "rgba(255,130,50,0.10)");
     this.kick(0.25);
+    this.hit(x, y, 2.5);
     const n = this.reduced ? 2 : 5;
     for (let i = 0; i < n; i++) {
       const a = -Math.PI / 2 + rand(-0.55, 0.55);
@@ -1221,6 +1404,7 @@ class Engine {
     this.hole(x, y, r * 1.5, 0.4);
     this.moltenRim(x, y, r);
     this.kick(0.5);
+    this.hit(x, y, 5);
     const n = this.reduced ? 1 : 4;
     for (let i = 0; i < n; i++) {
       const a = Math.random() * PI2;
@@ -1282,6 +1466,7 @@ class Engine {
     g.fillText(text, 0, 1);
     g.restore();
     this.kick(3);
+    this.hit(x, y, 12);
     for (let i = 0; i < 6; i++) {
       const a = Math.random() * PI2;
       const sp = rand(40, 160);
@@ -1320,6 +1505,7 @@ class Engine {
     this.spawn("pop", termite.x, termite.y, 0, 0, 0.3, 8, "#7a2b18");
     this.kick(2.5);
     this.buzz(10);
+    this.hit(termite.x, termite.y, 10);
   }
 
   private washNow() {
@@ -1383,6 +1569,7 @@ class Engine {
     const x = this.pointer.x + rand(-10, 10);
     const y = this.pointer.y + rand(-10, 10);
     this.paintSplat(x, y, color);
+    this.hit(x, y, 3);
     for (let i = 0; i < 5; i++) {
       const a = Math.random() * PI2;
       const sp = rand(80, 240);
@@ -1453,6 +1640,7 @@ class Engine {
 
   private bite(x: number, y: number) {
     this.hole(x, y, rand(2, 4.5), 1);
+    this.hit(x, y, 1);
     const g = this.gctx;
     g.strokeStyle = "rgba(214,216,222,0.4)";
     g.lineWidth = 0.8;
@@ -1482,8 +1670,11 @@ class Engine {
     const sctx = this.scratch.getContext("2d", { willReadFrequently: true });
     if (!sctx) return 100;
     sctx.clearRect(0, 0, sw, sh);
-    sctx.drawImage(this.holes, 0, 0, sw, sh);
-    sctx.drawImage(this.damage, 0, 0, sw, sh);
+    // Only the window counts: its region of the two damage layers, scaled down.
+    const { x, y, w, h } = this.target;
+    const d = this.dpr;
+    sctx.drawImage(this.holes, x * d, y * d, w * d, h * d, 0, 0, sw, sh);
+    sctx.drawImage(this.damage, x * d, y * d, w * d, h * d, 0, 0, sw, sh);
     const data = sctx.getImageData(0, 0, sw, sh).data;
     let damaged = 0;
     for (let i = 3; i < data.length; i += 4) {
@@ -1526,14 +1717,44 @@ class Engine {
     ctx.drawImage(this.damage, 0, 0, w, h);
 
     for (const termite of this.termites) this.drawTermite(ctx, termite);
+    for (const bug of this.bugs) this.drawBug(ctx, bug);
 
     this.drawParticles(ctx);
+    if (this.combo >= 3 && this.pointer.inside && this.state === "running") this.drawCombo(ctx);
 
     if (this.pointer.down && this.tool === "phaser") this.drawPhaserGlow(ctx);
     if (this.pointer.down && this.tool === "washing") this.drawWashSheen(ctx);
 
     if (this.pointer.inside && !this.pointer.touch) this.drawCursor(ctx);
 
+    ctx.restore();
+  }
+
+  private drawBug(ctx: CanvasRenderingContext2D, bug: Bug) {
+    const age = (performance.now() - bug.born) / 1000;
+    const scale = Math.min(1, age * 3) * 0.8;
+    ctx.save();
+    ctx.translate(bug.x, bug.y);
+    ctx.rotate(bug.angle + Math.PI / 2);
+    ctx.scale(scale, scale);
+    ctx.shadowColor = "rgba(143,209,79,0.55)";
+    ctx.shadowBlur = 14;
+    bugGlyph(ctx, 0, 0);
+    ctx.restore();
+  }
+
+  private drawCombo(ctx: CanvasRenderingContext2D) {
+    const { x, y } = this.pointer;
+    const heat = Math.min(this.combo, 20) / 20;
+    ctx.save();
+    ctx.font = `800 ${14 + heat * 10}px ${SANS}`;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(0,0,0,0.6)";
+    ctx.fillStyle = heat > 0.6 ? "#ffffff" : "#2d8cff";
+    ctx.strokeText(`×${this.combo}`, x + 22, y - 22);
+    ctx.fillText(`×${this.combo}`, x + 22, y - 22);
     ctx.restore();
   }
 
@@ -1728,6 +1949,18 @@ class Engine {
           ctx.fillStyle = p.color;
           ctx.fillRect(-p.size * 3, -p.size * 0.35, p.size * 6, p.size * 0.7);
           ctx.restore();
+          break;
+        }
+        case "score": {
+          ctx.globalAlpha = Math.min(1, t * 2);
+          ctx.font = `700 ${p.size}px ${SANS}`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = "rgba(0,0,0,0.65)";
+          ctx.strokeText(p.text ?? "", p.x, p.y);
+          ctx.fillStyle = p.color;
+          ctx.fillText(p.text ?? "", p.x, p.y);
           break;
         }
         case "heat": {
@@ -2014,6 +2247,35 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
   const [integrity, setIntegrity] = useState(100);
   const [hint, setHint] = useState(true);
   const [quip, setQuip] = useState<string | null>(null);
+  const [stats, setStats] = useState<RunStats>({ state: "idle", elapsed: 0, score: 0, combo: 0, bugs: 0 });
+  const [best, setBest] = useState<number | null>(null);
+  const [newBest, setNewBest] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = Number(localStorage.getItem("demolition-best"));
+      if (stored > 0) setBest(stored);
+    } catch {
+      /* no storage, no best */
+    }
+  }, []);
+
+  /** A finished run is scored against the best one on this device. */
+  useEffect(() => {
+    if (stats.state !== "done") {
+      setNewBest(false);
+      return;
+    }
+    if (best === null || stats.elapsed < best) {
+      setBest(stats.elapsed);
+      setNewBest(true);
+      try {
+        localStorage.setItem("demolition-best", String(Math.round(stats.elapsed)));
+      } catch {
+        /* no storage, no best */
+      }
+    }
+  }, [stats.state, stats.elapsed, best]);
   const passedRef = useRef<number>(100);
   const quipTimer = useRef(0);
 
@@ -2047,10 +2309,11 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
     engineRef.current?.setTool(id);
   }, []);
 
+  /** The start card leaves on the first hit, whatever the visitor pressed first. */
   useEffect(() => {
-    const timer = window.setTimeout(() => setHint(false), 4500);
-    return () => window.clearTimeout(timer);
-  }, []);
+    if (stats.state === "running") setHint(false);
+    if (stats.state === "idle" && stats.elapsed === 0 && stats.score === 0) setHint(true);
+  }, [stats.state, stats.elapsed, stats.score]);
 
   useEffect(() => {
     const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -2069,7 +2332,7 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const reduced = document.documentElement.dataset.motion === "off" || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const engine = new Engine(canvas, { reduced, onIntegrity: setIntegrity });
+    const engine = new Engine(canvas, { reduced, onIntegrity: setIntegrity, onStats: setStats });
     engineRef.current = engine;
     engine.start();
     return () => {
@@ -2104,10 +2367,14 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
         return;
       }
       if (event.key === "r" || event.key === "R") engineRef.current?.reset();
+      if (event.key === "Enter" && engineRef.current && stats.state === "done") engineRef.current.reset();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, select]);
+  }, [onClose, select, stats.state]);
+
+  const clock = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
+  const rank = (ms: number) => (ms < 20_000 ? "Ship it." : ms < 40_000 ? "Hotfix." : "Rollback.");
 
   const pointFrom = (event: ReactPointerEvent<HTMLCanvasElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -2118,14 +2385,15 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
     <dialog ref={dialogRef}
       onCancel={(event) => { event.preventDefault(); onClose(); }}
       aria-modal="true"
-      aria-label="Stress reducer: destroy the screen"
+      aria-label="Demolition run: destroy the screen against the clock"
       tabIndex={-1}
       className="fixed inset-0 z-50 m-0 h-dvh w-screen max-h-none max-w-none select-none border-0 bg-[#05060a] p-0 text-white outline-none"
     >
       <p className="sr-only">
-        A stress-relief toy. Destroy a mock screenshot of this website with{" "}
-        {TOOLS.length} tools. Keys 1 to {TOOLS.length} select a tool, right
-        click switches to the next one, R resets the screen and Escape closes.
+        A stress-relief toy and a timed run: bring a mock screenshot of this website to zero
+        integrity with {TOOLS.length} tools as fast as you can. Keys 1 to {TOOLS.length} select a
+        tool, right click switches to the next one, R rebuilds the screen, Enter rebuilds after a
+        finished run, and Escape closes.
       </p>
 
       <canvas
@@ -2155,8 +2423,15 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
       />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-3 sm:p-4">
-        <span className="rounded-full border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[11px] text-white/60">
-          stress reducer · {DOMAIN}
+        <span className="flex items-center gap-3 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[11px] text-white/60 tabular-nums">
+          <span className="text-white/80">demolition run</span>
+          <span>
+            time <span className="text-white">{clock(stats.elapsed)}</span>
+          </span>
+          {best !== null ? <span>best {clock(best)}</span> : null}
+          <span>
+            score <span className="text-[#2d8cff]">{stats.score}</span>
+          </span>
         </span>
         <span className="flex items-center gap-2 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[11px] text-white/60 tabular-nums">
           <span aria-hidden="true" className="relative h-1.5 w-16 overflow-hidden rounded-full bg-white/10">
@@ -2169,10 +2444,63 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
         </span>
       </div>
 
+      {stats.state === "idle" && hint ? (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
+          <div className="pointer-events-auto max-w-[24rem] rounded-2xl border border-white/10 bg-[#0d0f14]/92 p-5 text-center shadow-2xl shadow-black/70 backdrop-blur-md">
+            <p className="font-mono text-[11px] text-[#2d8cff]">after hours</p>
+            <h2 className="mt-1 text-xl font-bold tracking-tight">Demolition run</h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-white/70">
+              Bring this screen&apos;s integrity to zero as fast as you can. Nine tools, keys 1 to 9.
+              Rapid hits build a combo. Squash a bug for a second back. R rebuilds, Esc leaves.
+            </p>
+            {best !== null ? (
+              <p className="mt-3 font-mono text-[11px] text-white/50">best on this device · {clock(best)}</p>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setHint(false)}
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-[#0a66c2] px-6 text-[13px] font-semibold text-white transition-[background-color,transform] duration-150 hover:bg-[#2d8cff] active:scale-[0.97]"
+            >
+              Start swinging
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {stats.state === "done" ? (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
+          <div className="pointer-events-auto max-w-[24rem] rounded-2xl border border-[#2d8cff]/40 bg-[#0d0f14]/94 p-5 text-center shadow-2xl shadow-black/70 backdrop-blur-md">
+            <p className="font-mono text-[11px] text-[#2d8cff]">{newBest ? "new best" : "demolished"}</p>
+            <h2 className="mt-1 text-3xl font-extrabold tracking-tight tabular-nums">{clock(stats.elapsed)}</h2>
+            <p className="mt-1 text-lg font-semibold text-white/90">{rank(stats.elapsed)}</p>
+            <p className="mt-2 font-mono text-[11px] text-white/55 tabular-nums">
+              score {stats.score}
+              {best !== null && !newBest ? ` · best ${clock(best)}` : ""}
+            </p>
+            <div className="mt-4 flex justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => engineRef.current?.reset()}
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0a66c2] px-5 text-[13px] font-semibold text-white transition-[background-color,transform] duration-150 hover:bg-[#2d8cff] active:scale-[0.97]"
+              >
+                Rebuild and go again
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 px-5 text-[13px] font-semibold text-white/80 transition-[border-color,transform] duration-150 hover:border-white/40 active:scale-[0.97]"
+              >
+                Back to the chat
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div
         className={cn(
           "pointer-events-none absolute inset-x-0 bottom-64 flex justify-center transition-opacity duration-700",
-          hint || quip ? "opacity-100" : "opacity-0",
+          quip && stats.state !== "done" ? "opacity-100" : "opacity-0",
         )}
         role="status"
       >
@@ -2184,7 +2512,7 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
               : "border-white/10 bg-black/60 text-white/70",
           )}
         >
-          {quip ?? "Pick a tool and go. This screen skipped its release gate."}
+          {quip ?? ""}
         </span>
       </div>
 
@@ -2233,9 +2561,9 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
             ))}
           </div>
           <div className="flex items-center justify-between gap-2 px-1 pt-2.5 text-[10px] font-medium tracking-wider text-white/45 uppercase">
-            <span>Tap / Right Click = Switch</span>
-            <span>R = Reset</span>
-            <span>Esc / X = Close</span>
+            <span>1–9 / Right click = tool</span>
+            <span>R = Rebuild</span>
+            <span>Esc = Chat</span>
           </div>
         </div>
       </div>

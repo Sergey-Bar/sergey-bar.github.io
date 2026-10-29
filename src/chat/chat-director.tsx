@@ -30,6 +30,22 @@ type Entry = { key: number; order: number; node: ReactNode };
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+/** What the bottom line claims to be doing, and for how long. Ten seconds in all. */
+const LOADER_STEPS: ReadonlyArray<readonly [string, number]> = [
+  ["Booting the chat. No, the other chat.", 900],
+  ["Negotiating with the release gate… it wants evidence.", 1000],
+  ["Convincing the flaky test to pass. Just once.", 1000],
+  ["Teaching the AI to say “I don't know”. Harder than it sounds.", 1100],
+  ["Counting open bugs. Lost count. Counting again.", 900],
+  ["Hiding the button you are told not to press.", 900],
+  ["Rehearsing the opening line in the mirror.", 900],
+  ["Ready in 5", 700],
+  ["Ready in 4", 650],
+  ["Ready in 3", 650],
+  ["Ready in 2", 650],
+  ["Ready in 1", 650],
+];
+
 const finePointer = () => window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
 /**
@@ -119,6 +135,8 @@ export function ChatDirector({
   const [chipsOpen, setChipsOpen] = useState(false);
   /** A short pulse on the send button after a question goes. */
   const [sent, setSent] = useState(false);
+  /** The line at the bottom while the intro waits for the chat to open. */
+  const [loader, setLoader] = useState<{ text: string; step: number } | null>(null);
 
   /* ----------------------------------------------------------- helpers */
 
@@ -152,6 +170,11 @@ export function ChatDirector({
   /** Switches to the chat synchronously, so the log is laid out before anything measures it. */
   const openChat = useCallback(() => {
     flushSync(() => setStage("chat"));
+  }, []);
+
+  /** On a device with a pointer the composer takes focus, like any chat. */
+  const focusComposer = useCallback(() => {
+    if (finePointer()) inputRef.current?.focus({ preventScroll: true });
   }, []);
 
 
@@ -201,35 +224,47 @@ export function ChatDirector({
         followRef.current = true;
         anchorRef.current = null;
         push(
-          <>
-            <Bubble>
-              <p>{hero.positioning}</p>
-              <p>Ask me anything about my work, or pick a topic.</p>
-            </Bubble>
-            <QuickReplies ids={topics.map((t) => t.id)} />
-          </>,
+          <Bubble>
+            <p>{hero.positioning}</p>
+            <p>Ask me anything about my work, or pick a topic below.</p>
+          </Bubble>,
         );
         window.scrollTo({ top: 0, behavior: "auto" });
-        setStatus(`${site.name}: ask me anything about my work, or pick a topic.`);
+        setStatus(`${site.name}: ask me anything about my work, or pick a topic below.`);
+        focusComposer();
       }),
-    [enqueue, openChat, push],
+    [enqueue, focusComposer, openChat, push],
   );
 
+  /**
+   * While the intro waits, a line at the bottom pretends to boot the chat,
+   * then counts down and opens it. Ten seconds in all. A click on the line,
+   * or the first scroll, skips straight to the chat; a hidden tab pauses.
+   */
   useEffect(() => {
-    if (stage !== "intro") return;
+    if (stage !== "intro") {
+      setLoader(null);
+      return;
+    }
     const booting = document.documentElement.dataset.boot === "";
     let timer = 0;
-    const arm = (ms: number) => {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        if (document.visibilityState !== "visible") {
-          arm(4000);
-          return;
-        }
+    let index = 0;
+    const total = LOADER_STEPS.length;
+    const run = () => {
+      if (document.visibilityState !== "visible") {
+        timer = window.setTimeout(run, 1000);
+        return;
+      }
+      if (index >= total) {
         void greet();
-      }, ms);
+        return;
+      }
+      const [text, ms] = LOADER_STEPS[index];
+      setLoader({ text, step: index });
+      index += 1;
+      timer = window.setTimeout(run, ms);
     };
-    arm((booting ? 3400 : 0) + 10_000);
+    timer = window.setTimeout(run, booting ? 3400 : 0);
     const onScroll = () => {
       if (window.scrollY > 40) void greet();
     };
@@ -385,10 +420,6 @@ export function ChatDirector({
 
   /* ------------------------------------------------------------ events */
 
-  /** On a device with a pointer the composer takes focus, like any chat. */
-  const focusComposer = useCallback(() => {
-    if (finePointer()) inputRef.current?.focus({ preventScroll: true });
-  }, []);
 
   /** The opening veil ends on a click or any key; the hero then rises at once. */
   const skipBoot = useCallback(() => {
@@ -679,6 +710,26 @@ export function ChatDirector({
           {status}
         </p>
       </div>
+
+      {stage === "intro" ? (
+        <button
+          type="button"
+          className="loader"
+          onClick={() => void greet()}
+          title="Open the chat now"
+          data-loader
+        >
+          <span className="loader-bar" aria-hidden="true">
+            <span style={{ width: `${loader ? ((loader.step + 1) / LOADER_STEPS.length) * 100 : 0}%` }} />
+          </span>
+          <span className="loader-line" aria-hidden="true">
+            <span className="loader-caret">▸</span>
+            <span className="loader-text">{loader?.text ?? "Booting the chat…"}</span>
+            <span className="loader-cursor" />
+          </span>
+          <span className="sr-only">The chat opens in a few seconds. Press to open it now.</span>
+        </button>
+      ) : null}
 
       <form className="composer" onSubmit={onSubmit}>
         <div className="composer-panel" data-match={match ?? undefined}>

@@ -15,6 +15,14 @@ async function open(page: Page, path = "/") {
   await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
 }
 
+/** Opens the page and goes straight into the chat by pressing the loading line. */
+async function enter(page: Page) {
+  await open(page);
+  await page.locator("[data-loader]").click();
+  await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat", { timeout: 10_000 });
+  await expect(page.locator(".entry .bubble").first()).toBeVisible();
+}
+
 /** Presses a composer chip; on a phone the row is folded, so it is opened first. */
 async function pressChip(page: Page, id: string) {
   const chip = page.locator(`.composer .chip[data-ask="${id}"]`);
@@ -35,7 +43,8 @@ test.describe("intro", () => {
     await open(page);
     await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(/Sergey Bar/);
     await expect(page.getByRole("img", { name: "Sergey Bar" })).toBeVisible();
-    await expect(page.getByRole("textbox", { name: "Ask about my work" })).toBeVisible();
+    await expect(page.locator("[data-loader]")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Ask about my work" })).toBeHidden();
     await expectAxeClean(page);
   });
 
@@ -57,7 +66,9 @@ test.describe("intro", () => {
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
     await page.clock.runFor(2_000);
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat", { timeout: 10_000 });
-    await expect(page.locator(".entry .replies .chip")).toHaveCount(TOPICS.length);
+    await expect(page.locator(".entry .bubble").first()).toBeVisible();
+    await expect(page.locator(".entry .replies .chip")).toHaveCount(0);
+    await expect(page.locator(".composer .chip[data-ask]")).toHaveCount(TOPICS.length);
   });
 
   test("has no horizontal overflow", async ({ page }) => {
@@ -72,7 +83,7 @@ test.describe("intro", () => {
 test.describe("conversations", () => {
   for (const id of TOPICS) {
     test(`the ${id} chip reveals every message of its answer`, async ({ page }) => {
-      await open(page);
+      await enter(page);
       await pressChip(page, id);
       const flow = page.locator(`[data-flow="${id}"]`);
       await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat");
@@ -85,7 +96,7 @@ test.describe("conversations", () => {
   }
 
   test("quick replies inside an answer open the next one", async ({ page }) => {
-    await open(page);
+    await enter(page);
     await pressChip(page, "about");
     const reply = page.locator('[data-flow="about"] .replies .chip[data-ask="cases"]');
     await expect(reply).toBeVisible({ timeout: 20_000 });
@@ -94,7 +105,7 @@ test.describe("conversations", () => {
   });
 
   test("answers appear in the order they were asked", async ({ page }) => {
-    await open(page);
+    await enter(page);
     await pressChip(page, "contact");
     await expect(page.locator('[data-flow="contact"] .replies')).toBeVisible({ timeout: 20_000 });
     await pressChip(page, "about");
@@ -106,7 +117,7 @@ test.describe("conversations", () => {
   });
 
   test("asking the same thing twice points back instead of repeating", async ({ page }) => {
-    await open(page);
+    await enter(page);
     await pressChip(page, "fun");
     await expect(page.locator('[data-flow="fun"] .replies')).toBeVisible({ timeout: 20_000 });
     await pressChip(page, "fun");
@@ -115,7 +126,7 @@ test.describe("conversations", () => {
   });
 
   test("start over returns to the intro and clears the log", async ({ page }) => {
-    await open(page);
+    await enter(page);
     await pressChip(page, "toolbox");
     await expect(page.locator('[data-flow="toolbox"] .replies')).toBeVisible({ timeout: 20_000 });
     await page.getByRole("button", { name: "Start over" }).click();
@@ -125,7 +136,7 @@ test.describe("conversations", () => {
   });
 
   test("reading mode shows every answer at once, in order", async ({ page }) => {
-    await open(page);
+    await enter(page);
     await pressChip(page, "contact");
     await page.getByRole("button", { name: "Read all" }).click();
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-mode", "read");
@@ -140,7 +151,7 @@ test.describe("conversations", () => {
 
   test("a phone folds the chip row behind a count", async ({ page, isMobile }) => {
     test.skip(!isMobile, "the fold is a phone layout");
-    await open(page);
+    await enter(page);
     await expect(page.locator('.composer .chip[data-ask="experience"]')).toBeHidden();
     await page.locator(".composer .chips-more").click();
     await expect(page.locator('.composer .chip[data-ask="experience"]')).toBeVisible();
@@ -162,7 +173,7 @@ test.describe("composer", () => {
   };
 
   test("routes a typed question and echoes the visitor's words", async ({ page }) => {
-    await open(page);
+    await enter(page);
     await ask(page, "where did you work before?");
     await expect(page.locator(".entry .msg.user")).toHaveText(/where did you work before\?/);
     await expect(page.locator('[data-flow="experience"]')).toHaveAttribute("data-sent", "", { timeout: 10_000 });
@@ -170,13 +181,13 @@ test.describe("composer", () => {
   });
 
   test("previews the topic on the chips while typing", async ({ page }) => {
-    await open(page);
+    await enter(page);
     await page.getByRole("textbox", { name: "Ask about my work" }).fill("tell me about your projects");
     await expect(page.locator(".composer-panel")).toHaveAttribute("data-match", "projects");
   });
 
   test("answers a greeting and admits what it does not know", async ({ page }) => {
-    await open(page);
+    await enter(page);
     // The status line for assistive technology repeats each reply, so the
     // assertions look inside the log entries only.
     await ask(page, "hello");
@@ -188,7 +199,7 @@ test.describe("composer", () => {
 
   test("the slash key focuses the composer and Escape leaves it", async ({ page, isMobile }) => {
     test.skip(isMobile, "keyboard shortcuts are for devices with a keyboard");
-    await open(page);
+    await enter(page);
     await page.locator("body").click({ position: { x: 5, y: 5 } });
     await page.keyboard.press("/");
     await expect(page.getByRole("textbox", { name: "Ask about my work" })).toBeFocused();
