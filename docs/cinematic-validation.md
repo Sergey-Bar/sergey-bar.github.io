@@ -166,3 +166,15 @@ phone, every topic marked asked, restart confirmation); screenshots at 1440×900
 and on a Pixel 7 with the drawer open; budgets within limits. A late sidebar
 seen while probing was Chromium not producing frames for the first page of a
 fresh headless browser, regardless of the page, and not the site.
+
+## Profiles in the sidebar, a ghost in the corner (2026-10-29, later)
+
+GitHub and LinkedIn left the corner for a "Profiles" list at the bottom of the
+sidebar once the chat is open (they stay in the corner on the intro). A ghost
+button in the corner, on every state, opens the demolition run directly with
+no conversation; Escape returns. The identity bar's corner reserve shrank to
+the ghost's width.
+
+Verified: two new specs (the links move, the ghost opens the game and leaves
+the intro as it was) pass on both devices with the rest of the suite;
+screenshots of the intro corner, the chat at 1440×900 and the phone drawer.

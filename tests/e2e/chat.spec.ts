@@ -90,6 +90,27 @@ test.describe("intro", () => {
     await expect(page.locator('.sidebar .side-item[data-ask="about"]')).toHaveAttribute("data-asked", "");
   });
 
+  test("GitHub and LinkedIn move from the corner into the sidebar", async ({ page, isMobile }) => {
+    await open(page);
+    await expect(page.locator(".topbar .social")).toBeVisible();
+    await enter(page);
+    await expect(page.locator(".topbar .social")).toBeHidden();
+    if (isMobile) await page.getByRole("button", { name: "Open menu" }).click();
+    const sidebar = page.locator(".sidebar");
+    await expect(sidebar.getByRole("link", { name: "GitHub" })).toBeVisible();
+    await expect(sidebar.getByRole("link", { name: "LinkedIn" })).toBeVisible();
+  });
+
+  test("the ghost in the corner opens the game directly", async ({ page }) => {
+    await open(page);
+    await page.getByRole("button", { name: "Play the demolition run" }).click();
+    const game = page.getByRole("dialog");
+    await expect(game).toBeVisible();
+    await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
+    await page.keyboard.press("Escape");
+    await expect(game).toBeHidden();
+  });
+
   test("a phone opens the sidebar as a drawer", async ({ page, isMobile }) => {
     test.skip(!isMobile, "the drawer is a phone layout");
     await enter(page);

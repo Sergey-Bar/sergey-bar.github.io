@@ -860,6 +860,36 @@ main:has(.chat-shell) ~ .motion-control {
   .chat-shell[data-state="chat"] .identity { padding-left: 50px; }
 }
 
+/* GitHub and LinkedIn move into the sidebar once the chat is open; the ghost
+   stays in the corner as the direct route to the game. */
+.chat-shell[data-state="chat"] .social { display: none; }
+.side-profile svg { color: var(--color-ink); }
+.ghost {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--color-line-strong);
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  color: var(--color-c-ice);
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: border-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out), box-shadow var(--dur-hover) var(--ease-out);
+}
+.ghost svg { transition: transform var(--dur-ui) var(--ease-out); }
+.ghost:hover { color: #fff; border-color: var(--color-c-sky); box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-c-sky) 22%, transparent), 0 8px 28px -10px var(--color-c-sky); }
+.ghost:hover svg { transform: translateY(-2px) rotate(-8deg) scale(1.1); }
+.ghost:active { transform: scale(0.94); }
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="off"]) .ghost svg { animation: ghost-float 3.2s ease-in-out infinite; }
+  :root:not([data-motion="off"]) .ghost:hover svg { animation: none; }
+}
+@keyframes ghost-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -2.5px; }
+}
+
 /* The status row under the field: what this chat runs on. */
 .composer-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 4px 12px 2px; font-family: var(--font-mono); font-size: 11px; color: var(--color-muted); }
 .meta-pill { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
@@ -900,12 +930,12 @@ main:has(.chat-shell) ~ .motion-control {
 }
 /* The fixed corner links share the top edge; leave them room on narrow screens. */
 @media (max-width: 84.99rem) {
-  .chat-shell[data-state="chat"] .identity { padding-right: 150px; }
+  .chat-shell[data-state="chat"] .identity { padding-right: 64px; }
 }
 /* On a phone the bar is one line: avatar, name, restart. The reading-mode
    button and the status line go; the corner controls get the room they need. */
 @media (max-width: 47.99rem) {
-  .chat-shell[data-state="chat"] .identity { padding-left: 50px; padding-right: 100px; gap: 8px; }
+  .chat-shell[data-state="chat"] .identity { padding-left: 50px; padding-right: 56px; gap: 8px; }
   .identity .identity-text { min-width: 0; }
   .identity .identity-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .identity .identity-status { display: none; }

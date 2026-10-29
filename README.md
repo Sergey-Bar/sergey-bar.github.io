@@ -73,14 +73,18 @@ to close; there the composer keeps a compact chip row (three topics and a
 count on a phone). Under the text field a status row reads like an agent's:
 model (the person), effort (the years), mode (evidence-first) and context (the
 topics, recommendations and recorded scan behind the answers). Every value is
-true and none is a setting. Text bubbles grow as their words arrive, a card
+true and none is a setting. GitHub and LinkedIn sit in the corner on the intro
+and move into the sidebar's "Profiles" list once the chat is open; the ghost
+that stays in the corner opens the demolition run directly, without the
+conversation. Text bubbles grow as their words arrive, a card
 taller than a phone screen opens folded with a "Show the whole card" button,
 and "Start over" asks once ("Clear the conversation?") before it clears.
 
 The page opens, once per tab session, on a veil that says "Hello, I'm Sergey"
 and "Welcome" and lifts into the hero; a click or a key ends it early, and it
 never plays with motion off. GitHub and LinkedIn share one pill in the corner
-whose white highlight slides to the hovered or focused half.
+whose white highlight slides to the hovered or focused half, with the ghost
+beside it.
 
 ## Palette
 

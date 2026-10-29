@@ -16,6 +16,7 @@ import { flushSync } from "react-dom";
 import Link from "next/link";
 
 import { CaseIcon, CheckIcon, LayersIcon, ReadIcon, RestartIcon, SendIcon, TopicIcon } from "@/chat/icons";
+import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
 import { CloseIcon, MenuIcon } from "@/components/icons";
 import { BotAvatar, Bubble, QuickReplies, UserBubble } from "@/chat/message";
 import {
@@ -795,6 +796,24 @@ export function ChatDirector({
               <CheckIcon size={15} />
               <span>Accessibility</span>
             </Link>
+          </li>
+        </ul>
+
+        <p className="side-label" id="side-profiles">
+          Profiles
+        </p>
+        <ul className="side-list" aria-labelledby="side-profiles">
+          <li>
+            <a href={contact.github} className="side-item side-profile">
+              <GitHubIcon size={15} />
+              <span>GitHub</span>
+            </a>
+          </li>
+          <li>
+            <a href={contact.linkedin} className="side-item side-profile">
+              <LinkedInIcon size={15} />
+              <span>LinkedIn</span>
+            </a>
           </li>
         </ul>
 
