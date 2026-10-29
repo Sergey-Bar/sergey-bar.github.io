@@ -36,11 +36,14 @@ export function Bubble({ children, first = true }: { children: ReactNode; first?
 export function Card({
   title,
   eyebrow,
+  stat,
   children,
   first = false,
 }: {
   title?: string;
   eyebrow?: string;
+  /** One figure the card leads with: the hierarchy is title, number, detail. */
+  stat?: { value: string; label: string };
   children: ReactNode;
   first?: boolean;
 }) {
@@ -52,6 +55,12 @@ export function Card({
           <header className="card-head">
             {eyebrow ? <p className="data card-eyebrow">{eyebrow}</p> : null}
             {title ? <h3 className="card-title">{title}</h3> : null}
+            {stat ? (
+              <p className="card-stat">
+                <span className="card-stat-value">{stat.value}</span>
+                <span className="card-stat-label">{stat.label}</span>
+              </p>
+            ) : null}
           </header>
         ) : null}
         {children}
@@ -83,6 +92,22 @@ export function QuickReplies({ ids, lead }: { ids: readonly TopicId[]; lead?: st
         </ul>
       </div>
     </article>
+  );
+}
+
+/** The rest of a long card, behind one line, so the conversation keeps its pace. */
+export function More({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <details className="more">
+      <summary>
+        <span className="more-show">{label}</span>
+        <span className="more-hide">Show less</span>
+        <span className="more-toggle" aria-hidden="true">
+          +
+        </span>
+      </summary>
+      <div className="more-body">{children}</div>
+    </details>
   );
 }
 

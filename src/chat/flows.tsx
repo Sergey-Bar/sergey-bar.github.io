@@ -1,8 +1,7 @@
 import Link from "next/link";
 
-import { TopicIcon } from "@/chat/icons";
-import { Bubble, Card, QuickReplies, UserBubble } from "@/chat/message";
-import { topicById, topics, type TopicId } from "@/chat/topics";
+import { Bubble, Card, More, QuickReplies, UserBubble } from "@/chat/message";
+import { topicById, type TopicId } from "@/chat/topics";
 import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
 import { CountUp } from "@/components/count-up";
 import { ExperienceRecord } from "@/components/experience-record";
@@ -155,13 +154,25 @@ function CasesFlow() {
         </p>
       </Bubble>
       {caseStudies.map((study, index) => (
-        <Card key={study.slug} eyebrow={`case ${index + 1} of ${caseStudies.length}`} title={study.title}>
-          <p className="case-context">{study.context}</p>
+        <Card
+          key={study.slug}
+          eyebrow={`case ${index + 1} of ${caseStudies.length}`}
+          title={study.title}
+          stat={study.stat}
+        >
           <dl className="case">
             <div>
               <dt>Problem</dt>
               <dd>{study.problem}</dd>
             </div>
+            <div>
+              <dt>Outcome</dt>
+              <dd className="case-outcome">{study.outcome}</dd>
+            </div>
+          </dl>
+          <More label="How, and the evidence">
+          <p className="case-context">{study.context}</p>
+          <dl className="case">
             <div>
               <dt>Approach</dt>
               <dd>
@@ -193,11 +204,8 @@ function CasesFlow() {
                 </ul>
               </dd>
             </div>
-            <div>
-              <dt>Outcome</dt>
-              <dd className="case-outcome">{study.outcome}</dd>
-            </div>
           </dl>
+          </More>
           {study.artifact === "scan" ? <ScanTranscript /> : null}
         </Card>
       ))}
@@ -226,7 +234,16 @@ function ProjectsFlow() {
         </p>
       </Bubble>
       {projects.map((project) => (
-        <Card key={project.slug} eyebrow={project.kind} title={project.name}>
+        <Card
+          key={project.slug}
+          eyebrow={project.kind}
+          title={project.name}
+          stat={
+            project.slug === "mjolnir"
+              ? { value: project.facts[1].value, label: project.facts[1].label.replace(",", " ·") }
+              : { value: project.facts[0].value, label: "in the capability register, 26 marked not real" }
+          }
+        >
           {project.slug === "mjolnir" ? (
             <div className="mb-4">
               <StatusChip tone="success" label={`v${mjolnir.package.version} published`} />
@@ -475,18 +492,3 @@ export function Flows() {
   );
 }
 
-/** The chip row in the composer, in conversation order. */
-export function TopicChips() {
-  return (
-    <ul className="chips" aria-label="Topics">
-      {topics.map((topic) => (
-        <li key={topic.id}>
-          <a href={`#${topic.id}`} className="chip" data-ask={topic.id} data-topic={topic.id}>
-            <TopicIcon id={topic.id} size={15} />
-            {topic.label}
-          </a>
-        </li>
-      ))}
-    </ul>
-  );
-}

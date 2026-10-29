@@ -53,6 +53,15 @@ asked; the identity bar reads "typing…" while a reply is composed. On a device
 with a pointer the composer takes focus after the opening, "/" focuses it from
 anywhere and Escape hands focus back to the page.
 
+The first screen is already the conversation: the name and the role, then the
+first message with the ways in as quick replies beneath it, and "read everything
+as one page" for the visitor who would rather scan. Reading mode shows every
+answer at once in the record's order, with no pacing. Long cards keep their
+rhythm: a recommendation shows two sentences and opens the rest on request, a
+case study shows the problem, the outcome and one figure, with the approach and
+the evidence behind one line. Every card leads with one figure under its title.
+On a phone the chip row shows three topics and folds the rest behind a count.
+
 The page opens, once per tab session, on a veil that says "Hello, I'm Sergey"
 and "Welcome" and lifts into the hero; a click or a key ends it early, and it
 never plays with motion off. GitHub and LinkedIn share one pill in the corner

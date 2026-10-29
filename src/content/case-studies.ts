@@ -1,4 +1,5 @@
 import { proofRow } from "@/content/metrics";
+import { mjolnirReport } from "@/content/mjolnir-report";
 import { projects } from "@/content/projects";
 import { roles } from "@/content/experience";
 
@@ -19,6 +20,8 @@ export type CaseStudy = {
   /** Where the evidence lives and what it shows. */
   evidence: { label: string; detail: string; href?: string }[];
   outcome: string;
+  /** The one figure the card leads with. */
+  stat: { value: string; label: string };
   /** Which artifact the card renders beneath the text, if any. */
   artifact?: "scan" | "automate";
 };
@@ -58,6 +61,7 @@ export const caseStudies: readonly CaseStudy[] = [
     ],
     outcome:
       "A three-tier pyramid with full backend and frontend suites, a nightly regression pass in the pipeline, and one quality point of contact for release readiness. The platform is in operational use.",
+    stat: { value: "0 → 3", label: "tiers of tests, built from no QA infrastructure" },
   },
   {
     slug: "memory-leak",
@@ -81,6 +85,7 @@ export const caseStudies: readonly CaseStudy[] = [
       },
     ],
     outcome: `${releases.value} major releases delivered with zero critical production defects, and a ${stability.value} stability improvement from one root cause found with the right instruments.`,
+    stat: { value: stability.value, label: stability.label },
   },
   {
     slug: "mjolnir",
@@ -105,6 +110,7 @@ export const caseStudies: readonly CaseStudy[] = [
       },
     ],
     outcome: mjolnir.tagline,
+    stat: { value: `${mjolnirReport.score}/100`, label: `worthiness on the recorded scan, verdict ${mjolnirReport.verdict}` },
     artifact: "scan",
   },
 ];

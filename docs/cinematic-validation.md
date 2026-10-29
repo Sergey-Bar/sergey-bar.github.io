@@ -104,3 +104,14 @@ The first full run found one real defect, which the suite now guards: the scan
 transcript scrolled without keyboard access (axe `scrollable-region-focusable`).
 Fixed with a focusable labelled region. The full verify pipeline, including the
 suite, passed before the push.
+
+## UX pass (2026-10-29, later)
+
+The intro became the first message of the conversation with the openers as
+quick replies and a reading-mode link; reading mode shows every answer at once
+in order; recommendations and case studies fold their long parts behind one
+line; every card leads with one figure; the phone chip row shows three topics
+plus a count; the send button pulses; the toolbox has a real empty state; the
+identity bar gained "Read all" and tooltips. Two specs were added (reading
+mode, the phone fold) and the chip helper opens the fold on a phone. The full
+verify pipeline, including the suite, passed before the push.

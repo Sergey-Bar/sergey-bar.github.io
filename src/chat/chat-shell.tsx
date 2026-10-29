@@ -1,5 +1,5 @@
 import { ChatDirector } from "@/chat/chat-director";
-import { Flows, TopicChips } from "@/chat/flows";
+import { Flows } from "@/chat/flows";
 import { Intro } from "@/chat/intro";
 import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
 import { contact } from "@/content/site";
@@ -15,7 +15,6 @@ export function ChatShell() {
     <ChatDirector
       intro={<Intro />}
       flows={<Flows />}
-      chips={<TopicChips />}
       topbar={
         <nav className="topbar" aria-label="Profiles">
           {/* One pill, two routes. The filled half follows the pointer (or

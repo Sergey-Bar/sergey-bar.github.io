@@ -589,27 +589,21 @@ main:has(.chat-shell) ~ .motion-control {
 
 .intro-stage {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 28px;
-  width: 100%;
-  margin-top: 40px;
+  justify-content: center;
+  gap: 36px;
+  width: min(100%, 860px);
+  margin-top: 36px;
 }
 
-.intro-quote {
-  justify-self: end;
-  max-width: 30ch;
-  text-align: left;
-  padding: 20px 22px;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--color-line);
-  background: color-mix(in oklab, var(--color-surface) 70%, transparent);
-  backdrop-filter: blur(14px);
-}
-.intro-quote-mark { display: block; font-size: 40px; line-height: 0.6; color: var(--color-c-sky); margin-bottom: 10px; font-weight: 700; }
-.intro-quote blockquote p { font-size: 15px; line-height: 1.6; color: var(--color-ink); font-style: italic; }
-.intro-quote figcaption { margin-top: 12px; font-size: 12px; line-height: 1.5; color: var(--color-muted); }
-.intro-quote figcaption strong { color: var(--color-ink); font-weight: 600; }
+/* The first message, already a conversation. */
+.intro-chat { width: min(100%, 560px); text-align: left; }
+.intro-chat .bubble { max-width: none; }
+.intro-actions { margin-top: 14px; }
+.intro-readall { margin-top: 12px; padding-left: 48px; font-size: 13px; color: var(--color-muted); }
+.intro-readall button { color: inherit; cursor: pointer; }
+.intro-readall button:hover { color: var(--color-ink); }
 
 /* Smaller than a hero portrait on purpose, and after a few seconds it settles:
    the ring goes, the photo dims a little, and the words carry the screen. A
@@ -690,13 +684,6 @@ main:has(.chat-shell) ~ .motion-control {
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-c-sky) 25%, transparent);
 }
 
-.intro-actions {
-  justify-self: start;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-}
 
 /* --- Actions and chips ---------------------------------------------------- */
 
@@ -739,6 +726,15 @@ main:has(.chat-shell) ~ .motion-control {
   list-style: none;
 }
 .chips::-webkit-scrollbar { display: none; }
+.chips-more-item { display: none; }
+@media (max-width: 47.99rem) {
+  .chips { flex-wrap: wrap; overflow: visible; gap: 6px; }
+  .chips .chip { min-height: 34px; padding: 0 11px; font-size: 12.5px; gap: 6px; }
+  .chips .chip svg { display: none; }
+  .chips-more-item { display: block; }
+  .chips[data-collapsed] > li:nth-child(n + 4):not(.chips-more-item) { display: none; }
+  .chips-more { color: var(--color-muted); }
+}
 .chip {
   display: inline-flex;
   align-items: center;
@@ -894,6 +890,9 @@ main:has(.chat-shell) ~ .motion-control {
 .card-head { margin-bottom: 14px; }
 .card-eyebrow { color: var(--topic); }
 .card-title { margin-top: 4px; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; }
+.card-stat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-top: 10px; }
+.card-stat-value { font-size: clamp(2rem, 3.4vw, 2.6rem); font-weight: 750; letter-spacing: -0.045em; line-height: 1; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+.card-stat-label { font-size: 13px; color: var(--color-muted); max-width: 34ch; }
 .card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-top: 22px; }
 
 .replies { padding-top: 2px; }
@@ -976,6 +975,8 @@ main:has(.chat-shell) ~ .motion-control {
 .toolbox-search input { min-width: 0; width: 100%; padding: 12px 16px; font-size: 16px; outline: none; background: transparent; color: var(--color-ink); }
 .toolbox-search button { padding: 12px; min-height: 44px; color: var(--topic); }
 @media (max-width: 47.99rem) { .toolbox-search { grid-template-columns: 1fr; } }
+.toolbox-empty { padding: 20px 0 8px; }
+.toolbox-empty .toolbox-expand { margin-top: 16px; }
 .toolbox-expand {
   display: inline-flex; margin-top: 28px; min-height: 44px; align-items: center; padding: 10px 18px;
   border: 1px solid var(--color-line-strong); border-radius: 100px; font-size: 14px; cursor: pointer;
@@ -1024,10 +1025,32 @@ main:has(.chat-shell) ~ .motion-control {
   }
 }
 
+/* --- "Show more": the rest of a long card behind one line ---------------------- */
+
+.more { margin-top: 16px; border-top: 1px solid var(--color-line); }
+.more > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  min-height: 44px; cursor: pointer; list-style: none; font-size: 14px; font-weight: 550; color: var(--color-ink);
+}
+.more > summary::-webkit-details-marker { display: none; }
+.more-hide, .more[open] .more-show { display: none; }
+.more[open] .more-hide { display: inline; }
+.more-toggle { font-size: 22px; font-weight: 300; line-height: 1; color: var(--topic); }
+.more[open] .more-toggle { transform: rotate(45deg); }
+.more-body { padding-bottom: 6px; }
+.more { interpolate-size: allow-keywords; }
+@media (prefers-reduced-motion: no-preference) {
+  .more-toggle { transition: transform 200ms var(--ease-out); }
+  @supports (interpolate-size: allow-keywords) {
+    .more::details-content { height: 0; overflow: clip; transition: height var(--dur-ui) var(--ease-out), content-visibility var(--dur-ui) allow-discrete; }
+    .more[open]::details-content { height: auto; }
+  }
+}
+
 /* --- Case studies and the scan transcript ------------------------------------ */
 
-.case-context { font-size: 14px; line-height: 1.6; color: var(--color-muted); }
-.case { display: grid; gap: 18px; margin-top: 18px; }
+.case-context { font-size: 14px; line-height: 1.6; color: var(--color-muted); margin-top: 8px; }
+.case { display: grid; gap: 18px; margin-top: 14px; }
 .case > div { display: grid; gap: 6px; padding-top: 14px; border-top: 1px solid var(--color-line); }
 .case dt { font-family: var(--font-mono); font-size: var(--ts-data); letter-spacing: -0.01em; color: var(--topic); }
 .case dd { font-size: 15px; line-height: 1.65; color: var(--color-ink); }
@@ -1184,6 +1207,10 @@ main:has(.chat-shell) ~ .motion-control {
 }
 .composer-send:hover { box-shadow: 0 10px 30px #2d8cff66; }
 .composer-send:active { transform: scale(0.94); }
+@keyframes send-fly { 0% { transform: translateY(0); opacity: 1; } 45% { transform: translateY(-14px); opacity: 0; } 50% { transform: translateY(12px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+@media (prefers-reduced-motion: no-preference) {
+  .composer-send[data-sent] svg { animation: send-fly 600ms var(--ease-out) both; }
+}
 .composer-hint {
   pointer-events: auto;
   width: min(100%, 960px);
@@ -1196,10 +1223,8 @@ main:has(.chat-shell) ~ .motion-control {
 /* --- Responsive ------------------------------------------------------------ */
 
 @media (max-width: 63.99rem) {
-  .intro-stage { grid-template-columns: 1fr; justify-items: center; gap: 30px; margin-top: 36px; }
-  .intro-quote { justify-self: center; max-width: 42ch; }
-  .intro-actions { justify-self: center; flex-direction: row; flex-wrap: wrap; justify-content: center; }
-  .intro-portrait { order: -1; width: clamp(150px, 36vw, 200px); }
+  .intro-stage { grid-template-columns: 1fr; justify-items: center; gap: 26px; margin-top: 28px; }
+  .intro-portrait { order: -1; width: clamp(140px, 34vw, 190px); }
 }
 @media (max-width: 47.99rem) {
   .intro { padding-top: 64px; }
@@ -1207,8 +1232,7 @@ main:has(.chat-shell) ~ .motion-control {
   .intro-sub { margin-top: 14px; font-size: 1rem; }
   .intro-stage { margin-top: 22px; gap: 22px; }
   .intro-quote { display: none; }
-  .intro-actions { width: 100%; flex-direction: column; }
-  .intro-actions .action { width: 100%; }
+  .intro-readall { padding-left: 0; }
   .msg { grid-template-columns: 30px minmax(0, 1fr); gap: 10px; }
   .msg-avatar { width: 30px; height: 30px; }
   .msg-card .bubble { padding: 18px 16px; }
@@ -1257,8 +1281,10 @@ main:has(.chat-shell) ~ .motion-control {
   .portrait-glow { transition: transform 600ms var(--ease-out), opacity 400ms var(--ease-out); }
 
   /* Each message arrives once, the moment the director shows it, and the
-     words of a reply follow one another the way a model's output does. */
+     words of a reply follow one another the way a model's output does. In
+     reading mode everything is simply there. */
   .log .msg { animation: pop 460ms var(--ease-out) both; }
+  .chat-shell[data-mode="read"] .log .msg { animation: none; }
   .w { display: inline-block; animation: word-in 320ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 24ms); }
   .typing .bubble span { animation: dots 1.2s ease-in-out infinite; }
   .typing .bubble span:nth-child(2) { animation-delay: 150ms; }

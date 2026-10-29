@@ -26,7 +26,15 @@ export function ToolboxExplorer({ groups }: { groups: Group[] }) {
         {visible.map((group) => <div key={group.id}>{group.content}</div>)}
       </div>
       {!term && <button className="toolbox-expand" type="button" aria-expanded={expanded} aria-controls={`${inputId}-results`} onClick={() => setExpanded(!expanded)}>{expanded ? "Show essential groups" : `Explore all ${groups.length} groups`}</button>}
-      {matches.length === 0 && <p className="py-8 t-body text-muted">No matching tools. Try a different name or clear your search to see everything.</p>}
+      {matches.length === 0 && (
+        <div className="toolbox-empty">
+          <p className="t-body text-ink">Nothing in the toolbox matches &ldquo;{query.trim()}&rdquo;.</p>
+          <p className="mt-2 t-small text-muted">Try a discipline (automation, cloud, mobile) or a tool by name.</p>
+          <button type="button" className="toolbox-expand" onClick={() => { setQuery(""); inputRef.current?.focus(); }}>
+            Clear the search
+          </button>
+        </div>
+      )}
     </div>
   );
 }

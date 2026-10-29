@@ -13,7 +13,7 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 
-import { RestartIcon, SendIcon } from "@/chat/icons";
+import { RestartIcon, SendIcon, TopicIcon } from "@/chat/icons";
 import { BotAvatar, Bubble, QuickReplies, UserBubble } from "@/chat/message";
 import {
   placeholderPrompts,
@@ -89,12 +89,10 @@ function motionOff() {
 export function ChatDirector({
   intro,
   flows,
-  chips,
   topbar,
 }: {
   intro: ReactNode;
   flows: ReactNode;
-  chips: ReactNode;
   topbar: ReactNode;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -116,6 +114,10 @@ export function ChatDirector({
   const [status, setStatus] = useState("");
   /** The topic the router would answer with, previewed on the chips as the visitor types. */
   const [match, setMatch] = useState<TopicId | null>(null);
+  /** On a phone the chip row shows three and folds the rest behind a count. */
+  const [chipsOpen, setChipsOpen] = useState(false);
+  /** A short pulse on the send button after a question goes. */
+  const [sent, setSent] = useState(false);
 
   /* ----------------------------------------------------------- helpers */
 
@@ -257,6 +259,38 @@ export function ChatDirector({
     [enqueue, follow, openChat, push, think],
   );
 
+  /**
+   * Reading mode: every answer, in the record's own order, shown at once with
+   * no pacing. For the visitor who would rather scan than converse.
+   */
+  const readAll = useCallback(() => {
+    runRef.current += 1;
+    queueRef.current = Promise.resolve();
+    anchorRef.current = null;
+    followRef.current = false;
+    setTyping(false);
+    setEntries([]);
+    openChat();
+    const log = logRef.current;
+    if (!log) return;
+    log.querySelectorAll<HTMLElement>("[data-flow]").forEach((flow, index) => {
+      flow.style.order = String(index + 1);
+      flow.dataset.sent = "";
+      flow.querySelectorAll<HTMLElement>(":scope > [data-msg]").forEach((m) => {
+        m.dataset.sent = "";
+      });
+      const canned = flow.querySelector<HTMLElement>(":scope > .msg.user");
+      if (canned) canned.hidden = false;
+    });
+    orderRef.current = log.querySelectorAll("[data-flow]").length + 1;
+    rootRef.current?.setAttribute("data-mode", "read");
+    window.scrollTo({ top: 0, behavior: "auto" });
+    setStatus("Everything, in order.");
+    requestAnimationFrame(() => {
+      log.querySelector<HTMLElement>("[data-flow]")?.focus({ preventScroll: true });
+    });
+  }, [openChat]);
+
   const restart = useCallback(() => {
     runRef.current += 1;
     queueRef.current = Promise.resolve();
@@ -277,6 +311,7 @@ export function ChatDirector({
         if (canned) canned.hidden = false;
       });
     }
+    rootRef.current?.removeAttribute("data-mode");
     history.replaceState(null, "", location.pathname);
     window.scrollTo({ top: 0, behavior: motionOff() ? "auto" : "smooth" });
     setStatus("Back at the start.");
@@ -335,6 +370,11 @@ export function ChatDirector({
   }, []);
 
   const onClick = (event: MouseEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest("[data-read-all]")) {
+      event.preventDefault();
+      readAll();
+      return;
+    }
     const target = (event.target as HTMLElement).closest<HTMLElement>("[data-ask]");
     if (!target) return;
     event.preventDefault();
@@ -365,6 +405,8 @@ export function ChatDirector({
     if (!text || !input) return;
     input.value = "";
     setMatch(null);
+    setSent(true);
+    window.setTimeout(() => setSent(false), 650);
     const route = routeInput(text);
     if (route.kind === "topic") {
       void ask(route.id, text);
@@ -535,7 +577,22 @@ export function ChatDirector({
               {typing ? "typing…" : availability.text}
             </p>
           </div>
-          <button type="button" className="identity-restart" onClick={restart} aria-label="Start over">
+          <button
+            type="button"
+            className="identity-restart"
+            onClick={readAll}
+            aria-label="Read all"
+            title="Show every answer at once, in order"
+          >
+            <span className="identity-restart-label">Read all</span>
+          </button>
+          <button
+            type="button"
+            className="identity-restart"
+            onClick={restart}
+            aria-label="Start over"
+            title="Back to the intro; the conversation is cleared"
+          >
             <RestartIcon size={15} />
             <span className="identity-restart-label">Start over</span>
           </button>
@@ -584,11 +641,30 @@ export function ChatDirector({
               onInput={onInput}
             />
             <kbd className="composer-kbd" aria-hidden="true">/</kbd>
-            <button type="submit" className="composer-send" aria-label="Send">
+            <button type="submit" className="composer-send" aria-label="Send" data-sent={sent ? "" : undefined}>
               <SendIcon size={17} />
             </button>
           </div>
-          {chips}
+          <ul className="chips" aria-label="Topics" data-collapsed={chipsOpen ? undefined : ""}>
+            {topics.map((topic) => (
+              <li key={topic.id}>
+                <a href={`#${topic.id}`} className="chip" data-ask={topic.id} data-topic={topic.id}>
+                  <TopicIcon id={topic.id} size={15} />
+                  {topic.label}
+                </a>
+              </li>
+            ))}
+            <li className="chips-more-item">
+              <button
+                type="button"
+                className="chip chips-more"
+                aria-expanded={chipsOpen}
+                onClick={() => setChipsOpen((v) => !v)}
+              >
+                {chipsOpen ? "Fewer" : `+${topics.length - 3}`}
+              </button>
+            </li>
+          </ul>
         </div>
         <p className="composer-hint">
           You can ask about: projects · experience · toolbox · recommendations · contact

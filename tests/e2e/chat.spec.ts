@@ -15,6 +15,13 @@ async function open(page: Page, path = "/") {
   await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
 }
 
+/** Presses a composer chip; on a phone the row is folded, so it is opened first. */
+async function pressChip(page: Page, id: string) {
+  const chip = page.locator(`.composer .chip[data-ask="${id}"]`);
+  if (!(await chip.isVisible())) await page.locator(".composer .chips-more").click();
+  await chip.click();
+}
+
 async function expectAxeClean(page: Page) {
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
@@ -57,7 +64,7 @@ test.describe("conversations", () => {
   for (const id of TOPICS) {
     test(`the ${id} chip reveals every message of its answer`, async ({ page }) => {
       await open(page);
-      await page.locator(`.composer .chip[data-ask="${id}"]`).click();
+      await pressChip(page, id);
       const flow = page.locator(`[data-flow="${id}"]`);
       await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat");
       await expect(flow).toHaveAttribute("data-sent", "");
@@ -70,7 +77,7 @@ test.describe("conversations", () => {
 
   test("quick replies inside an answer open the next one", async ({ page }) => {
     await open(page);
-    await page.locator('.composer .chip[data-ask="about"]').click();
+    await pressChip(page, "about");
     const reply = page.locator('[data-flow="about"] .replies .chip[data-ask="cases"]');
     await expect(reply).toBeVisible({ timeout: 20_000 });
     await reply.click();
@@ -79,9 +86,9 @@ test.describe("conversations", () => {
 
   test("answers appear in the order they were asked", async ({ page }) => {
     await open(page);
-    await page.locator('.composer .chip[data-ask="contact"]').click();
+    await pressChip(page, "contact");
     await expect(page.locator('[data-flow="contact"] .replies')).toBeVisible({ timeout: 20_000 });
-    await page.locator('.composer .chip[data-ask="about"]').click();
+    await pressChip(page, "about");
     const orders = await page.evaluate(() => ({
       contact: Number(document.querySelector<HTMLElement>('[data-flow="contact"]')?.style.order),
       about: Number(document.querySelector<HTMLElement>('[data-flow="about"]')?.style.order),
@@ -91,21 +98,42 @@ test.describe("conversations", () => {
 
   test("asking the same thing twice points back instead of repeating", async ({ page }) => {
     await open(page);
-    await page.locator('.composer .chip[data-ask="fun"]').click();
+    await pressChip(page, "fun");
     await expect(page.locator('[data-flow="fun"] .replies')).toBeVisible({ timeout: 20_000 });
-    await page.locator('.composer .chip[data-ask="fun"]').click();
+    await pressChip(page, "fun");
     await expect(page.locator(".entry").getByText("That one is above.")).toBeVisible({ timeout: 10_000 });
     await expect(page.locator('[data-flow="fun"]')).toHaveCount(1);
   });
 
   test("start over returns to the intro and clears the log", async ({ page }) => {
     await open(page);
-    await page.locator('.composer .chip[data-ask="toolbox"]').click();
+    await pressChip(page, "toolbox");
     await expect(page.locator('[data-flow="toolbox"] .replies')).toBeVisible({ timeout: 20_000 });
     await page.getByRole("button", { name: "Start over" }).click();
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
     await expect(page.locator("[data-flow][data-sent]")).toHaveCount(0);
     await expect(page.locator(".entry")).toHaveCount(0);
+  });
+
+  test("reading mode shows every answer at once, in order", async ({ page }) => {
+    await open(page);
+    await page.getByRole("button", { name: "Or read everything as one page" }).click();
+    await expect(page.locator(".chat-shell")).toHaveAttribute("data-mode", "read");
+    const flows = page.locator("[data-flow]");
+    await expect(flows).toHaveCount(TOPICS.length);
+    await expect(page.locator("[data-flow][data-sent]")).toHaveCount(TOPICS.length);
+    await expect(page.locator("[data-flow] > [data-msg]:not([data-sent])")).toHaveCount(0);
+    const orders = await flows.evaluateAll((nodes) => nodes.map((n) => Number((n as HTMLElement).style.order)));
+    expect(orders).toEqual([...orders].sort((a, b) => a - b));
+    await expectAxeClean(page);
+  });
+
+  test("a phone folds the chip row behind a count", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "the fold is a phone layout");
+    await open(page);
+    await expect(page.locator('.composer .chip[data-ask="experience"]')).toBeHidden();
+    await page.locator(".composer .chips-more").click();
+    await expect(page.locator('.composer .chip[data-ask="experience"]')).toBeVisible();
   });
 
   test("a legacy anchor opens its conversation on arrival", async ({ page }) => {
