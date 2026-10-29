@@ -15,6 +15,18 @@ async function open(page: Page, path = "/") {
   await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
 }
 
+/**
+ * Opens the page under a fake clock and freezes it a moment after load, so the
+ * five-second wait is advanced by the test alone and real load time cannot eat
+ * into it.
+ */
+async function openFrozen(page: Page) {
+  await page.clock.install();
+  await open(page);
+  const now = await page.evaluate(() => Date.now());
+  await page.clock.pauseAt(now + 700);
+}
+
 /** Opens the page and goes straight into the chat by pressing the loading line. */
 async function enter(page: Page) {
   await open(page);
@@ -68,28 +80,26 @@ test.describe("intro", () => {
   });
 
   test("the loading line stays for the whole wait, counts down, and changes on the next load", async ({ page }) => {
-    await page.clock.install();
-    await open(page);
+    await openFrozen(page);
     const text = page.locator(".loader-text");
     await expect(text).not.toHaveText("Booting the chat…");
     const first = await text.textContent();
-    await page.clock.runFor(4_000);
-    await expect(text).toHaveText(first ?? "");
     await expect(page.locator(".loader-count")).toHaveCount(0);
-    await page.clock.runFor(2_000);
+    await page.clock.runFor(2_300);
     await expect(text).toHaveText(first ?? "");
-    await expect(page.locator(".loader-count")).toHaveText(/Ready in [1-5]/);
+    await expect(page.locator(".loader-count")).toHaveText(/Ready in [1-3]/);
+    await page.clock.resume();
     await page.reload();
     await expect(text).not.toHaveText("Booting the chat…");
     expect(await text.textContent()).not.toBe(first);
   });
 
-  test("the chat opens by itself after ten seconds with every topic offered", async ({ page }) => {
-    await page.clock.install();
-    await open(page);
-    await page.clock.runFor(9_000);
+  test("the chat opens by itself after five seconds with every topic offered", async ({ page }) => {
+    await openFrozen(page);
+    await page.clock.runFor(3_000);
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
     await page.clock.runFor(2_000);
+    await page.clock.resume();
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat", { timeout: 10_000 });
     await expect(page.locator(".entry .bubble").first()).toBeVisible();
     await expect(page.locator(".entry .replies .chip")).toHaveCount(0);

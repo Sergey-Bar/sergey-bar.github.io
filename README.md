@@ -56,9 +56,9 @@ anywhere and Escape hands focus back to the page.
 The first screen is quiet: the name, the role and the portrait, with a line
 at the bottom that pretends to boot the chat (negotiating with the release
 gate, convincing the flaky test, counting bugs): one line per visit, kept for
-the whole wait, with "Ready in 5…1" appended for the last five seconds. The
+the whole wait, with "Ready in 3…1" appended for the last three seconds. The
 line rotates through twelve, so the next load reads a different one.
-After those ten seconds, or on a click on the line, or on the first scroll, the
+After those five seconds, or on a click on the line, or on the first scroll, the
 intro lifts and the chat opens with one greeting; the topics live only in the
 composer. A hidden tab pauses the countdown. "Read all" in the identity bar shows
 every answer at once in the record's order, with no pacing. Long cards keep their
@@ -67,9 +67,11 @@ case study shows the problem, the outcome and one figure, with the approach and
 the evidence behind one line. Every card leads with one figure under its title.
 
 Once the chat is open, a sidebar stands beside it on a wide screen, the way a
-coding agent lays out its session: "Start over" and "Read everything", every
-topic with a check once it has been asked, the three pages, and the person at
-the bottom with the typing state. On narrower screens the same sidebar is a
+coding agent lays out its session: "Read everything", every topic with a check
+once it has been asked, GitHub, LinkedIn and email, and the person at the bottom
+with the typing state. The long pages (projects in full, how the site is built,
+accessibility) are not in the sidebar; they stay reachable by their address and
+from one another's footers. On narrower screens the same sidebar is a
 drawer behind the menu button in the identity bar, with a backdrop and Escape
 to close. Under the text field the bar reads like a chat with a model: a plus
 that holds every topic as chips above the field, with GitHub, LinkedIn and

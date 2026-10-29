@@ -253,3 +253,18 @@ name at its head (the name stands once, in its foot).
 Verified: 64 specs pass, 4 skipped by device; a new spec checks that the text
 is partial early, that the caret shows while typing and goes after, and that
 the sr-only copy holds the whole message.
+
+## No Pages in the sidebar (2026-10-29, later)
+
+The sidebar's "Pages" list (projects in full, how the site is built,
+accessibility) was removed. The routes still exist, are still built and
+tested, and are reachable by their address and from one another's footers.
+
+Verified: typecheck, lint and the full suite pass with the list gone.
+
+## A shorter wait (2026-10-29, later)
+
+The loading line's wait was halved, from ten seconds to five, and the
+countdown from the last five seconds to the last three ("Ready in 3…1"). The
+opening veil on a first visit is unchanged. The auto-open spec and the
+loading-line spec run to the new times under Playwright's clock.

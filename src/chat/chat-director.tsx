@@ -13,9 +13,8 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 
-import Link from "next/link";
 
-import { CaseIcon, CheckIcon, LayersIcon, MailIcon, ReadIcon, RestartIcon, SendIcon, TopicIcon } from "@/chat/icons";
+import { CheckIcon, MailIcon, ReadIcon, RestartIcon, SendIcon, TopicIcon } from "@/chat/icons";
 import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
 import { CloseIcon, MenuIcon, PlusIcon } from "@/components/icons";
 import { BotAvatar, Bubble, QuickReplies, UserBubble } from "@/chat/message";
@@ -54,9 +53,9 @@ const LOADER_LINES: readonly string[] = [
   "Running the scan on this page. The page is fine. The page is nervous.",
   "Asking the termites to wait outside.",
 ];
-const LOADER_MS = 10_000;
+const LOADER_MS = 5_000;
 const LOADER_TICK = 250;
-const COUNTDOWN_MS = 5_000;
+const COUNTDOWN_MS = 3_000;
 
 /** The next line in the rotation, remembered across loads. */
 function nextLoaderLine(): string {
@@ -294,7 +293,7 @@ export function ChatDirector({
 
   /**
    * While the intro waits, a line at the bottom pretends to boot the chat,
-   * then counts down the last five seconds and opens it. Ten seconds in all.
+   * then counts down the last three seconds and opens it. Five seconds in all.
    * A click on the line, or the first scroll, skips straight to the chat; a
    * hidden tab pauses.
    */
@@ -784,30 +783,6 @@ export function ChatDirector({
               </li>
             );
           })}
-        </ul>
-
-        <p className="side-label" id="side-pages">
-          Pages
-        </p>
-        <ul className="side-list" aria-labelledby="side-pages">
-          <li>
-            <Link href="/projects/" className="side-item">
-              <LayersIcon size={15} />
-              <span>Projects, in full</span>
-            </Link>
-          </li>
-          <li>
-            <Link href="/colophon/" className="side-item">
-              <CaseIcon size={15} />
-              <span>How this site is built</span>
-            </Link>
-          </li>
-          <li>
-            <Link href="/accessibility/" className="side-item">
-              <CheckIcon size={15} />
-              <span>Accessibility</span>
-            </Link>
-          </li>
         </ul>
 
         <p className="side-label" id="side-profiles">
