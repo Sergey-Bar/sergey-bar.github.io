@@ -23,8 +23,16 @@ async function enter(page: Page) {
   await expect(page.locator(".entry .bubble").first()).toBeVisible();
 }
 
-/** Presses a composer chip; on a phone the row is folded, so it is opened first. */
+/**
+ * Asks a topic the way the layout offers it: the sidebar item on a wide screen,
+ * the composer chip on a phone (opening the fold first when needed).
+ */
 async function pressChip(page: Page, id: string) {
+  const side = page.locator(`.sidebar .side-item[data-ask="${id}"]`);
+  if (await side.isVisible()) {
+    await side.click();
+    return;
+  }
   const chip = page.locator(`.composer .chip[data-ask="${id}"]`);
   if (!(await chip.isVisible())) await page.locator(".composer .chips-more").click();
   await chip.click();
@@ -69,6 +77,28 @@ test.describe("intro", () => {
     await expect(page.locator(".entry .bubble").first()).toBeVisible();
     await expect(page.locator(".entry .replies .chip")).toHaveCount(0);
     await expect(page.locator(".composer .chip[data-ask]")).toHaveCount(TOPICS.length);
+  });
+
+  test("every topic is listed in the sidebar and marked once asked", async ({ page, isMobile }) => {
+    test.skip(isMobile, "phones carry the topics in a drawer and the folded row");
+    await enter(page);
+    const items = page.locator(".sidebar .side-item[data-ask]");
+    await expect(items).toHaveCount(TOPICS.length);
+    for (let i = 0; i < TOPICS.length; i++) await expect(items.nth(i)).toBeInViewport();
+    await expect(page.locator(".composer .chips")).toBeHidden();
+    await items.first().click();
+    await expect(page.locator('.sidebar .side-item[data-ask="about"]')).toHaveAttribute("data-asked", "");
+  });
+
+  test("a phone opens the sidebar as a drawer", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "the drawer is a phone layout");
+    await enter(page);
+    await expect(page.locator(".sidebar")).toBeHidden();
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await expect(page.locator(".sidebar")).toBeVisible();
+    await page.locator('.sidebar .side-item[data-ask="toolbox"]').click();
+    await expect(page.locator(".sidebar")).toBeHidden();
+    await expect(page.locator('[data-flow="toolbox"]')).toHaveAttribute("data-sent", "");
   });
 
   test("has no horizontal overflow", async ({ page }) => {
@@ -129,7 +159,9 @@ test.describe("conversations", () => {
     await enter(page);
     await pressChip(page, "toolbox");
     await expect(page.locator('[data-flow="toolbox"] .replies')).toBeVisible({ timeout: 20_000 });
-    await page.getByRole("button", { name: "Start over" }).click();
+    await page.getByRole("button", { name: "Start over" }).first().click();
+    await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat");
+    await page.getByRole("button", { name: "Clear the conversation?" }).first().click();
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
     await expect(page.locator("[data-flow][data-sent]")).toHaveCount(0);
     await expect(page.locator(".entry")).toHaveCount(0);
@@ -139,7 +171,7 @@ test.describe("conversations", () => {
     test.skip(isMobile, "reading mode is offered on wider screens");
     await enter(page);
     await pressChip(page, "contact");
-    await page.getByRole("button", { name: "Read all" }).click();
+    await page.getByRole("button", { name: "Read everything" }).click();
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-mode", "read");
     const flows = page.locator("[data-flow]");
     await expect(flows).toHaveCount(TOPICS.length);

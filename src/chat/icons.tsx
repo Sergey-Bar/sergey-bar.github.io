@@ -142,6 +142,14 @@ export function ChatIcon(props: IconProps) {
   );
 }
 
+export function ReadIcon(props: IconProps) {
+  return (
+    <svg {...svgProps(props)}>
+      <path d="M4 5h16M4 10h16M4 15h10M4 20h7" />
+    </svg>
+  );
+}
+
 export function TopicIcon({ id, size }: { id: TopicId; size?: number }) {
   switch (id) {
     case "about":

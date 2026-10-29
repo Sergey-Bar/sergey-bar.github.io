@@ -64,6 +64,9 @@ export function Card({
           </header>
         ) : null}
         {children}
+        <button type="button" className="card-expand" data-expand>
+          Show the whole card
+        </button>
       </div>
     </article>
   );

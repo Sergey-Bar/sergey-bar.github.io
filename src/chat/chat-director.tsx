@@ -13,7 +13,10 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 
-import { RestartIcon, SendIcon, TopicIcon } from "@/chat/icons";
+import Link from "next/link";
+
+import { CaseIcon, CheckIcon, LayersIcon, ReadIcon, RestartIcon, SendIcon, TopicIcon } from "@/chat/icons";
+import { CloseIcon, MenuIcon } from "@/components/icons";
 import { BotAvatar, Bubble, QuickReplies, UserBubble } from "@/chat/message";
 import {
   placeholderPrompts,
@@ -50,10 +53,11 @@ const finePointer = () => window.matchMedia("(hover: hover) and (pointer: fine)"
 
 /**
  * Streams a reply the way a model would: every word of a text bubble becomes
- * a span with its index, and the stylesheet fades them in one after another.
- * Cards and quick replies are left whole. The split happens once, on the
- * server-rendered markup React never reconciles again, and only when motion
- * is on; with it off the text is simply there.
+ * a span, hidden, and they are shown one after another so the bubble grows
+ * with the text instead of opening as an empty frame. Cards and quick replies
+ * are left whole. The split happens once, on the server-rendered markup React
+ * never reconciles again, and only when motion is on; with it off the text is
+ * simply there.
  */
 function streamWords(message: HTMLElement) {
   if ("streamed" in message.dataset || motionOff()) return;
@@ -64,7 +68,7 @@ function streamWords(message: HTMLElement) {
   const walker = document.createTreeWalker(bubble, NodeFilter.SHOW_TEXT);
   const nodes: Text[] = [];
   for (let node = walker.nextNode(); node; node = walker.nextNode()) nodes.push(node as Text);
-  let index = 0;
+  const words: HTMLElement[] = [];
   for (const node of nodes) {
     if (!node.data.trim()) continue;
     const fragment = document.createDocumentFragment();
@@ -76,12 +80,27 @@ function streamWords(message: HTMLElement) {
       }
       const word = document.createElement("span");
       word.className = "w";
-      word.style.setProperty("--i", String(Math.min(index++, 70)));
+      word.hidden = true;
       word.textContent = part;
       fragment.appendChild(word);
+      words.push(word);
     }
     node.replaceWith(fragment);
   }
+  let shown = 0;
+  const tick = () => {
+    const batch = shown < 6 ? 1 : 2;
+    for (let i = 0; i < batch && shown < words.length; i++) words[shown++].hidden = false;
+    if (shown < words.length) window.setTimeout(tick, 26);
+  };
+  tick();
+}
+
+/** A card taller than a phone screen opens folded; the director marks it. */
+function markTall(message: HTMLElement) {
+  if (!message.classList.contains("msg-card")) return;
+  const bubble = message.querySelector<HTMLElement>(".bubble");
+  if (bubble && window.innerWidth < 768 && bubble.scrollHeight > 360) message.dataset.tall = "";
 }
 
 /** True when the visitor, or the OS, has asked this site not to move. */
@@ -137,6 +156,10 @@ export function ChatDirector({
   const [sent, setSent] = useState(false);
   /** The line at the bottom while the intro waits for the chat to open. */
   const [loader, setLoader] = useState<{ text: string; step: number } | null>(null);
+  /** Topics already answered, marked in the sidebar. */
+  const [asked, setAsked] = useState<Set<TopicId>>(() => new Set());
+  /** The sidebar as a drawer on narrow screens. */
+  const [drawer, setDrawer] = useState(false);
 
   /* ----------------------------------------------------------- helpers */
 
@@ -316,6 +339,8 @@ export function ChatDirector({
 
         flow.style.order = String(++orderRef.current);
         flow.dataset.sent = "";
+        setAsked((prev) => new Set(prev).add(id));
+        setDrawer(false);
         anchorRef.current = anchor;
         follow(true);
         setStatus(`${site.name} is answering: ${topicById[id].description}.`);
@@ -329,6 +354,7 @@ export function ChatDirector({
           if (run !== runRef.current) return;
           streamWords(message);
           message.dataset.sent = "";
+          markTall(message);
           follow();
           // The reading cursor lands on the answer as its first message arrives.
           if (index === 0 && !finePointer()) flow.focus({ preventScroll: true });
@@ -380,6 +406,8 @@ export function ChatDirector({
       if (canned) canned.hidden = false;
     });
     orderRef.current = log.querySelectorAll("[data-flow]").length + 1;
+    setAsked(new Set(topics.map((t) => t.id)));
+    setDrawer(false);
     rootRef.current?.setAttribute("data-mode", "read");
     window.scrollTo({ top: 0, behavior: "auto" });
     setStatus("Everything, in order.");
@@ -387,6 +415,21 @@ export function ChatDirector({
       log.querySelector<HTMLElement>("[data-flow]")?.focus({ preventScroll: true });
     });
   }, [openChat]);
+
+  /** "Start over" arms itself for three seconds; a second press clears. */
+  const [armed, setArmed] = useState(false);
+  const armTimer = useRef(0);
+  const restartGuarded = () => {
+    if (!armed) {
+      setArmed(true);
+      window.clearTimeout(armTimer.current);
+      armTimer.current = window.setTimeout(() => setArmed(false), 3000);
+      return;
+    }
+    window.clearTimeout(armTimer.current);
+    setArmed(false);
+    restart();
+  };
 
   const restart = useCallback(() => {
     runRef.current += 1;
@@ -409,6 +452,8 @@ export function ChatDirector({
       });
     }
     rootRef.current?.removeAttribute("data-mode");
+    setAsked(new Set());
+    setDrawer(false);
     history.replaceState(null, "", location.pathname);
     window.scrollTo({ top: 0, behavior: motionOff() ? "auto" : "smooth" });
     setStatus("Back at the start.");
@@ -456,6 +501,8 @@ export function ChatDirector({
         input.focus();
       } else if (event.key === "Escape" && document.activeElement === input) {
         input.blur();
+      } else if (event.key === "Escape") {
+        setDrawer(false);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -463,6 +510,15 @@ export function ChatDirector({
   }, []);
 
   const onClick = (event: MouseEvent<HTMLDivElement>) => {
+    const expand = (event.target as HTMLElement).closest<HTMLElement>("[data-expand]");
+    if (expand) {
+      const card = expand.closest<HTMLElement>(".msg-card");
+      if (card) {
+        card.dataset.open = "";
+        delete card.dataset.tall;
+      }
+      return;
+    }
     const target = (event.target as HTMLElement).closest<HTMLElement>("[data-ask]");
     if (!target) return;
     event.preventDefault();
@@ -622,7 +678,13 @@ export function ChatDirector({
   /* ------------------------------------------------------------ render */
 
   return (
-    <div ref={rootRef} className="chat-shell" data-state={stage} onClick={onClick}>
+    <div
+      ref={rootRef}
+      className="chat-shell"
+      data-state={stage}
+      data-drawer={drawer ? "" : undefined}
+      onClick={onClick}
+    >
       <div className="boot" aria-hidden="true">
         <p className="boot-line">
           {["Hello,", "I'm", site.name.split(" ")[0]].map((word, index) => (
@@ -654,61 +716,164 @@ export function ChatDirector({
 
       {topbar}
 
-      <div className="chat-column">
-        <div className="intro-wrap">{intro}</div>
-
-        <header className="identity">
-          <BotAvatar />
-          <div className="identity-text">
-            <p className="identity-name">{site.name}</p>
-            <p className="identity-status" data-typing={typing ? "" : undefined}>
-              <span className="status-dot" aria-hidden="true" />
-              {typing ? "typing…" : "QA Tech Lead"}
-            </p>
-          </div>
-          <button
-            type="button"
-            className="identity-restart identity-readall"
-            onClick={readAll}
-            aria-label="Read all"
-            title="Show every answer at once, in order"
-          >
-            <span className="identity-restart-label">Read all</span>
+      {/* The sidebar: the conversation's controls, every topic, the pages,
+          and the person. On a wide screen it stands beside the chat; on a
+          phone it is a drawer behind the menu button. */}
+      <aside className="sidebar" id="sidebar" aria-label="Conversation">
+        <div className="side-head">
+          <span className="side-brand">
+            <span className="side-mark" aria-hidden="true">
+              S
+            </span>
+            {site.name}
+          </span>
+          <button type="button" className="side-close" onClick={() => setDrawer(false)} aria-label="Close menu">
+            <CloseIcon size={16} />
           </button>
+        </div>
+
+        <div className="side-actions">
           <button
             type="button"
-            className="identity-restart"
-            onClick={restart}
-            aria-label="Start over"
-            title="Back to the intro; the conversation is cleared"
+            className="side-item"
+            data-armed={armed ? "" : undefined}
+            onClick={restartGuarded}
+            title={armed ? "Press again to clear the conversation" : "Back to the intro; the conversation is cleared"}
           >
             <RestartIcon size={15} />
-            <span className="identity-restart-label">Start over</span>
+            <span>{armed ? "Clear the conversation?" : "Start over"}</span>
           </button>
-        </header>
-
-        <div ref={logRef} className="log">
-          {flows}
-          {entries.map((entry) => (
-            <div key={entry.key} className="entry" data-entry={entry.key} style={{ order: entry.order }}>
-              {entry.node}
-            </div>
-          ))}
-          {typing ? (
-            <div className="msg typing" style={{ order: 1_000_000 }} role="status">
-              <BotAvatar />
-              <div className="bubble" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </div>
-              <span className="sr-only">{site.name} is typing</span>
-            </div>
-          ) : null}
+          <button type="button" className="side-item" onClick={readAll} title="Show every answer at once, in order">
+            <ReadIcon size={15} />
+            <span>Read everything</span>
+          </button>
         </div>
-        <p className="sr-only" role="status" aria-live="polite">
-          {status}
+
+        <p className="side-label" id="side-topics">
+          Topics
         </p>
+        <ul className="side-list" aria-labelledby="side-topics">
+          {topics.map((topic) => {
+            const done = asked.has(topic.id);
+            return (
+              <li key={topic.id}>
+                <a
+                  href={`#${topic.id}`}
+                  className="side-item"
+                  data-ask={topic.id}
+                  data-topic={topic.id}
+                  data-asked={done ? "" : undefined}
+                  aria-current={done ? "true" : undefined}
+                >
+                  <TopicIcon id={topic.id} size={15} />
+                  <span>{topic.label}</span>
+                  {done ? <CheckIcon size={13} className="side-check" /> : null}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+
+        <p className="side-label" id="side-pages">
+          Pages
+        </p>
+        <ul className="side-list" aria-labelledby="side-pages">
+          <li>
+            <Link href="/projects/" className="side-item">
+              <LayersIcon size={15} />
+              <span>Projects, in full</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/colophon/" className="side-item">
+              <CaseIcon size={15} />
+              <span>How this site is built</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/accessibility/" className="side-item">
+              <CheckIcon size={15} />
+              <span>Accessibility</span>
+            </Link>
+          </li>
+        </ul>
+
+        <div className="side-foot">
+          <BotAvatar />
+          <span className="side-foot-name">{site.name}</span>
+          <span className="side-foot-meta" data-typing={typing ? "" : undefined}>
+            · {typing ? "typing…" : "QA Tech Lead"}
+          </span>
+        </div>
+      </aside>
+      <button
+        type="button"
+        className="drawer-backdrop"
+        hidden={!drawer}
+        onClick={() => setDrawer(false)}
+        aria-label="Close menu"
+        tabIndex={-1}
+      />
+
+      <div className="chat-main">
+        <div className="chat-column">
+          <div className="intro-wrap">{intro}</div>
+
+          <header className="identity">
+            <button
+              type="button"
+              className="identity-menu"
+              onClick={() => setDrawer(true)}
+              aria-label="Open menu"
+              aria-controls="sidebar"
+              aria-expanded={drawer}
+            >
+              <MenuIcon size={16} />
+            </button>
+            <BotAvatar />
+            <div className="identity-text">
+              <p className="identity-name">{site.name}</p>
+              <p className="identity-status" data-typing={typing ? "" : undefined}>
+                <span className="status-dot" aria-hidden="true" />
+                {typing ? "typing…" : "QA Tech Lead"}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="identity-restart"
+              data-armed={armed ? "" : undefined}
+              onClick={restartGuarded}
+              aria-label={armed ? undefined : "Start over"}
+              title={armed ? "Press again to clear the conversation" : "Back to the intro; the conversation is cleared"}
+            >
+              <RestartIcon size={15} />
+              <span className="identity-restart-label">{armed ? "Clear the conversation?" : "Start over"}</span>
+            </button>
+          </header>
+
+          <div ref={logRef} className="log">
+            {flows}
+            {entries.map((entry) => (
+              <div key={entry.key} className="entry" data-entry={entry.key} style={{ order: entry.order }}>
+                {entry.node}
+              </div>
+            ))}
+            {typing ? (
+              <div className="msg typing" style={{ order: 1_000_000 }} role="status">
+                <BotAvatar />
+                <div className="bubble" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <span className="sr-only">{site.name} is typing</span>
+              </div>
+            ) : null}
+          </div>
+          <p className="sr-only" role="status" aria-live="polite">
+            {status}
+          </p>
+        </div>
       </div>
 
       {stage === "intro" ? (
@@ -753,6 +918,27 @@ export function ChatDirector({
             <button type="submit" className="composer-send" aria-label="Send" data-sent={sent ? "" : undefined}>
               <SendIcon size={17} />
             </button>
+          </div>
+          {/* The status row, the way a coding agent shows what it is running
+              with. Every value here is true; none of them is a setting. */}
+          <div className="composer-meta" aria-hidden="true">
+            <span className="meta-pill">
+              <span className="meta-k">model</span>
+              <span className="meta-v">{site.name} · human</span>
+              <span className="meta-caret">⌄</span>
+            </span>
+            <span className="meta-pill">
+              <span className="meta-k">effort</span>
+              <span className="meta-v">7+ years</span>
+            </span>
+            <span className="meta-pill meta-mode">
+              <span className="meta-k">mode</span>
+              <span className="meta-v">evidence-first</span>
+            </span>
+            <span className="meta-pill meta-wide">
+              <span className="meta-k">context</span>
+              <span className="meta-v">{topics.length} topics · 14 recommendations · 1 recorded scan</span>
+            </span>
           </div>
           <ul className="chips" aria-label="Topics" data-collapsed={chipsOpen ? undefined : ""}>
             {topics.map((topic) => (

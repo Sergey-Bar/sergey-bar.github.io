@@ -147,3 +147,22 @@ Verified: 52 specs pass (conversation specs now enter the chat through the
 loading line first); a scripted run of 160 hammer hits produced a live clock,
 score and combo, crawling bugs and floating points; the auto-open spec uses
 Playwright's clock across the ten-second line.
+
+## Sidebar and status row (2026-10-29, later)
+
+The chat gained a sidebar in the manner of a coding agent's session: the two
+actions, the eight topics with asked marks, the three pages and the person with
+the typing state. From 64rem it stands beside the chat and the composer shifts
+right; below that it is a drawer behind a menu button in the identity bar, with
+a backdrop, Escape, and the corner controls under the backdrop. The composer
+has a status row (model, effort, mode, context; mode hidden on phones) and a
+compact chip row only where there is no sidebar. The motion control sits in
+the sidebar's head beside the chat. Bubbles grow word by word, tall cards fold
+on phones, "Start over" asks once, the hint line goes once there is a
+conversation, and an answer that takes focus on arrival draws no ring.
+
+Verified: 53 specs pass, 5 skipped by device (sidebar on desktop, drawer on
+phone, every topic marked asked, restart confirmation); screenshots at 1440×900
+and on a Pixel 7 with the drawer open; budgets within limits. A late sidebar
+seen while probing was Chromium not producing frames for the first page of a
+fresh headless browser, regardless of the page, and not the site.

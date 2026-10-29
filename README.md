@@ -63,7 +63,19 @@ every answer at once in the record's order, with no pacing. Long cards keep thei
 rhythm: a recommendation shows two sentences and opens the rest on request, a
 case study shows the problem, the outcome and one figure, with the approach and
 the evidence behind one line. Every card leads with one figure under its title.
-On a phone the chip row shows three topics and folds the rest behind a count.
+
+Once the chat is open, a sidebar stands beside it on a wide screen, the way a
+coding agent lays out its session: "Start over" and "Read everything", every
+topic with a check once it has been asked, the three pages, and the person at
+the bottom with the typing state. On narrower screens the same sidebar is a
+drawer behind the menu button in the identity bar, with a backdrop and Escape
+to close; there the composer keeps a compact chip row (three topics and a
+count on a phone). Under the text field a status row reads like an agent's:
+model (the person), effort (the years), mode (evidence-first) and context (the
+topics, recommendations and recorded scan behind the answers). Every value is
+true and none is a setting. Text bubbles grow as their words arrive, a card
+taller than a phone screen opens folded with a "Show the whole card" button,
+and "Start over" asks once ("Clear the conversation?") before it clears.
 
 The page opens, once per tab session, on a veil that says "Hello, I'm Sergey"
 and "Welcome" and lifts into the hero; a click or a key ends it early, and it
