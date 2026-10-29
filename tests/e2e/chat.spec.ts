@@ -135,7 +135,8 @@ test.describe("conversations", () => {
     await expect(page.locator(".entry")).toHaveCount(0);
   });
 
-  test("reading mode shows every answer at once, in order", async ({ page }) => {
+  test("reading mode shows every answer at once, in order", async ({ page, isMobile }) => {
+    test.skip(isMobile, "reading mode is offered on wider screens");
     await enter(page);
     await pressChip(page, "contact");
     await page.getByRole("button", { name: "Read all" }).click();

@@ -668,7 +668,7 @@ export function ChatDirector({
           </div>
           <button
             type="button"
-            className="identity-restart"
+            className="identity-restart identity-readall"
             onClick={readAll}
             aria-label="Read all"
             title="Show every answer at once, in order"

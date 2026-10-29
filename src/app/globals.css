@@ -410,7 +410,7 @@ main:has(.chat-shell) ~ .motion-control {
   bottom: auto;
 }
 @media (max-width: 84.99rem) {
-  .chat-shell[data-state="chat"] .identity { padding-left: 46px; }
+  .chat-shell[data-state="chat"] .identity { padding-left: 50px; }
 }
 
 /* ---------------------------------------------------------------------------
@@ -796,10 +796,17 @@ main:has(.chat-shell) ~ .motion-control {
 @media (max-width: 84.99rem) {
   .chat-shell[data-state="chat"] .identity { padding-right: 150px; }
 }
+/* On a phone the bar is one line: avatar, name, restart. The reading-mode
+   button and the status line go; the corner controls get the room they need. */
 @media (max-width: 47.99rem) {
-  .chat-shell[data-state="chat"] .identity { padding-right: 96px; }
-  .identity-restart-label { display: none; }
-  .identity-restart { width: 36px; padding: 0; justify-content: center; }
+  .chat-shell[data-state="chat"] .identity { padding-left: 50px; padding-right: 100px; gap: 8px; }
+  .identity .identity-text { min-width: 0; }
+  .identity .identity-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .identity .identity-status { display: none; }
+  .identity .identity-readall { display: none; }
+  .identity .identity-restart-label { display: none; }
+  .identity .identity-restart { width: 36px; height: 36px; padding: 0; justify-content: center; flex-shrink: 0; }
+  .identity .msg-avatar { flex-shrink: 0; }
 }
 .identity-text { flex: 1; min-width: 0; }
 .identity-name { font-size: 15px; font-weight: 600; line-height: 1.2; }
