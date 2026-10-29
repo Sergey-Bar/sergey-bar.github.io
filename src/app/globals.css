@@ -612,28 +612,20 @@ main:has(.chat-shell) ~ .motion-control {
 
 .intro-stage {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  justify-content: center;
-  gap: 36px;
-  width: min(100%, 860px);
-  margin-top: 36px;
+  justify-items: center;
+  margin-top: 40px;
 }
 
-/* The first message, already a conversation. */
-.intro-chat { width: min(100%, 560px); text-align: left; }
-.intro-chat .bubble { max-width: none; }
-.intro-actions { margin-top: 14px; }
-.intro-readall { margin-top: 12px; padding-left: 48px; font-size: 13px; color: var(--color-muted); }
-.intro-readall button { color: inherit; cursor: pointer; }
-.intro-readall button:hover { color: var(--color-ink); }
+/* The intro lifts away when the chat opens on its own. */
+.intro-wrap { transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out); }
+.chat-shell[data-leaving] .intro-wrap { opacity: 0; transform: translateY(-28px); }
 
-/* Smaller than a hero portrait on purpose, and after a few seconds it settles:
-   the ring goes, the photo dims a little, and the words carry the screen. A
-   pointer over it, or focus near it, brings it back. */
+/* Centred, a little larger now that it stands alone, and after a few seconds
+   it settles: the ring goes and the photo dims a little. A pointer over it,
+   or focus near it, brings it back. */
 .intro-portrait {
   position: relative;
-  width: clamp(168px, min(20vw, 24vh), 232px);
+  width: clamp(180px, min(22vw, 28vh), 260px);
   aspect-ratio: 1;
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -873,7 +865,10 @@ main:has(.chat-shell) ~ .motion-control {
   border: 1px solid var(--color-line-strong);
   background: var(--color-surface-2);
 }
-.msg-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
+/* At 36px the photo's dark backdrop would swallow the face, so the avatar
+   shows the centre of the picture at one and a half times, still well under
+   the file's resolution. */
+.msg-avatar img { display: block; width: 150%; height: 150%; margin: -25% 0 0 -25%; object-fit: cover; object-position: 50% 45%; }
 .msg-avatar-gap { border: 0; background: transparent; }
 
 .bubble {
@@ -1077,6 +1072,44 @@ main:has(.chat-shell) ~ .motion-control {
   }
 }
 
+/* --- After hours: the button ------------------------------------------------ */
+
+.fun-stage { display: grid; place-items: center; padding: 30px 0 14px; }
+.fun-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 14px 30px;
+  border-radius: 100px;
+  background: var(--grad);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 14px 40px #0a66c24d;
+  transition: transform var(--dur-press) var(--ease-out), box-shadow var(--dur-ui) var(--ease-out);
+}
+.fun-button::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  border: 2px solid color-mix(in oklab, var(--color-c-sky) 55%, transparent);
+  pointer-events: none;
+}
+.fun-button:hover { transform: translateY(-2px); box-shadow: 0 18px 50px #2d8cff66; }
+.fun-button:active { transform: scale(0.96); }
+.fun-hints { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; list-style: none; font-size: 12px; color: var(--color-muted); }
+.fun-hints li { position: relative; padding-left: 12px; }
+.fun-hints li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 5px; height: 5px; border-radius: 50%; background: var(--color-c-sky); }
+@keyframes fun-pulse { 0%, 100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 0; transform: scale(1.12); } }
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="off"]) .fun-button::before { animation: fun-pulse 2.4s var(--ease-out) infinite; }
+}
+
 /* --- Case studies and the scan transcript ------------------------------------ */
 
 .case-context { font-size: 14px; line-height: 1.6; color: var(--color-muted); margin-top: 8px; }
@@ -1253,8 +1286,8 @@ main:has(.chat-shell) ~ .motion-control {
 /* --- Responsive ------------------------------------------------------------ */
 
 @media (max-width: 63.99rem) {
-  .intro-stage { grid-template-columns: 1fr; justify-items: center; gap: 26px; margin-top: 28px; }
-  .intro-portrait { order: -1; width: clamp(140px, 34vw, 190px); }
+  .intro-stage { margin-top: 28px; }
+  .intro-portrait { width: clamp(150px, 36vw, 200px); }
 }
 @media (max-width: 47.99rem) {
   .intro { padding-top: 64px; }
@@ -1262,7 +1295,6 @@ main:has(.chat-shell) ~ .motion-control {
   .intro-sub { margin-top: 14px; font-size: 1rem; }
   .intro-stage { margin-top: 22px; gap: 22px; }
   .intro-quote { display: none; }
-  .intro-readall { padding-left: 0; }
   .msg { grid-template-columns: 30px minmax(0, 1fr); gap: 10px; }
   .msg-avatar { width: 30px; height: 30px; }
   .msg-card .bubble { padding: 18px 16px; }

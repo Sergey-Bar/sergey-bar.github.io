@@ -115,3 +115,20 @@ plus a count; the send button pulses; the toolbox has a real empty state; the
 identity bar gained "Read all" and tooltips. Two specs were added (reading
 mode, the phone fold) and the chip helper opens the fold on a phone. The full
 verify pipeline, including the suite, passed before the push.
+
+## Quiet intro, the game, and the avatar (2026-10-29, later)
+
+The intro is now the name, the role and the portrait alone; after about ten
+seconds, or on the first scroll, it lifts and the chat opens with a greeting and
+every topic as a quick reply (a chip pressed earlier cancels it, a hidden tab
+waits). "Open to work" is gone from the badge, the identity bar, the preview and
+the game. The after-hours answer is a card with the button centred and a pulse.
+The game's target is repainted as the current chat UI on the site's ground, the
+toolbox panel matches the site, integrity shows as a bar, the screen talks back
+at 75, 50, 25 and 3 percent, and touch gets a haptic tick on the hammer, the
+stamp and a squished termite. The chat avatar shows the centre of the photo at
+one and a half times so the face reads at 36px.
+
+Verified: the suite (52 specs) passes; the engine reacts to dispatched pointer
+events (integrity 100 to 96.4 after three hammer hits); the spec for the
+auto-opening intro uses Playwright's clock.

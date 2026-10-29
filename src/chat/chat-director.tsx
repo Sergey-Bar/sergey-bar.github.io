@@ -23,7 +23,8 @@ import {
   topics,
   type TopicId,
 } from "@/chat/topics";
-import { availability, contact, site } from "@/content/site";
+import { hero } from "@/content/hero";
+import { contact, site } from "@/content/site";
 
 type Entry = { key: number; order: number; node: ReactNode };
 
@@ -153,6 +154,7 @@ export function ChatDirector({
     flushSync(() => setStage("chat"));
   }, []);
 
+
   /** Shows the typing indicator for about as long as the reply takes to read. */
   const think = useCallback(
     async (run: number, weight: number) => {
@@ -177,6 +179,66 @@ export function ChatDirector({
   }, []);
 
   /* ------------------------------------------------------------- flows */
+
+  /**
+   * The intro leaves on its own: after about ten seconds, or on the first
+   * scroll, it lifts and the chat opens with a greeting and every topic as a
+   * quick reply. A chip pressed earlier cancels it; a hidden tab waits.
+   */
+  const greet = useCallback(
+    () =>
+      enqueue(async () => {
+        const run = runRef.current;
+        if (rootRef.current?.dataset.state !== "intro") return;
+        const shell = rootRef.current;
+        if (shell && !motionOff()) {
+          shell.dataset.leaving = "";
+          await sleep(520);
+          delete shell.dataset.leaving;
+          if (run !== runRef.current) return;
+        }
+        openChat();
+        followRef.current = true;
+        anchorRef.current = null;
+        push(
+          <>
+            <Bubble>
+              <p>{hero.positioning}</p>
+              <p>Ask me anything about my work, or pick a topic.</p>
+            </Bubble>
+            <QuickReplies ids={topics.map((t) => t.id)} />
+          </>,
+        );
+        window.scrollTo({ top: 0, behavior: "auto" });
+        setStatus(`${site.name}: ask me anything about my work, or pick a topic.`);
+      }),
+    [enqueue, openChat, push],
+  );
+
+  useEffect(() => {
+    if (stage !== "intro") return;
+    const booting = document.documentElement.dataset.boot === "";
+    let timer = 0;
+    const arm = (ms: number) => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        if (document.visibilityState !== "visible") {
+          arm(4000);
+          return;
+        }
+        void greet();
+      }, ms);
+    };
+    arm((booting ? 3400 : 0) + 10_000);
+    const onScroll = () => {
+      if (window.scrollY > 40) void greet();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [stage, greet]);
 
   const ask = useCallback(
     (id: TopicId, typed?: string) =>
@@ -370,11 +432,6 @@ export function ChatDirector({
   }, []);
 
   const onClick = (event: MouseEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest("[data-read-all]")) {
-      event.preventDefault();
-      readAll();
-      return;
-    }
     const target = (event.target as HTMLElement).closest<HTMLElement>("[data-ask]");
     if (!target) return;
     event.preventDefault();
@@ -575,7 +632,7 @@ export function ChatDirector({
             <p className="identity-name">{site.name}</p>
             <p className="identity-status" data-typing={typing ? "" : undefined}>
               <span className="status-dot" aria-hidden="true" />
-              {typing ? "typing…" : availability.text}
+              {typing ? "typing…" : "QA Tech Lead"}
             </p>
           </div>
           <button

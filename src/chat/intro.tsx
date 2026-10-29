@@ -1,10 +1,7 @@
 import type { CSSProperties } from "react";
 
-import { TopicIcon } from "@/chat/icons";
-import { BotAvatar } from "@/chat/message";
-import { topicById } from "@/chat/topics";
 import { hero, images } from "@/content/hero";
-import { availability, site } from "@/content/site";
+import { site } from "@/content/site";
 
 /** A delay for the page-load sequence, read by the stylesheet as `--d`. */
 function at(ms: number): CSSProperties {
@@ -32,18 +29,11 @@ function MaskedLine({ words, delay }: { words: readonly Word[]; delay: number })
   );
 }
 
-const OPENERS = [
-  { id: "about", label: "About me" },
-  { id: "projects", label: "See my work" },
-  { id: "cases", label: topicById.cases.label },
-] as const;
-
 /**
- * The first screen is already the conversation: the name and the role, then
- * the first message, with the ways in as quick replies beneath it. The
- * portrait sits beside it, smaller than a hero, still, and settling after a
- * moment so the words carry the screen. It leaves once a topic is chosen and
- * comes back with "Start over".
+ * The first screen is quiet: the name, the role and the portrait, centred.
+ * After about ten seconds (or on the first scroll) the director lifts it and
+ * opens the chat; any chip does the same at once. It comes back with "Start
+ * over".
  */
 export function Intro() {
   const titleLine1: Word[] = [{ text: "I'm" }, { text: `${site.name.split(" ")[0]},`, className: "name" }];
@@ -65,31 +55,6 @@ export function Intro() {
       </p>
 
       <div className="intro-stage">
-        <div className="intro-chat" data-stage style={at(680)}>
-          <article className="msg">
-            <BotAvatar />
-            <div className="bubble">
-              <p>{hero.positioning}</p>
-              <p>Ask me anything about my work, or start with one of these.</p>
-            </div>
-          </article>
-          <ul className="replies-list intro-actions" aria-label="Start here">
-            {OPENERS.map((opener) => (
-              <li key={opener.id}>
-                <a href={`#${opener.id}`} className="chip" data-ask={opener.id} data-topic={opener.id}>
-                  <TopicIcon id={opener.id} size={15} />
-                  {opener.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-          <p className="intro-readall">
-            <button type="button" className="link-underline" data-read-all>
-              Or read everything as one page
-            </button>
-          </p>
-        </div>
-
         <div className="intro-portrait">
           <span className="portrait-glow" aria-hidden="true" />
           <span className="portrait-ring" aria-hidden="true" />
@@ -103,10 +68,6 @@ export function Intro() {
               fetchPriority="high"
               className="portrait-img"
             />
-          </span>
-          <span className="portrait-badge" data-stage style={at(900)}>
-            <span className="status-dot" aria-hidden="true" />
-            {availability.text}
           </span>
         </div>
       </div>

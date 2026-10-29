@@ -34,8 +34,7 @@ test.describe("intro", () => {
   test("renders the name, the role and the ways in", async ({ page }) => {
     await open(page);
     await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(/Sergey Bar/);
-    await expect(page.getByRole("link", { name: "About me" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "See my work" })).toBeVisible();
+    await expect(page.getByRole("img", { name: "Sergey Bar" })).toBeVisible();
     await expect(page.getByRole("textbox", { name: "Ask about my work" })).toBeVisible();
     await expectAxeClean(page);
   });
@@ -49,6 +48,16 @@ test.describe("intro", () => {
     await expect(page.locator(".boot")).toBeHidden();
     await page.reload();
     await expect(page.locator("html")).not.toHaveAttribute("data-boot", "");
+  });
+
+  test("the chat opens by itself after ten seconds with every topic offered", async ({ page }) => {
+    await page.clock.install();
+    await open(page);
+    await page.clock.runFor(9_000);
+    await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
+    await page.clock.runFor(2_000);
+    await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat", { timeout: 10_000 });
+    await expect(page.locator(".entry .replies .chip")).toHaveCount(TOPICS.length);
   });
 
   test("has no horizontal overflow", async ({ page }) => {
@@ -117,7 +126,8 @@ test.describe("conversations", () => {
 
   test("reading mode shows every answer at once, in order", async ({ page }) => {
     await open(page);
-    await page.getByRole("button", { name: "Or read everything as one page" }).click();
+    await pressChip(page, "contact");
+    await page.getByRole("button", { name: "Read all" }).click();
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-mode", "read");
     const flows = page.locator("[data-flow]");
     await expect(flows).toHaveCount(TOPICS.length);

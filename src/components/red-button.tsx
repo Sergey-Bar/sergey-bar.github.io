@@ -20,7 +20,7 @@ export function RedButton() {
       <button
         type="button"
         onClick={press}
-        className="relative inline-flex min-h-14 max-w-full py-3 text-left items-center gap-3 rounded-[var(--radius-panel)] border-2 border-[#5aa9ff] bg-accent px-7 t-body font-semibold text-white transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[#2d8cff] active:scale-[0.96] motion-reduce:active:scale-100"
+        className="fun-button"
       >
         <svg
           className="size-5"

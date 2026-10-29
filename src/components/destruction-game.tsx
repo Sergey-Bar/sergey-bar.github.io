@@ -3,10 +3,9 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 
 import { cn } from "@/lib/utils";
 import { CloseIcon } from "@/components/icons";
-import { availability, contact, site } from "@/content/site";
+import { site } from "@/content/site";
 import { hero } from "@/content/hero";
 
-const HERO_HEADLINE = hero.headline;
 import {
   HammerIcon,
   TOOLS,
@@ -20,7 +19,6 @@ const SANS = '"Segoe UI", Roboto, Helvetica, Arial, system-ui, sans-serif';
 const MONO = '"JetBrains Mono", "Cascadia Mono", ui-monospace, Consolas, monospace';
 
 const DOMAIN = new URL(site.domain).hostname;
-const readable = (href: string) => href.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 const PAINT_COLORS = [
   "#ff5252",
@@ -229,9 +227,9 @@ function docGlyph(g: CanvasRenderingContext2D, x: number, y: number) {
   g.fillRect(x - 6, y - 6, 12, 1.6);
   g.fillRect(x - 6, y - 2, 12, 1.6);
   g.fillRect(x - 6, y + 2, 8, 1.6);
-  g.fillStyle = tokens.success;
+  g.fillStyle = "#2d8cff";
   g.fillRect(x - 6, y + 6, 12, 1.6);
-  g.fillStyle = tokens.critical;
+  g.fillStyle = "#0a66c2";
   g.fillRect(x - 6, y + 9, 7, 1.6);
 }
 
@@ -256,30 +254,25 @@ function drawDesktopIcon(
 function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number) {
   const showIcons = w >= 640;
 
-  const wall = g.createLinearGradient(0, 0, w * 0.55, h);
-  wall.addColorStop(0, "#2b1d70");
-  wall.addColorStop(0.55, "#191157");
-  wall.addColorStop(1, "#0b0834");
-  g.fillStyle = wall;
+  // The site's own ground: near-black, one blue light low on the right.
+  g.fillStyle = "#050608";
+  g.fillRect(0, 0, w, h);
+  const light = g.createRadialGradient(w * 0.86, h * 0.92, 0, w * 0.86, h * 0.92, Math.max(w, h) * 0.75);
+  light.addColorStop(0, "rgba(29,95,217,0.55)");
+  light.addColorStop(0.35, "rgba(11,62,168,0.28)");
+  light.addColorStop(1, "rgba(11,62,168,0)");
+  g.fillStyle = light;
+  g.fillRect(0, 0, w, h);
+  const light2 = g.createRadialGradient(w * 0.9, -h * 0.1, 0, w * 0.9, -h * 0.1, Math.max(w, h) * 0.5);
+  light2.addColorStop(0, "rgba(10,102,194,0.22)");
+  light2.addColorStop(1, "rgba(10,102,194,0)");
+  g.fillStyle = light2;
   g.fillRect(0, 0, w, h);
 
-  g.fillStyle = "rgba(255,255,255,0.05)";
+  g.fillStyle = "rgba(255,255,255,0.045)";
   for (let x = 26; x < w - 12; x += 46) {
     for (let y = 26; y < h - 52; y += 46) g.fillRect(x, y, 2, 2);
   }
-
-  const vignette = g.createRadialGradient(
-    w / 2,
-    h / 2,
-    Math.min(w, h) * 0.32,
-    w / 2,
-    h / 2,
-    Math.max(w, h) * 0.78,
-  );
-  vignette.addColorStop(0, "rgba(0,0,0,0)");
-  vignette.addColorStop(1, "rgba(0,0,0,0.38)");
-  g.fillStyle = vignette;
-  g.fillRect(0, 0, w, h);
 
   if (showIcons) {
     const iconX = 44;
@@ -297,31 +290,28 @@ function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number) {
   const titlebar = 34;
   const chrome = 42;
 
+  // The browser window, in the site's dark theme.
   g.save();
-  g.shadowColor = "rgba(0,0,0,0.5)";
-  g.shadowBlur = 34;
-  g.shadowOffsetY = 12;
-  rr(g, wx, wy, ww, wh, 10);
-  g.fillStyle = "#f7f7f5";
+  g.shadowColor = "rgba(0,0,0,0.6)";
+  g.shadowBlur = 40;
+  g.shadowOffsetY = 14;
+  rr(g, wx, wy, ww, wh, 12);
+  g.fillStyle = "#0d0f14";
   g.fill();
   g.restore();
 
-  rr(g, wx, wy, ww, wh, 10);
-  g.strokeStyle = "rgba(0,0,0,0.28)";
+  rr(g, wx, wy, ww, wh, 12);
+  g.strokeStyle = "rgba(255,255,255,0.12)";
   g.lineWidth = 1;
   g.stroke();
 
   g.save();
-  rr(g, wx, wy, ww, titlebar + 10, 10);
+  rr(g, wx, wy, ww, titlebar + 10, 12);
   g.clip();
-  const titleGrad = g.createLinearGradient(0, wy, 0, wy + titlebar);
-  titleGrad.addColorStop(0, "#f1f0ea");
-  titleGrad.addColorStop(1, "#dcdbd4");
-  g.fillStyle = titleGrad;
+  g.fillStyle = "#1c2026";
   g.fillRect(wx, wy, ww, titlebar);
   g.restore();
-
-  g.fillStyle = "rgba(0,0,0,0.14)";
+  g.fillStyle = "rgba(255,255,255,0.08)";
   g.fillRect(wx + 1, wy + titlebar, ww - 2, 1);
 
   const dots = ["#ff5f57", "#febc2e", "#28c840"];
@@ -333,15 +323,14 @@ function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number) {
     g.fill();
     dx += 16;
   }
-
   g.font = `600 12px ${SANS}`;
   g.textAlign = "center";
-  g.fillStyle = "#3c3d42";
+  g.fillStyle = "#a3acb8";
   g.fillText(site.title, wx + ww / 2 + 20, wy + titlebar / 2 + 4);
 
-  g.fillStyle = "#f7f7f5";
+  g.fillStyle = "#14171c";
   g.fillRect(wx, wy + titlebar + 1, ww, chrome);
-  g.fillStyle = "rgba(0,0,0,0.09)";
+  g.fillStyle = "rgba(255,255,255,0.08)";
   g.fillRect(wx, wy + titlebar + 1 + chrome, ww, 1);
 
   const tabX = wx + 12;
@@ -349,13 +338,14 @@ function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number) {
   const tabW = Math.min(200, ww - 150);
   const tabH = chrome - 14;
   rr(g, tabX, tabY, tabW, tabH, 8);
-  g.fillStyle = "#ffffff";
+  g.fillStyle = "#1c2026";
   g.fill();
-  g.strokeStyle = "rgba(0,0,0,0.1)";
+  g.strokeStyle = "rgba(255,255,255,0.1)";
   g.lineWidth = 1;
   g.stroke();
-  rr(g, tabX + 8, tabY + tabH / 2 - 7, 14, 14, 4);
-  g.fillStyle = "#3d5afe";
+  g.fillStyle = "#2d8cff";
+  g.beginPath();
+  g.arc(tabX + 15, tabY + tabH / 2, 7, 0, PI2);
   g.fill();
   g.font = `700 9px ${SANS}`;
   g.textAlign = "center";
@@ -363,7 +353,7 @@ function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number) {
   g.fillText("S", tabX + 15, tabY + tabH / 2 + 3.5);
   g.font = `500 11px ${SANS}`;
   g.textAlign = "left";
-  g.fillStyle = "#22242a";
+  g.fillStyle = "#e6e8eb";
   g.fillText(DOMAIN, tabX + 28, tabY + tabH / 2 + 4);
 
   const urlX = tabX + tabW + 10;
@@ -371,162 +361,205 @@ function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number) {
   const urlY = tabY + 1;
   const urlH = tabH - 2;
   rr(g, urlX, urlY, urlW, urlH, urlH / 2);
-  g.fillStyle = "#ffffff";
+  g.fillStyle = "#0d0f14";
   g.fill();
-  g.strokeStyle = "rgba(0,0,0,0.16)";
+  g.strokeStyle = "rgba(255,255,255,0.12)";
   g.stroke();
-  g.strokeStyle = "#66686d";
+  g.strokeStyle = "#8b939d";
   g.lineWidth = 1.2;
   g.beginPath();
   g.arc(urlX + 16, urlY + urlH / 2 - 2, 3, Math.PI, 0);
   g.stroke();
-  g.fillStyle = "#66686d";
+  g.fillStyle = "#8b939d";
   g.fillRect(urlX + 13, urlY + urlH / 2 - 2, 6, 5.5);
   g.font = `400 11px ${MONO}`;
   g.textAlign = "left";
-  g.fillStyle = "#4a4c50";
+  g.fillStyle = "#a3acb8";
   g.fillText(site.domain, urlX + 27, urlY + urlH / 2 + 4);
 
-  const pad = 30;
+  // The page itself: the chat, as it looks today.
+  const pad = 26;
   const cx = wx + pad;
   const cw = ww - pad * 2;
   const contentTop = wy + titlebar + 1 + chrome;
+  const contentBottom = wy + wh;
 
   g.save();
   g.beginPath();
   g.rect(wx + 1, contentTop, ww - 2, wh - titlebar - 2);
   g.clip();
 
-  g.textAlign = "left";
-  let y = contentTop + 32;
+  const pageLight = g.createRadialGradient(wx + ww * 0.9, contentBottom, 0, wx + ww * 0.9, contentBottom, ww * 0.7);
+  pageLight.addColorStop(0, "rgba(29,95,217,0.3)");
+  pageLight.addColorStop(1, "rgba(29,95,217,0)");
+  g.fillStyle = pageLight;
+  g.fillRect(wx, contentTop, ww, wh);
 
-  g.font = `650 23px ${SANS}`;
-  g.fillStyle = "#101114";
-  for (const line of wrap(g, HERO_HEADLINE, cw)) {
-    g.fillText(line, cx, y);
-    y += 28;
-  }
-
-  y += 6;
-  g.font = `400 12px ${SANS}`;
-  g.fillStyle = "#66686d";
-  for (const line of wrap(g, site.description, cw)) {
-    g.fillText(line, cx, y);
-    y += 17;
-  }
-
-  y += 12;
-  g.fillStyle = tokens.success;
-  g.beginPath();
-  g.arc(cx + 3, y - 4, 3.2, 0, PI2);
-  g.fill();
-  g.font = `400 11.5px ${SANS}`;
-  g.fillStyle = "#4a4c50";
-  g.fillText(availability.text, cx + 13, y);
-  y += 26;
-
-  const btnH = 34;
-  let bx = cx;
-  const drawButton = (label: string, primary: boolean, glyph: "in" | "gh") => {
-    g.font = `600 12px ${SANS}`;
-    const bw = g.measureText(label).width + 48;
-    rr(g, bx, y, bw, btnH, 8);
-    g.fillStyle = primary ? tokens.ink : "#ffffff";
+  const avatar = (x: number, y: number, r: number) => {
+    g.fillStyle = "#1d5fd9";
+    g.beginPath();
+    g.arc(x, y, r, 0, PI2);
     g.fill();
-    if (!primary) {
-      g.strokeStyle = "#cfcfc9";
-      g.lineWidth = 1;
-      g.stroke();
-    }
-    rr(g, bx + 12, y + btnH / 2 - 7, 14, 14, 3.5);
-    g.fillStyle = glyph === "in" ? "#0a66c2" : tokens.ink;
+    g.fillStyle = "#f5d6c0";
+    g.beginPath();
+    g.arc(x, y - r * 0.15, r * 0.42, 0, PI2);
     g.fill();
-    g.font = `700 9px ${SANS}`;
-    g.textAlign = "center";
-    g.fillStyle = "#ffffff";
-    g.fillText(glyph === "in" ? "in" : "GH", bx + 19, y + btnH / 2 + 3.5);
-    g.font = `600 12px ${SANS}`;
-    g.textAlign = "left";
-    g.fillStyle = primary ? "#ffffff" : tokens.ink;
-    g.fillText(label, bx + 33, y + btnH / 2 + 4);
-    bx += bw + 12;
+    g.fillStyle = "#1b1f2b";
+    g.beginPath();
+    g.ellipse(x, y + r * 0.7, r * 0.72, r * 0.48, 0, Math.PI, 0);
+    g.fill();
+    g.fillStyle = "#2a1d12";
+    g.beginPath();
+    g.ellipse(x, y - r * 0.42, r * 0.44, r * 0.22, 0, Math.PI, 0);
+    g.fill();
   };
-  drawButton("Connect on LinkedIn", true, "in");
-  drawButton("Open GitHub", false, "gh");
 
-  y += btnH + 22;
+  let y = contentTop + 18;
+  avatar(cx + 14, y + 12, 14);
+  g.font = `600 12.5px ${SANS}`;
+  g.textAlign = "left";
+  g.fillStyle = "#ffffff";
+  g.fillText(site.name, cx + 36, y + 10);
+  g.fillStyle = "#2d8cff";
+  g.beginPath();
+  g.arc(cx + 40, y + 21, 3, 0, PI2);
+  g.fill();
+  g.font = `400 10.5px ${SANS}`;
+  g.fillStyle = "#a3acb8";
+  g.fillText("QA Tech Lead", cx + 47, y + 25);
+  g.fillStyle = "rgba(255,255,255,0.08)";
+  g.fillRect(cx, y + 38, cw, 1);
+  y += 56;
 
-  const cardsTop = y;
-  const cardH = 98;
-  if (cardsTop + cardH <= wy + wh - 12) {
-    const gap = 12;
-    const cardW = (cw - gap) / 2;
-    const cards: Array<{ title: string; sub: string; url: string; glyph: "in" | "gh" }> = [
-      {
-        title: "Open LinkedIn",
-        sub: "The full record: roles, dates, scope and outcomes.",
-        url: readable(contact.linkedin),
-        glyph: "in",
-      },
-      {
-        title: "Open GitHub",
-        sub: "The work itself: source, tests and the gating pipeline.",
-        url: readable(contact.github),
-        glyph: "gh",
-      },
-    ];
-    cards.forEach((card, i) => {
-      const cardX = cx + i * (cardW + gap);
-      rr(g, cardX, cardsTop, cardW, cardH, 12);
-      g.fillStyle = "#ffffff";
-      g.fill();
-      g.strokeStyle = "#cfcfc9";
-      g.lineWidth = 1;
-      g.stroke();
-      rr(g, cardX + 12, cardsTop + 12, 26, 26, 6);
-      g.fillStyle = tokens.ink;
-      g.fill();
-      rr(g, cardX + 17.5, cardsTop + 17.5, 15, 15, 3.6);
-      g.fillStyle = card.glyph === "in" ? "#0a66c2" : "#2f343c";
-      g.fill();
-      g.font = `700 8.5px ${SANS}`;
-      g.textAlign = "center";
-      g.fillStyle = "#ffffff";
-      g.fillText(card.glyph === "in" ? "in" : "GH", cardX + 25, cardsTop + 28);
-      g.font = `600 12px ${SANS}`;
-      g.textAlign = "left";
-      g.fillStyle = "#101114";
-      g.fillText(card.title, cardX + 48, cardsTop + 23);
-      g.font = `400 10.5px ${SANS}`;
-      g.fillStyle = "#66686d";
-      let sy = cardsTop + 52;
-      for (const line of wrap(g, card.sub, cardW - 24)) {
-        g.fillText(line, cardX + 12, sy);
-        sy += 14;
-      }
-      g.font = `400 10px ${MONO}`;
-      g.fillStyle = "#4a4c50";
-      g.fillText(card.url, cardX + 12, cardsTop + cardH - 12);
-    });
+  // The visitor's bubble, right-aligned, in the blue gradient.
+  g.font = `500 12px ${SANS}`;
+  const ask = "Walk me through your work";
+  const askW = g.measureText(ask).width + 28;
+  const askH = 30;
+  const bubbleGrad = g.createLinearGradient(cx + cw - askW, y, cx + cw, y + askH);
+  bubbleGrad.addColorStop(0, "#0a66c2");
+  bubbleGrad.addColorStop(1, "#2d8cff");
+  rr(g, cx + cw - askW, y, askW, askH, 14);
+  g.fillStyle = bubbleGrad;
+  g.fill();
+  g.fillStyle = "#ffffff";
+  g.fillText(ask, cx + cw - askW + 14, y + 19);
+  y += askH + 14;
+
+  // The reply, with the avatar beside it.
+  const replyLines = [
+    ...wrap(g, hero.positioning, cw - 90),
+    ...wrap(g, site.description, cw - 90).slice(0, 3),
+  ];
+  g.font = `400 12px ${SANS}`;
+  const replyW = Math.min(cw - 44, Math.max(...replyLines.map((l) => g.measureText(l).width)) + 30);
+  const replyH = replyLines.length * 17 + 20;
+  avatar(cx + 14, y + 14, 12);
+  rr(g, cx + 34, y, replyW, replyH, 14);
+  g.fillStyle = "#14171c";
+  g.fill();
+  g.strokeStyle = "rgba(255,255,255,0.1)";
+  g.lineWidth = 1;
+  g.stroke();
+  let ly = y + 22;
+  replyLines.forEach((line, i) => {
+    g.fillStyle = i === 0 ? "#ffffff" : "#a3acb8";
+    g.fillText(line, cx + 48, ly);
+    ly += 17;
+  });
+  y += replyH + 14;
+
+  // A card with one big figure, the way the site's cards read.
+  const cardH = 92;
+  if (y + cardH + 70 <= contentBottom) {
+    rr(g, cx + 34, y, cw - 34, cardH, 14);
+    g.fillStyle = "#14171c";
+    g.fill();
+    g.strokeStyle = "rgba(255,255,255,0.1)";
+    g.stroke();
+    g.fillStyle = "#2d8cff";
+    g.fillRect(cx + 34, y, (cw - 34) * 0.4, 2);
+    g.font = `400 10px ${MONO}`;
+    g.fillStyle = "#2d8cff";
+    g.fillText("verification trust engine", cx + 50, y + 22);
+    g.font = `700 15px ${SANS}`;
+    g.fillStyle = "#ffffff";
+    g.fillText("Mjolnir", cx + 50, y + 42);
+    g.font = `750 26px ${SANS}`;
+    g.fillText("80/100", cx + 50, y + 72);
+    g.font = `400 10.5px ${SANS}`;
+    g.fillStyle = "#a3acb8";
+    g.fillText("worthiness on the recorded scan", cx + 140, y + 72);
+    y += cardH + 14;
   }
+
+  // Quick replies.
+  g.font = `500 11px ${SANS}`;
+  let chipX = cx + 34;
+  for (const label of ["Projects", "Experience", "Contact"]) {
+    const chipW = g.measureText(label).width + 26;
+    if (chipX + chipW > cx + cw) break;
+    rr(g, chipX, y, chipW, 26, 13);
+    g.fillStyle = "rgba(255,255,255,0.03)";
+    g.fill();
+    g.strokeStyle = "rgba(255,255,255,0.18)";
+    g.stroke();
+    g.fillStyle = "#2d8cff";
+    g.beginPath();
+    g.arc(chipX + 12, y + 13, 3, 0, PI2);
+    g.fill();
+    g.fillStyle = "#ffffff";
+    g.fillText(label, chipX + 20, y + 17);
+    chipX += chipW + 8;
+  }
+
+  // The composer, pinned to the bottom of the page.
+  const compH = 44;
+  const compY = contentBottom - compH - 14;
+  rr(g, cx, compY, cw, compH, 22);
+  g.fillStyle = "#14171c";
+  g.fill();
+  g.strokeStyle = "rgba(255,255,255,0.14)";
+  g.lineWidth = 1;
+  g.stroke();
+  g.font = `400 12px ${SANS}`;
+  g.fillStyle = "#8b939d";
+  g.fillText("Ask about my projects…", cx + 18, compY + compH / 2 + 4);
+  const sendGrad = g.createLinearGradient(cx + cw - 38, compY, cx + cw - 6, compY + compH);
+  sendGrad.addColorStop(0, "#0a66c2");
+  sendGrad.addColorStop(1, "#2d8cff");
+  g.fillStyle = sendGrad;
+  g.beginPath();
+  g.arc(cx + cw - 22, compY + compH / 2, 15, 0, PI2);
+  g.fill();
+  g.strokeStyle = "#ffffff";
+  g.lineWidth = 1.8;
+  g.beginPath();
+  g.moveTo(cx + cw - 22, compY + compH / 2 + 5);
+  g.lineTo(cx + cw - 22, compY + compH / 2 - 5);
+  g.moveTo(cx + cw - 27, compY + compH / 2);
+  g.lineTo(cx + cw - 22, compY + compH / 2 - 5);
+  g.lineTo(cx + cw - 17, compY + compH / 2);
+  g.stroke();
 
   g.restore();
 
-  g.fillStyle = "#d8d8d2";
+  g.fillStyle = "rgba(255,255,255,0.14)";
   rr(g, wx + ww - 9, contentTop + 8, 4, Math.min(46, wh * 0.2), 2);
   g.fill();
 
+  // The taskbar, on the same ground.
   const barH = 40;
   const barY = h - barH;
-  g.fillStyle = "rgba(16,17,20,0.94)";
+  g.fillStyle = "rgba(13,15,20,0.96)";
   g.fillRect(0, barY, w, barH);
-  g.fillStyle = "rgba(255,255,255,0.12)";
+  g.fillStyle = "rgba(255,255,255,0.1)";
   g.fillRect(0, barY, w, 1);
 
   rr(g, 12, barY + 7, 88, 26, 6);
-  g.fillStyle = "#23262d";
+  g.fillStyle = "#1c2026";
   g.fill();
-  g.strokeStyle = "rgba(255,255,255,0.16)";
+  g.strokeStyle = "rgba(255,255,255,0.14)";
   g.lineWidth = 1;
   g.stroke();
   const s = 4.6;
@@ -542,12 +575,13 @@ function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number) {
   g.fillText("Start", 44, barY + 24);
 
   rr(g, 112, barY + 7, 180, 26, 6);
-  g.fillStyle = "#2b2e35";
+  g.fillStyle = "#1c2026";
   g.fill();
-  g.strokeStyle = "rgba(255,255,255,0.1)";
+  g.strokeStyle = "rgba(45,140,255,0.5)";
   g.stroke();
-  rr(g, 120, barY + 13, 14, 14, 4);
-  g.fillStyle = "#3d5afe";
+  g.fillStyle = "#2d8cff";
+  g.beginPath();
+  g.arc(127, barY + 20, 7, 0, PI2);
   g.fill();
   g.font = `700 9px ${SANS}`;
   g.textAlign = "center";
@@ -707,11 +741,19 @@ class Engine {
     this.pointer.inside = false;
   }
 
+  /** A short tick on a touch screen, where there is no click to feel. */
+  private buzz(ms: number) {
+    if (this.pointer.touch && !this.reduced && typeof navigator.vibrate === "function") {
+      navigator.vibrate(ms);
+    }
+  }
+
   press(x: number, y: number) {
     this.pointer.down = true;
     this.pointer.x = x;
     this.pointer.y = y;
     const tool = this.tool;
+    if (tool === "hammer" || tool === "stamp") this.buzz(14);
     if (tool === "hammer") this.hammer(x, y);
     else if (tool === "chainsaw") this.gouge(x, y, x, y);
     else if (tool === "machinegun") this.lastShot = 0;
@@ -1277,6 +1319,7 @@ class Engine {
     g.fill();
     this.spawn("pop", termite.x, termite.y, 0, 0, 0.3, 8, "#7a2b18");
     this.kick(2.5);
+    this.buzz(10);
   }
 
   private washNow() {
@@ -1970,6 +2013,34 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
   const [tool, setTool] = useState<ToolId>("hammer");
   const [integrity, setIntegrity] = useState(100);
   const [hint, setHint] = useState(true);
+  const [quip, setQuip] = useState<string | null>(null);
+  const passedRef = useRef<number>(100);
+  const quipTimer = useRef(0);
+
+  /**
+   * The screen talks back as it goes: one line per threshold crossed on the
+   * way down, and a finale when there is nothing left. Reset arms them again.
+   */
+  useEffect(() => {
+    const milestones: Array<[number, string]> = [
+      [75, "Release gate: still green. Somehow."],
+      [50, "QA would like a word."],
+      [25, "Rollback recommended. Nobody is listening."],
+      [3, "Nothing left to test. R rebuilds it."],
+    ];
+    const crossed = milestones.find(([at]) => integrity <= at && passedRef.current > at);
+    if (integrity > 99 && passedRef.current <= 99) {
+      passedRef.current = 100;
+      setQuip(null);
+      return;
+    }
+    if (!crossed) return;
+    passedRef.current = crossed[0];
+    setQuip(crossed[1]);
+    window.clearTimeout(quipTimer.current);
+    if (crossed[0] > 3) quipTimer.current = window.setTimeout(() => setQuip(null), 2600);
+    return () => window.clearTimeout(quipTimer.current);
+  }, [integrity]);
 
   const select = useCallback((id: ToolId) => {
     setTool(id);
@@ -2087,24 +2158,38 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
         <span className="rounded-full border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[11px] text-white/60">
           stress reducer · {DOMAIN}
         </span>
-        <span className="rounded-full border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[11px] text-white/60 tabular-nums">
-          screen integrity {integrity >= 99.95 ? "100" : integrity.toFixed(1)}%
+        <span className="flex items-center gap-2 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[11px] text-white/60 tabular-nums">
+          <span aria-hidden="true" className="relative h-1.5 w-16 overflow-hidden rounded-full bg-white/10">
+            <span
+              className="absolute inset-y-0 left-0 rounded-full bg-[#2d8cff] transition-[width] duration-500"
+              style={{ width: `${Math.max(0, Math.min(100, integrity))}%` }}
+            />
+          </span>
+          integrity {integrity >= 99.95 ? "100" : integrity.toFixed(1)}%
         </span>
       </div>
 
       <div
         className={cn(
           "pointer-events-none absolute inset-x-0 bottom-64 flex justify-center transition-opacity duration-700",
-          hint ? "opacity-100" : "opacity-0",
+          hint || quip ? "opacity-100" : "opacity-0",
         )}
+        role="status"
       >
-        <span className="rounded-full border border-white/10 bg-black/60 px-4 py-2 text-[12px] text-white/70">
-          Pick a tool and go. This screen skipped its release gate.
+        <span
+          className={cn(
+            "rounded-full border px-4 py-2 text-[12px]",
+            quip && integrity <= 3
+              ? "border-[#2d8cff]/60 bg-[#0a66c2]/30 text-white"
+              : "border-white/10 bg-black/60 text-white/70",
+          )}
+        >
+          {quip ?? "Pick a tool and go. This screen skipped its release gate."}
         </span>
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 sm:p-5">
-        <div className="pointer-events-auto w-full max-w-[27rem] rounded-xl border-2 border-[#4346b8] bg-[#191a63] p-2.5 shadow-2xl shadow-black/60 sm:p-3">
+        <div className="pointer-events-auto w-full max-w-[27rem] rounded-2xl border border-white/10 bg-[#14171c]/95 p-2.5 shadow-2xl shadow-black/70 backdrop-blur-md sm:p-3">
           <div className="flex items-center gap-2 px-1 pb-2.5">
             <HammerIcon className="size-3.5 text-white/80" />
             <span className="text-[13px] font-bold tracking-[0.14em] text-white uppercase">
@@ -2129,8 +2214,8 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
                 className={cn(
                   "flex flex-col items-center gap-1.5 rounded-lg border px-1 py-2 transition-[background-color,border-color,box-shadow] duration-150 sm:py-2.5",
                   item.id === tool
-                    ? "border-white bg-white/20 shadow-[0_0_14px_rgba(255,255,255,0.28)]"
-                    : "border-white/15 bg-white/5 hover:bg-white/10",
+                    ? "border-[#2d8cff] bg-[#2d8cff]/20 shadow-[0_0_16px_rgba(45,140,255,0.35)]"
+                    : "border-white/10 bg-white/[0.04] hover:bg-white/10",
                 )}
               >
                 <item.Icon className="size-6 sm:size-7" />

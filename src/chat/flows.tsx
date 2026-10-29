@@ -467,10 +467,21 @@ function FunFlow() {
   return (
     <Flow id="fun">
       <Bubble>
-        <p>An after-hours experiment: a stress-relief toy. Press Escape to come back.</p>
+        <p>Not everything here is a release gate. This one is for after hours.</p>
       </Bubble>
-      <Card first={false}>
-        <RedButton />
+      <Card eyebrow="after hours" title="A stress-relief toy" first={false}>
+        <p className="t-body text-muted">
+          A small canvas game that hands you nine tools and this page&apos;s own headline to take
+          them to. It downloads only when the button is pressed, and Escape brings you back.
+        </p>
+        <div className="fun-stage">
+          <RedButton />
+        </div>
+        <ul className="fun-hints" aria-label="How it works">
+          <li>Nine tools, particles, and a few termites</li>
+          <li>Keyboard: Tab cycles the tools, Escape returns</li>
+          <li>Nothing is saved and nothing is sent</li>
+        </ul>
       </Card>
       <QuickReplies ids={["projects", "about", "contact"]} />
     </Flow>

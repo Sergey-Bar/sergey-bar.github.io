@@ -79,15 +79,7 @@ def main() -> None:
     mask = mask.resize((size, size), Image.LANCZOS)
     img.paste(photo, (cx - size // 2, cy - size // 2), mask)
 
-    # Open-to-work badge under the portrait.
     draw = ImageDraw.Draw(img)
-    badge_font = font(20, bold=True)
-    label = "Open to work"
-    tw = draw.textlength(label, font=badge_font)
-    bx0, by0 = cx - (tw + 56) / 2, cy + size // 2 - 6
-    draw.rounded_rectangle((bx0, by0, bx0 + tw + 56, by0 + 44), radius=22, fill=(20, 23, 28), outline=LINE, width=2)
-    draw.ellipse((bx0 + 18, by0 + 17, bx0 + 28, by0 + 27), fill=SKY)
-    draw.text((bx0 + 40, by0 + 9), label, font=badge_font, fill=INK)
 
     # Copy.
     x = 80
