@@ -72,11 +72,8 @@ def main() -> None:
     ring = Image.new("RGBA", (size + 16, size + 16), (0, 0, 0, 0))
     ImageDraw.Draw(ring).ellipse((0, 0, size + 15, size + 15), fill=SKY + (255,))
     img.alpha_composite(ring, (cx - size // 2 - 8, cy - size // 2 - 8))
-    source = Image.open(ROOT / "public/portrait.webp").convert("RGB")
-    # The photo carries headroom; crop to the central 82%, a little above centre.
-    side = int(source.width * 0.82)
-    left, top = (source.width - side) // 2, int((source.height - side) * 0.42)
-    photo = source.crop((left, top, left + side, top + side)).resize((size, size), Image.LANCZOS)
+    # portrait.webp is already cropped to the face.
+    photo = Image.open(ROOT / "public/portrait.webp").convert("RGB").resize((size, size), Image.LANCZOS)
     mask = Image.new("L", (size * 4, size * 4), 0)
     ImageDraw.Draw(mask).ellipse((0, 0, size * 4 - 1, size * 4 - 1), fill=255)
     mask = mask.resize((size, size), Image.LANCZOS)

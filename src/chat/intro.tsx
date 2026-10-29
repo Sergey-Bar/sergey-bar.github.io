@@ -91,8 +91,8 @@ export function Intro() {
             <img
               src={images.portrait}
               alt={site.name}
-              width={800}
-              height={800}
+              width={900}
+              height={900}
               fetchPriority="high"
               className="portrait-img"
             />
