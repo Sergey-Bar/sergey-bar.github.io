@@ -15,7 +15,7 @@ import { flushSync } from "react-dom";
 
 import Link from "next/link";
 
-import { CaseIcon, CheckIcon, LayersIcon, ReadIcon, RestartIcon, SendIcon, TopicIcon } from "@/chat/icons";
+import { CaseIcon, CheckIcon, LayersIcon, MailIcon, ReadIcon, RestartIcon, SendIcon, TopicIcon } from "@/chat/icons";
 import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
 import { CloseIcon, MenuIcon, PlusIcon } from "@/components/icons";
 import { BotAvatar, Bubble, QuickReplies, UserBubble } from "@/chat/message";
@@ -152,7 +152,7 @@ export function ChatDirector({
   /** The topic the router would answer with, previewed on the chips as the visitor types. */
   const [match, setMatch] = useState<TopicId | null>(null);
   /** On a phone the chip row shows three and folds the rest behind a count. */
-  const [chipsOpen, setChipsOpen] = useState(false);
+  const [chipsOpen, setChipsOpen] = useState(true);
   /** A short pulse on the send button after a question goes. */
   const [sent, setSent] = useState(false);
   /** The line at the bottom while the intro waits for the chat to open. */
@@ -457,7 +457,7 @@ export function ChatDirector({
     rootRef.current?.removeAttribute("data-mode");
     setAsked(new Set());
     setDrawer(false);
-    setChipsOpen(false);
+    setChipsOpen(true);
     history.replaceState(null, "", location.pathname);
     window.scrollTo({ top: 0, behavior: motionOff() ? "auto" : "smooth" });
     setStatus("Back at the start.");
@@ -738,16 +738,6 @@ export function ChatDirector({
         </div>
 
         <div className="side-actions">
-          <button
-            type="button"
-            className="side-item"
-            data-armed={armed ? "" : undefined}
-            onClick={restartGuarded}
-            title={armed ? "Press again to clear the conversation" : "Back to the intro; the conversation is cleared"}
-          >
-            <RestartIcon size={15} />
-            <span>{armed ? "Clear the conversation?" : "Start over"}</span>
-          </button>
           <button type="button" className="side-item" onClick={readAll} title="Show every answer at once, in order">
             <ReadIcon size={15} />
             <span>Read everything</span>
@@ -819,14 +809,22 @@ export function ChatDirector({
               <span>LinkedIn</span>
             </a>
           </li>
+          <li>
+            <a href={`mailto:${contact.email}`} className="side-item side-profile">
+              <MailIcon size={15} />
+              <span>Email</span>
+            </a>
+          </li>
         </ul>
 
         <div className="side-foot">
           <BotAvatar />
           <span className="side-foot-name">{site.name}</span>
-          <span className="side-foot-meta" data-typing={typing ? "" : undefined}>
-            · {typing ? "typing…" : "QA Tech Lead"}
-          </span>
+          {typing ? (
+            <span className="side-foot-meta" data-typing="">
+              · typing…
+            </span>
+          ) : null}
         </div>
       </aside>
       <button
@@ -853,24 +851,6 @@ export function ChatDirector({
             >
               <MenuIcon size={16} />
             </button>
-            <div className="identity-text">
-              <p className="identity-name">{site.name}</p>
-              <p className="identity-status" data-typing={typing ? "" : undefined}>
-                <span className="status-dot" aria-hidden="true" />
-                {typing ? "typing…" : "QA Tech Lead"}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="identity-restart"
-              data-armed={armed ? "" : undefined}
-              onClick={restartGuarded}
-              aria-label={armed ? undefined : "Start over"}
-              title={armed ? "Press again to clear the conversation" : "Back to the intro; the conversation is cleared"}
-            >
-              <RestartIcon size={15} />
-              <span className="identity-restart-label">{armed ? "Clear the conversation?" : "Start over"}</span>
-            </button>
           </header>
 
           <div ref={logRef} className="log">
@@ -896,6 +876,20 @@ export function ChatDirector({
           </p>
         </div>
       </div>
+
+      {stage === "chat" ? (
+        <button
+          type="button"
+          className="ghost corner-restart"
+          data-armed={armed ? "" : undefined}
+          onClick={restartGuarded}
+          aria-label={armed ? undefined : "Start over"}
+          title={armed ? "Press again to clear the conversation" : "Back to the intro; the conversation is cleared"}
+        >
+          <RestartIcon size={17} />
+          <span className="corner-restart-label">Clear the conversation?</span>
+        </button>
+      ) : null}
 
       {stage === "intro" ? (
         <button
@@ -931,6 +925,26 @@ export function ChatDirector({
                 </li>
               ))}
             </ul>
+            <ul className="chips chips-routes" aria-label="Profiles and contact">
+              <li>
+                <a href={contact.github} className="chip chip-route">
+                  <GitHubIcon size={14} />
+                  GitHub
+                </a>
+              </li>
+              <li>
+                <a href={contact.linkedin} className="chip chip-route">
+                  <LinkedInIcon size={14} />
+                  LinkedIn
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${contact.email}`} className="chip chip-route">
+                  <MailIcon size={14} />
+                  Email
+                </a>
+              </li>
+            </ul>
           </div>
           <div className="composer-row">
             <label htmlFor="ask" className="sr-only">
@@ -958,15 +972,16 @@ export function ChatDirector({
               type="button"
               className="composer-plus"
               aria-label={chipsOpen ? "Hide the topics" : "Show every topic"}
+              aria-pressed={chipsOpen}
               aria-expanded={chipsOpen}
               aria-controls="composer-topics"
               onClick={() => setChipsOpen((v) => !v)}
             >
               <PlusIcon size={18} />
             </button>
-            <span className="model-pill" title="Jarvis, at maximum effort. The answers are written, not generated.">
-              <span className="model-name">Jarvis</span>
-              <span className="model-effort">Max</span>
+            <span className="model-pill" title="The model is a person, at maximum effort. The answers are written, not generated.">
+              <span className="model-name">{site.name}</span>
+              <span className="model-effort">Ultra</span>
             </span>
             <button type="submit" className="composer-send" aria-label="Send" data-sent={sent ? "" : undefined}>
               <SendIcon size={17} />

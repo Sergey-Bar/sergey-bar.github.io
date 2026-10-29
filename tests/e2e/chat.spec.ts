@@ -85,7 +85,6 @@ test.describe("intro", () => {
     const items = page.locator(".sidebar .side-item[data-ask]");
     await expect(items).toHaveCount(TOPICS.length);
     for (let i = 0; i < TOPICS.length; i++) await expect(items.nth(i)).toBeInViewport();
-    await expect(page.locator(".composer .chips")).toBeHidden();
     await items.first().click();
     await expect(page.locator('.sidebar .side-item[data-ask="about"]')).toHaveAttribute("data-asked", "");
   });
@@ -99,6 +98,7 @@ test.describe("intro", () => {
     const sidebar = page.locator(".sidebar");
     await expect(sidebar.getByRole("link", { name: "GitHub" })).toBeVisible();
     await expect(sidebar.getByRole("link", { name: "LinkedIn" })).toBeVisible();
+    await expect(sidebar.getByRole("link", { name: "Email" })).toHaveAttribute("href", /^mailto:/);
   });
 
   test("the ghost in the corner opens the game directly", async ({ page }) => {
@@ -203,25 +203,32 @@ test.describe("conversations", () => {
     await expectAxeClean(page);
   });
 
-  test("the plus under the field opens every topic and a chip closes it", async ({ page }) => {
+  test("the panel behind the plus opens with the chat, a chip closes it, the plus reopens it", async ({ page }) => {
     await enter(page);
     const chips = page.locator(".composer .chip[data-ask]");
-    await expect(chips.first()).toBeHidden();
-    await page.getByRole("button", { name: "Show every topic" }).click();
     await expect(chips).toHaveCount(TOPICS.length);
     for (let i = 0; i < TOPICS.length; i++) await expect(chips.nth(i)).toBeInViewport();
+    await expect(page.getByRole("button", { name: "Hide the topics" })).toHaveAttribute("aria-pressed", "true");
+    const routes = page.locator(".composer .chips-routes");
+    await expect(routes.getByRole("link", { name: "GitHub" })).toBeVisible();
+    await expect(routes.getByRole("link", { name: "LinkedIn" })).toBeVisible();
+    await expect(routes.getByRole("link", { name: "Email" })).toHaveAttribute("href", /^mailto:/);
     await page.locator('.composer .chip[data-ask="experience"]').click();
     await expect(page.locator('[data-flow="experience"]')).toHaveAttribute("data-sent", "");
     await expect(chips.first()).toBeHidden();
+    await page.getByRole("button", { name: "Show every topic" }).click();
+    await expect(chips.first()).toBeVisible();
   });
 
   test("the bar under the field reads like a model's and has no microphone", async ({ page }) => {
     await enter(page);
-    await expect(page.locator(".composer .model-name")).toHaveText("Jarvis");
-    await expect(page.locator(".composer .model-effort")).toHaveText("Max");
+    await expect(page.locator(".composer .model-name")).toHaveText("Sergey Bar");
+    await expect(page.locator(".composer .model-effort")).toHaveText("Ultra");
     await expect(page.getByRole("button", { name: /microphone|dictate|voice/i })).toHaveCount(0);
     await expect(page.locator(".identity .msg-avatar")).toHaveCount(0);
     await expect(page.locator(".log .msg-avatar")).toHaveCount(0);
+    await expect(page.locator(".identity-name")).toHaveCount(0);
+    await expect(page.locator(".corner-restart")).toBeVisible();
   });
 
   test("a legacy anchor opens its conversation on arrival", async ({ page }) => {

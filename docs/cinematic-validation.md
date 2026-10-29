@@ -197,3 +197,19 @@ microphone, and the header and log carry no avatar); screenshots at 1440×900
 with the panel open, on a Pixel 7 closed and open, and of the drawer's foot.
 A phone-only rule that kept a 30px avatar column had squeezed bubbles to
 nothing; it is gone.
+
+## The corner, the panel and the foot (2026-10-29, later)
+
+The panel behind the plus is open when the chat opens, so the first step is
+in view, and it carries GitHub, LinkedIn and email on a second row; the
+sidebar's Profiles list has email too. The pill names "Sergey Bar" at "Ultra", the word shimmering pink to purple.
+"Start over" left the sidebar and the header for the corner, a round button in
+the ghost's style that widens into "Clear the conversation?" when armed. The
+header lost the name and the title (a menu button alone, on phones), and the
+sidebar's foot lost the title that was being cut; it shows "typing…" only
+while a reply is composed.
+
+Verified: 60 specs pass, 4 skipped by device; the panel spec checks that it
+opens with the chat, that the three routes are in it, that a chip closes it
+and the plus reopens it; screenshots at 1440×900 on arrival and with the
+restart armed, on a Pixel 7 on arrival and with the drawer open.

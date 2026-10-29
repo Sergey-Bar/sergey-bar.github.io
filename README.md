@@ -70,14 +70,19 @@ topic with a check once it has been asked, the three pages, and the person at
 the bottom with the typing state. On narrower screens the same sidebar is a
 drawer behind the menu button in the identity bar, with a backdrop and Escape
 to close. Under the text field the bar reads like a chat with a model: a plus
-that opens every topic as chips above the field (a chip asks and closes the
-panel; Escape closes it), a pill that names the model, "Jarvis" at "Max"
-effort, and the send arrow. There is no microphone. Replies carry no avatar
-and neither does the header; the portrait stands once, in the sidebar's foot,
-beside the motion control. GitHub and LinkedIn sit in the corner on the intro
-and move into the sidebar's "Profiles" list once the chat is open; the ghost
-that stays in the corner opens the demolition run directly, without the
-conversation. Text bubbles grow as their words arrive, a card
+that holds every topic as chips above the field, with GitHub, LinkedIn and
+email on a second row. The panel is open when the chat opens, so the first
+step is in view; a chip asks and closes it, Escape closes it, the plus brings
+it back. Beside the plus a pill names the model, "Sergey Bar" at "Ultra" effort (the one place the palette bends: the word shimmers pink to purple),
+and the send arrow ends the row. There is no microphone. Replies carry no
+avatar, and the chat has no header beyond the menu button on a phone; the
+portrait and the name stand once, in the sidebar's foot, beside the motion
+control. The corner holds two round buttons in one style: "Start over", which
+asks once ("Clear the conversation?") before it clears, and the ghost, which
+opens the demolition run directly, without the conversation. GitHub and
+LinkedIn sit in the corner on the intro and move into the sidebar's
+"Profiles" list, with email, once the chat is open. Text bubbles grow as
+their words arrive, a card
 taller than a phone screen opens folded with a "Show the whole card" button,
 and "Start over" asks once ("Clear the conversation?") before it clears.
 

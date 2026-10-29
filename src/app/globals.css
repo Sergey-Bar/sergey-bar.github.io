@@ -797,6 +797,9 @@ main:has(.chat-shell) ~ .motion-control {
 /* The topics panel behind the plus: every chip, wrapped, no overflow. */
 .composer-topics { padding: 6px 4px 8px; margin-bottom: 2px; border-bottom: 1px solid var(--color-line); }
 .composer-topics[hidden] { display: none; }
+.composer .chips-routes { padding-top: 6px; margin-top: 4px; border-top: 1px solid var(--color-line); }
+.chip-route svg { color: var(--color-ink); }
+.chip-route:hover { border-color: var(--color-ink); background: #ffffff0f; }
 .composer .chips { flex-wrap: wrap; overflow: visible; gap: 6px; padding: 2px; }
 .composer .chip { font-size: 12.5px; min-height: 34px; padding: 0 11px 0 9px; gap: 6px; }
 @media (prefers-reduced-motion: no-preference) {
@@ -866,7 +869,7 @@ main:has(.chat-shell) ~ .motion-control {
   .chat-shell[data-state="chat"] .chat-main { padding-left: var(--sidebar-w); }
   .chat-shell[data-state="chat"] .composer { left: var(--sidebar-w); }
   .chat-shell[data-state="chat"] .watermark-l { display: none; }
-  .chat-shell[data-state="chat"] .identity-restart { display: none; }
+  :root[data-js] .chat-shell[data-state="chat"] .identity { display: none; }
 }
 /* Narrow screens: a drawer behind the menu button. */
 @media (max-width: 63.99rem) {
@@ -879,6 +882,18 @@ main:has(.chat-shell) ~ .motion-control {
    stays in the corner as the direct route to the game. */
 .chat-shell[data-state="chat"] .social { display: none; }
 .side-profile svg { color: var(--color-ink); }
+.corner-restart {
+  position: fixed;
+  top: 14px;
+  right: 64px;
+  z-index: 40;
+  gap: 8px;
+  padding: 0;
+}
+.corner-restart-label { display: none; font-size: 13px; font-weight: 500; white-space: nowrap; }
+.corner-restart[data-armed] { display: inline-flex; align-items: center; justify-content: center; width: auto; padding: 0 16px 0 14px; color: #fff; border-color: var(--color-c-sky); background: color-mix(in oklab, var(--color-c-sky) 28%, transparent); }
+.corner-restart[data-armed] .corner-restart-label { display: inline; }
+:root:not([data-motion="off"]) .corner-restart svg { animation: none; }
 .ghost {
   display: grid;
   place-items: center;
@@ -938,7 +953,22 @@ main:has(.chat-shell) ~ .motion-control {
   cursor: default;
 }
 .model-name { font-weight: 600; color: var(--color-ink); }
-.model-effort { color: var(--color-muted); }
+/* The one place the palette bends: "Ultra" shimmers pink to purple, the way
+   the highest effort reads in a coding agent's composer. */
+.model-effort {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #e879f9;
+  background: linear-gradient(100deg, #f472b6 0%, #c084fc 30%, #818cf8 50%, #c084fc 70%, #f472b6 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="off"]) .model-effort { animation: ultra-shimmer 2.6s linear infinite; }
+}
+@keyframes ultra-shimmer { from { background-position: 0% 50%; } to { background-position: 220% 50%; } }
 .composer-bar .composer-send { margin-left: auto; }
 
 /* --- Identity bar (chat state) ------------------------------------------- */
@@ -970,12 +1000,12 @@ main:has(.chat-shell) ~ .motion-control {
 }
 /* The fixed corner links share the top edge; leave them room on narrow screens. */
 @media (max-width: 84.99rem) {
-  .chat-shell[data-state="chat"] .identity { padding-right: 64px; }
+  .chat-shell[data-state="chat"] .identity { padding-right: 0; }
 }
 /* On a phone the bar is one line: avatar, name, restart. The reading-mode
    button and the status line go; the corner controls get the room they need. */
 @media (max-width: 47.99rem) {
-  .chat-shell[data-state="chat"] .identity { padding-right: 56px; gap: 8px; }
+  .chat-shell[data-state="chat"] .identity { padding: 10px 0 12px; gap: 8px; }
   .identity .identity-text { min-width: 0; }
   .identity .identity-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .identity .identity-status { display: none; }
