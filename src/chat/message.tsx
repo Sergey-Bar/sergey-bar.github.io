@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { TopicIcon } from "@/chat/icons";
 import { topicById, type TopicId } from "@/chat/topics";
+import { images } from "@/content/hero";
 import { site } from "@/content/site";
 
 /**
@@ -12,7 +13,7 @@ export function BotAvatar() {
   return (
     <span className="msg-avatar" aria-hidden="true">
       {/* eslint-disable-next-line @next/next/no-img-element -- static export */}
-      <img src="/portrait.webp" alt="" width={36} height={36} loading="lazy" decoding="async" />
+      <img src={images.portrait} alt="" width={36} height={36} loading="lazy" decoding="async" />
     </span>
   );
 }

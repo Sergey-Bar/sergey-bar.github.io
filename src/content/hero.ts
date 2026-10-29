@@ -6,6 +6,16 @@
  * Everything here is a fact the published profile or CV states directly.
  */
 
+/**
+ * Image URLs carry a version so a replaced file is fetched at once: the name
+ * stays stable for the budget script and the generator, the query string
+ * defeats the browser cache and the social-preview caches, which key on the URL.
+ */
+export const images = {
+  portrait: "/portrait.webp?v=20261029b",
+  og: "/og.png?v=20261029b",
+} as const;
+
 export const hero = {
   /** The one-line promise under the name. */
   headline: "I make software releases trustworthy.",

@@ -4,6 +4,7 @@ import { JetBrains_Mono } from "next/font/google";
 
 import { MotionDirector } from "@/components/motion-director";
 import { PersonJsonLd } from "@/components/person-jsonld";
+import { images } from "@/content/hero";
 import { site } from "@/content/site";
 
 import "./globals.css";
@@ -39,13 +40,13 @@ export const metadata: Metadata = {
     title: site.title,
     description: site.description,
     // Static asset: GitHub Pages has no image optimisation server (§3.1).
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: site.title }],
+    images: [{ url: images.og, width: 1200, height: 630, alt: site.title }],
   },
   twitter: {
     card: "summary_large_image",
     title: site.title,
     description: site.description,
-    images: ["/og.png"],
+    images: [images.og],
   },
   robots: { index: true, follow: true },
   icons: {

@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 import { ArrowRightIcon, ChatIcon, LayersIcon, UserIcon } from "@/chat/icons";
-import { hero } from "@/content/hero";
+import { hero, images } from "@/content/hero";
 import { recommendations } from "@/content/recommendations";
 import { availability, site } from "@/content/site";
 
@@ -89,7 +89,7 @@ export function Intro() {
           <span className="portrait-disc">
             {/* eslint-disable-next-line @next/next/no-img-element -- static export */}
             <img
-              src="/portrait.webp"
+              src={images.portrait}
               alt={site.name}
               width={800}
               height={800}
