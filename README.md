@@ -158,7 +158,9 @@ deploy over a third-party API.
 `public/og.png`, `public/icon-512.png`, `public/apple-icon.png` and
 `public/favicon-32.png` are committed binaries. GitHub Pages has no image
 optimisation or generation runtime, so the OG image is a static 1200×630 PNG by
-necessity. `public/favicon.svg` is the vector form of the same mark.
+necessity; `python scripts/og-image.py` regenerates it on the site's theme from
+the portrait and the content modules (Pillow, Windows system fonts).
+`public/portrait.webp` is the LinkedIn profile photo, 400×400. `public/favicon.svg` is the vector form of the same mark.
 
 There is deliberately no `src/app/favicon.ico`: Next emits that convention file
 ahead of the explicit `metadata.icons` list, so a leftover one silently wins the

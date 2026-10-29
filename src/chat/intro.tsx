@@ -91,8 +91,8 @@ export function Intro() {
             <img
               src="/portrait.webp"
               alt={site.name}
-              width={880}
-              height={1100}
+              width={400}
+              height={400}
               fetchPriority="high"
               className="portrait-img"
             />
