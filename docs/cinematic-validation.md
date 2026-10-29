@@ -213,3 +213,27 @@ Verified: 60 specs pass, 4 skipped by device; the panel spec checks that it
 opens with the chat, that the three routes are in it, that a chip closes it
 and the plus reopens it; screenshots at 1440×900 on arrival and with the
 restart armed, on a Pixel 7 on arrival and with the drawer open.
+
+## A bare loading screen (2026-10-29, later)
+
+The loading screen carries no controls: the corner (ghost, Start over) and
+the motion control appear only once the chat is open. The GitHub and LinkedIn
+pill is gone from the home page altogether; the routes live in the sidebar
+and behind the plus. The other pages keep their header pill.
+
+Verified: 60 specs pass, 4 skipped by device; the intro spec asserts the
+corner and the motion control are hidden before the chat opens and shown
+after; the ghost spec now enters the chat first.
+
+## One loading line per visit (2026-10-29, later)
+
+The loading line no longer cycles through twelve steps: one line is chosen
+per load, kept for the whole ten seconds, and "Ready in 5…1" is appended for
+the last five. The choice rotates through the twelve lines in localStorage,
+so the next load reads the next one; without storage it is random. The bar
+fills on a quarter-second tick and pauses with the countdown in a hidden tab.
+
+Verified: a spec under Playwright's clock reads the line, checks it is the
+same at four and six seconds, that the countdown appears only in the last
+five, and that a reload shows a different line; the ten-second auto-open spec
+still passes.

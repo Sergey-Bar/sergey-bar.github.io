@@ -55,7 +55,9 @@ anywhere and Escape hands focus back to the page.
 
 The first screen is quiet: the name, the role and the portrait, with a line
 at the bottom that pretends to boot the chat (negotiating with the release
-gate, convincing the flaky test, counting bugs) and counts down from five.
+gate, convincing the flaky test, counting bugs): one line per visit, kept for
+the whole wait, with "Ready in 5…1" appended for the last five seconds. The
+line rotates through twelve, so the next load reads a different one.
 After those ten seconds, or on a click on the line, or on the first scroll, the
 intro lifts and the chat opens with one greeting; the topics live only in the
 composer. A hidden tab pauses the countdown. "Read all" in the identity bar shows
@@ -79,18 +81,17 @@ avatar, and the chat has no header beyond the menu button on a phone; the
 portrait and the name stand once, in the sidebar's foot, beside the motion
 control. The corner holds two round buttons in one style: "Start over", which
 asks once ("Clear the conversation?") before it clears, and the ghost, which
-opens the demolition run directly, without the conversation. GitHub and
-LinkedIn sit in the corner on the intro and move into the sidebar's
-"Profiles" list, with email, once the chat is open. Text bubbles grow as
-their words arrive, a card
+opens the demolition run directly, without the conversation. The loading
+screen shows none of this: no corner buttons and no motion control, only the
+name, the role, the portrait and the loading line. GitHub, LinkedIn and email
+live in the sidebar's "Profiles" list and behind the plus. Text bubbles grow
+as their words arrive, a card
 taller than a phone screen opens folded with a "Show the whole card" button,
 and "Start over" asks once ("Clear the conversation?") before it clears.
 
 The page opens, once per tab session, on a veil that says "Hello, I'm Sergey"
 and "Welcome" and lifts into the hero; a click or a key ends it early, and it
-never plays with motion off. GitHub and LinkedIn share one pill in the corner
-whose white highlight slides to the hovered or focused half, with the ghost
-beside it.
+never plays with motion off.
 
 ## Palette
 

@@ -412,7 +412,9 @@ main:has(.chat-shell) ~ .motion-control {
   width: 42px;
   height: 42px;
 }
-.chat-shell[data-state="intro"] .social { margin-right: 50px; }
+/* The loading screen shows no controls at all: no corner, no motion button. */
+.chat-shell[data-state="intro"] .topbar { display: none; }
+main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 /* Once the chat is open the control lives in the sidebar's foot, beside the
    person: the chat's own header stays clear. */
 @media (min-width: 64rem) {
@@ -878,9 +880,7 @@ main:has(.chat-shell) ~ .motion-control {
   .chat-shell[data-state="chat"] .identity-menu { display: grid; }
 }
 
-/* GitHub and LinkedIn move into the sidebar once the chat is open; the ghost
-   stays in the corner as the direct route to the game. */
-.chat-shell[data-state="chat"] .social { display: none; }
+/* The ghost in the corner is the direct route to the game. */
 .side-profile svg { color: var(--color-ink); }
 .corner-restart {
   position: fixed;
@@ -1448,10 +1448,12 @@ main:has(.chat-shell) ~ .motion-control {
   cursor: pointer;
 }
 .loader-bar { display: block; height: 2px; border-radius: 2px; background: var(--color-line); overflow: hidden; }
-.loader-bar > span { display: block; height: 100%; background: var(--grad); transition: width 600ms var(--ease-out); }
+.loader-bar > span { display: block; height: 100%; background: var(--grad); transition: width 300ms linear; }
 .loader-line { display: flex; align-items: center; gap: 10px; min-height: 24px; }
 .loader-caret { color: var(--color-c-sky); }
 .loader-text { color: var(--color-ink); }
+.loader-count { color: var(--color-c-sky); font-weight: 600; white-space: nowrap; }
+.loader-count::before { content: "·"; margin-right: 10px; color: var(--color-muted); font-weight: 400; }
 .loader-cursor { display: inline-block; width: 7px; height: 15px; background: var(--color-c-sky); border-radius: 1px; }
 .loader:hover .loader-text { color: #fff; }
 .loader:hover::after { content: "click to skip"; margin-left: auto; font-size: 11px; color: var(--color-muted); }

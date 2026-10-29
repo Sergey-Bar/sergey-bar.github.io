@@ -67,6 +67,23 @@ test.describe("intro", () => {
     await expect(page.locator("html")).not.toHaveAttribute("data-boot", "");
   });
 
+  test("the loading line stays for the whole wait, counts down, and changes on the next load", async ({ page }) => {
+    await page.clock.install();
+    await open(page);
+    const text = page.locator(".loader-text");
+    await expect(text).not.toHaveText("Booting the chat…");
+    const first = await text.textContent();
+    await page.clock.runFor(4_000);
+    await expect(text).toHaveText(first ?? "");
+    await expect(page.locator(".loader-count")).toHaveCount(0);
+    await page.clock.runFor(2_000);
+    await expect(text).toHaveText(first ?? "");
+    await expect(page.locator(".loader-count")).toHaveText(/Ready in [1-5]/);
+    await page.reload();
+    await expect(text).not.toHaveText("Booting the chat…");
+    expect(await text.textContent()).not.toBe(first);
+  });
+
   test("the chat opens by itself after ten seconds with every topic offered", async ({ page }) => {
     await page.clock.install();
     await open(page);
@@ -89,11 +106,13 @@ test.describe("intro", () => {
     await expect(page.locator('.sidebar .side-item[data-ask="about"]')).toHaveAttribute("data-asked", "");
   });
 
-  test("GitHub and LinkedIn move from the corner into the sidebar", async ({ page, isMobile }) => {
+  test("the loading screen shows no controls; the routes out live in the sidebar", async ({ page, isMobile }) => {
     await open(page);
-    await expect(page.locator(".topbar .social")).toBeVisible();
+    await expect(page.locator(".topbar")).toBeHidden();
+    await expect(page.locator(".motion-control")).toBeHidden();
+    await expect(page.locator(".corner-restart")).toHaveCount(0);
     await enter(page);
-    await expect(page.locator(".topbar .social")).toBeHidden();
+    await expect(page.locator(".topbar")).toBeVisible();
     if (isMobile) await page.getByRole("button", { name: "Open menu" }).click();
     const sidebar = page.locator(".sidebar");
     await expect(sidebar.getByRole("link", { name: "GitHub" })).toBeVisible();
@@ -102,13 +121,14 @@ test.describe("intro", () => {
   });
 
   test("the ghost in the corner opens the game directly", async ({ page }) => {
-    await open(page);
+    await enter(page);
     await page.getByRole("button", { name: "Play the demolition run" }).click();
     const game = page.getByRole("dialog");
     await expect(game).toBeVisible();
-    await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
+    await expect(page.locator("[data-flow][data-sent]")).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(game).toBeHidden();
+    await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat");
   });
 
   test("a phone opens the sidebar as a drawer", async ({ page, isMobile }) => {

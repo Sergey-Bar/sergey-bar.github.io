@@ -35,20 +35,42 @@ type Entry = { key: number; order: number; node: ReactNode };
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /** What the bottom line claims to be doing, and for how long. Ten seconds in all. */
-const LOADER_STEPS: ReadonlyArray<readonly [string, number]> = [
-  ["Booting the chat. No, the other chat.", 900],
-  ["Negotiating with the release gate… it wants evidence.", 1000],
-  ["Convincing the flaky test to pass. Just once.", 1000],
-  ["Teaching the AI to say “I don't know”. Harder than it sounds.", 1100],
-  ["Counting open bugs. Lost count. Counting again.", 900],
-  ["Hiding the button you are told not to press.", 900],
-  ["Rehearsing the opening line in the mirror.", 900],
-  ["Ready in 5", 700],
-  ["Ready in 4", 650],
-  ["Ready in 3", 650],
-  ["Ready in 2", 650],
-  ["Ready in 1", 650],
+/**
+ * One line per visit, shown for the whole wait, with the countdown appended
+ * at the end. The line rotates: each load takes the next one, so a returning
+ * visitor never reads the same joke twice in a row.
+ */
+const LOADER_LINES: readonly string[] = [
+  "Booting the chat. No, the other chat.",
+  "Negotiating with the release gate… it wants evidence.",
+  "Convincing the flaky test to pass. Just once.",
+  "Teaching the AI to say “I don't know”. Harder than it sounds.",
+  "Counting open bugs. Lost count. Counting again.",
+  "Hiding the button you are told not to press.",
+  "Rehearsing the opening line in the mirror.",
+  "Warming up the typing indicator. It gets nervous.",
+  "Checking whether it works on my machine. It does. Suspicious.",
+  "Reading the fourteen recommendations again. Still blushing.",
+  "Running the scan on this page. The page is fine. The page is nervous.",
+  "Asking the termites to wait outside.",
 ];
+const LOADER_MS = 10_000;
+const LOADER_TICK = 250;
+const COUNTDOWN_MS = 5_000;
+
+/** The next line in the rotation, remembered across loads. */
+function nextLoaderLine(): string {
+  const key = "loader-line";
+  let index = 0;
+  try {
+    const stored = Number(localStorage.getItem(key));
+    index = Number.isFinite(stored) ? (stored + 1) % LOADER_LINES.length : 0;
+    localStorage.setItem(key, String(index));
+  } catch {
+    index = Math.floor(Math.random() * LOADER_LINES.length);
+  }
+  return LOADER_LINES[index];
+}
 
 const finePointer = () => window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
@@ -156,7 +178,7 @@ export function ChatDirector({
   /** A short pulse on the send button after a question goes. */
   const [sent, setSent] = useState(false);
   /** The line at the bottom while the intro waits for the chat to open. */
-  const [loader, setLoader] = useState<{ text: string; step: number } | null>(null);
+  const [loader, setLoader] = useState<{ text: string; count: number | null; progress: number } | null>(null);
   /** Topics already answered, marked in the sidebar. */
   const [asked, setAsked] = useState<Set<TopicId>>(() => new Set());
   /** The sidebar as a drawer on narrow screens. */
@@ -262,8 +284,9 @@ export function ChatDirector({
 
   /**
    * While the intro waits, a line at the bottom pretends to boot the chat,
-   * then counts down and opens it. Ten seconds in all. A click on the line,
-   * or the first scroll, skips straight to the chat; a hidden tab pauses.
+   * then counts down the last five seconds and opens it. Ten seconds in all.
+   * A click on the line, or the first scroll, skips straight to the chat; a
+   * hidden tab pauses.
    */
   useEffect(() => {
     if (stage !== "intro") {
@@ -272,21 +295,26 @@ export function ChatDirector({
     }
     const booting = document.documentElement.dataset.boot === "";
     let timer = 0;
-    let index = 0;
-    const total = LOADER_STEPS.length;
+    let elapsed = 0;
+    let text = "";
     const run = () => {
       if (document.visibilityState !== "visible") {
         timer = window.setTimeout(run, 1000);
         return;
       }
-      if (index >= total) {
+      if (!text) text = nextLoaderLine();
+      if (elapsed >= LOADER_MS) {
         void greet();
         return;
       }
-      const [text, ms] = LOADER_STEPS[index];
-      setLoader({ text, step: index });
-      index += 1;
-      timer = window.setTimeout(run, ms);
+      const left = LOADER_MS - elapsed;
+      setLoader({
+        text,
+        count: left <= COUNTDOWN_MS ? Math.ceil(left / 1000) : null,
+        progress: elapsed / LOADER_MS,
+      });
+      elapsed += LOADER_TICK;
+      timer = window.setTimeout(run, LOADER_TICK);
     };
     timer = window.setTimeout(run, booting ? 3400 : 0);
     const onScroll = () => {
@@ -900,11 +928,12 @@ export function ChatDirector({
           data-loader
         >
           <span className="loader-bar" aria-hidden="true">
-            <span style={{ width: `${loader ? ((loader.step + 1) / LOADER_STEPS.length) * 100 : 0}%` }} />
+            <span style={{ width: `${loader ? loader.progress * 100 : 0}%` }} />
           </span>
           <span className="loader-line" aria-hidden="true">
             <span className="loader-caret">▸</span>
             <span className="loader-text">{loader?.text ?? "Booting the chat…"}</span>
+            {loader?.count ? <span className="loader-count">Ready in {loader.count}</span> : null}
             <span className="loader-cursor" />
           </span>
           <span className="sr-only">The chat opens in a few seconds. Press to open it now.</span>
