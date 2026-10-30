@@ -270,6 +270,13 @@ test.describe("conversations", () => {
     await page.locator('.composer .chip[data-ask="experience"]').click();
     await expect(page.locator('[data-flow="experience"]')).toHaveAttribute("data-sent", "");
     await expect(chips.first()).toBeHidden();
+    // Once the whole answer is in, every topic comes back for the next question.
+    const flow = page.locator('[data-flow="experience"]');
+    const total = await flow.locator(":scope > [data-msg]").count();
+    await expect(flow.locator(":scope > [data-msg][data-sent]")).toHaveCount(total, { timeout: 20_000 });
+    await expect(chips.first()).toBeVisible();
+    await page.getByRole("button", { name: "Hide the topics" }).click();
+    await expect(chips.first()).toBeHidden();
     await page.getByRole("button", { name: "Show every topic" }).click();
     await expect(chips.first()).toBeVisible();
   });

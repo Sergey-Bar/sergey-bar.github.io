@@ -418,7 +418,11 @@ export function ChatDirector({
           if (index === 0 && !finePointer()) flow.focus({ preventScroll: true });
           else if (index === 0 && document.activeElement === document.body) flow.focus({ preventScroll: true });
         }
-        if (run === runRef.current) setStatus(`${site.name} finished answering about ${topicById[id].label.toLowerCase()}.`);
+        if (run === runRef.current) {
+          setStatus(`${site.name} finished answering about ${topicById[id].label.toLowerCase()}.`);
+          // The whole answer is in: every topic comes back, ready for the next question.
+          setChipsOpen(true);
+        }
       }),
     [enqueue, follow, openChat, push, think],
   );

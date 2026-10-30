@@ -857,6 +857,12 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 .chip-read svg { color: var(--color-c-ice); }
 .chip-read:hover { border-color: var(--color-c-sky); background: color-mix(in oklab, var(--color-c-sky) 24%, transparent); }
 .chip-short { display: none; }
+/* While the topics panel is open the composer stands taller, so the log keeps
+   room beneath it and the end of an answer can always scroll clear of it. */
+.chat-shell:has(.composer-topics:not([hidden])) .log { padding-bottom: calc(var(--composer-space) + 110px); }
+@media (max-width: 47.99rem) {
+  .chat-shell:has(.composer-topics:not([hidden])) .log { padding-bottom: calc(var(--composer-space) + 220px); }
+}
 /* A phone gets every button at once, no scrolling: a grid of tiles, four
    across and three down, each an icon over a short name (the full label stays
    the accessible name), like the shortcuts on a phone's own home screen. */
