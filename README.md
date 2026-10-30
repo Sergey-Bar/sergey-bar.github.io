@@ -237,9 +237,9 @@ in `src/content/routes.json`, and fails closed:
 
 | Budget | Limit | Current |
 |---|---|---|
-| JavaScript, gzip (external + inline, excluding the `noModule` polyfill chunk) | 150KB | 142.4KB |
-| Stylesheet, gzip | 20KB | 17.8KB |
-| Self-hosted fonts | 140KB | 132.6KB |
+| JavaScript, gzip (external + inline, excluding the `noModule` polyfill chunk) | 150KB | 141.8KB |
+| Stylesheet, gzip | 20KB | 17.7KB |
+| Self-hosted fonts | 140KB | 107.5KB |
 
 It also fails if the built page set or the Lighthouse URL list disagrees with
 `src/content/routes.json`, so a new page cannot quietly escape the sitemap, the

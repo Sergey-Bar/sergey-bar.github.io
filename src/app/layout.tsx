@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
-import { JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 
 import { MotionDirector } from "@/components/motion-director";
 import { PersonJsonLd } from "@/components/person-jsonld";
@@ -10,15 +10,17 @@ import { site } from "@/content/site";
 import "./globals.css";
 
 /**
- * Geist ships as a package, so the text face is self-hosted with no network
- * request and no font swap. JetBrains Mono is reserved for terminal output:
- * the scan transcript, the loading line and the key hint. On Apple devices the stylesheet names SF Pro and
- * SF Mono first, so these two are what every other device reads.
+ * Both faces ship as packages, so the build never fetches a font: a deploy
+ * cannot fail because Google Fonts answered oddly, as one did. Geist is the
+ * text face. JetBrains Mono, the variable Latin file from Fontsource (OFL), is
+ * reserved for terminal output: the scan transcript, the loading line and the
+ * key hint. On Apple devices the stylesheet names SF Pro and SF Mono first, so
+ * these two are what every other device reads.
  */
-const mono = JetBrains_Mono({
+const mono = localFont({
+  src: "../../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2",
   variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: "100 800",
   display: "swap",
 });
 
