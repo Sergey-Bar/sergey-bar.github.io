@@ -49,7 +49,7 @@ export function StatusChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-[var(--radius-chip)] border bg-surface px-1.5 py-0.5 t-data font-medium",
+        "inline-flex items-center gap-1.5 rounded-full border bg-surface px-2.5 py-0.5 t-data font-medium",
         borderTone[tone],
         textTone[tone],
         className,

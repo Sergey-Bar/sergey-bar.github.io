@@ -19,7 +19,7 @@ export function TechnicalTag({
   className?: string;
 }) {
   const shell = cn(
-    "data inline-flex items-center rounded-[3px] border px-1.5 py-0.5",
+    "data inline-flex items-center rounded-full border px-2.5 py-0.5",
     href && "transition-colors duration-150",
     tone === "light"
       ? "border-line-strong bg-surface text-muted hover:text-ink"
