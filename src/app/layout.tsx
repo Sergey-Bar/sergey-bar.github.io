@@ -11,8 +11,8 @@ import "./globals.css";
 
 /**
  * Geist ships as a package, so the text face is self-hosted with no network
- * request and no font swap. JetBrains Mono is reserved for genuine technical
- * data (plan §5.2, §3.1). On Apple devices the stylesheet names SF Pro and
+ * request and no font swap. JetBrains Mono is reserved for terminal output:
+ * the scan transcript, the loading line and the key hint. On Apple devices the stylesheet names SF Pro and
  * SF Mono first, so these two are what every other device reads.
  */
 const mono = JetBrains_Mono({

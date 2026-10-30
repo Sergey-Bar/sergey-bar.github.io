@@ -3,9 +3,9 @@ import { cn } from "@/lib/utils";
 export type ToolItem = string | { label: string; href: string };
 
 /**
- * Mono is restricted to genuine technical data (plan §5.2). A tool name is
- * technical data; a sentence is not. An item with an `href` renders as a link,
- * because some of these are tools you are meant to go and look at.
+ * A tool, sector or skill as a small tag, in the text face like every other
+ * label. An item with an `href` renders as a link, because some of these are
+ * tools you are meant to go and look at.
  */
 export function TechnicalTag({
   children,

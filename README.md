@@ -119,12 +119,17 @@ surfaces get superellipse corners at a larger radius; elsewhere they stay round.
 ## Type
 
 On an Apple device the site reads in Apple's own faces, SF Pro for text and
-SF Mono for data, taken from the system (`-apple-system`, `BlinkMacSystemFont`,
+SF Mono for terminal output, taken from the system (`-apple-system`, `BlinkMacSystemFont`,
 `ui-monospace`, `SF Mono`). They are named, never shipped: Apple's licence
 allows neither self-hosting them nor using them off Apple platforms. Every other
 device reads the self-hosted Geist and JetBrains Mono, which sit close to them,
 so the font budget is unchanged. The demolition run's canvas follows the same
 order.
+
+Labels, card eyebrows, tags, sidebar headings and figures are set in the text
+face, with tabular figures so numbers still align. Mono appears only where the
+page shows terminal output: the scan transcript, the loading line and the "/"
+key hint.
 
 ## Stack
 

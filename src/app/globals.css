@@ -107,12 +107,16 @@
   line-height: 1.55;
 }
 
+/* Labels, eyebrows, tags and figures read in the text face, with tabular
+   figures so numbers still line up. Mono is kept for what really is terminal
+   output: the scan transcript, the loading line and the key hint. */
 @utility t-data {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--ts-data);
+  font-weight: 500;
   line-height: 1.45;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 /* ---------------------------------------------------------------------------
@@ -281,10 +285,11 @@
   }
 
   .data {
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--ts-data);
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
   }
 
   .link-underline {
@@ -865,7 +870,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 .side-head { display: none; align-items: center; justify-content: flex-end; padding: 2px 6px 12px; }
 .side-close { display: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-line-strong); color: var(--color-muted); place-items: center; cursor: pointer; }
 .side-actions { display: grid; gap: 2px; }
-.side-label { margin: 16px 0 6px; padding-inline: 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.02em; color: var(--color-muted); }
+.side-label { margin: 16px 0 6px; padding-inline: 10px; font-size: 12px; font-weight: 500; color: var(--color-muted); }
 .side-list { display: grid; gap: 2px; list-style: none; }
 .side-item {
   display: flex;
@@ -1376,7 +1381,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 .case-context { font-size: 14px; line-height: 1.6; color: var(--color-muted); margin-top: 8px; }
 .case { display: grid; gap: 18px; margin-top: 14px; }
 .case > div { display: grid; gap: 6px; padding-top: 14px; border-top: 1px solid var(--color-line); }
-.case dt { font-family: var(--font-mono); font-size: var(--ts-data); letter-spacing: -0.01em; color: var(--topic); }
+.case dt { font-size: var(--ts-data); font-weight: 600; color: var(--topic); }
 .case dd { font-size: 15px; line-height: 1.65; color: var(--color-ink); }
 .case dd ul { padding-left: 18px; list-style: disc; }
 .case dd li + li { margin-top: 8px; }
