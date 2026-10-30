@@ -5,7 +5,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type CSSProperties,
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent,
@@ -33,7 +32,6 @@ type Entry = { key: number; order: number; node: ReactNode };
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/** What the bottom line claims to be doing, and for how long. Ten seconds in all. */
 /**
  * One line per visit, shown for the whole wait, with the countdown appended
  * at the end. The line rotates: each load takes the next one, so a returning
@@ -53,9 +51,9 @@ const LOADER_LINES: readonly string[] = [
   "Running the scan on this page. The page is fine. The page is nervous.",
   "Asking the termites to wait outside.",
 ];
-const LOADER_MS = 5_000;
+const LOADER_MS = 3_000;
 const LOADER_TICK = 250;
-const COUNTDOWN_MS = 3_000;
+const COUNTDOWN_MS = 2_000;
 
 /** The next line in the rotation, remembered across loads. */
 function nextLoaderLine(): string {
@@ -293,7 +291,8 @@ export function ChatDirector({
 
   /**
    * While the intro waits, a line at the bottom pretends to boot the chat,
-   * then counts down the last three seconds and opens it. Five seconds in all.
+   * then counts down the last two seconds and opens it. Three seconds in all,
+   * so a visitor with half a minute to spare reads the chat, not the wait.
    * A click on the line, or the first scroll, skips straight to the chat; a
    * hidden tab pauses.
    */
@@ -302,7 +301,6 @@ export function ChatDirector({
       setLoader(null);
       return;
     }
-    const booting = document.documentElement.dataset.boot === "";
     let timer = 0;
     let elapsed = 0;
     let text = "";
@@ -325,7 +323,7 @@ export function ChatDirector({
       elapsed += LOADER_TICK;
       timer = window.setTimeout(run, LOADER_TICK);
     };
-    timer = window.setTimeout(run, booting ? 3400 : 0);
+    timer = window.setTimeout(run, 0);
     const onScroll = () => {
       if (window.scrollY > 40) void greet();
     };
@@ -492,28 +490,10 @@ export function ChatDirector({
   /* ------------------------------------------------------------ events */
 
 
-  /** The opening veil ends on a click or any key; the hero then rises at once. */
-  const skipBoot = useCallback(() => {
-    if (document.documentElement.dataset.boot === "") {
-      document.documentElement.dataset.boot = "skip";
-    }
+  /** On a device with a pointer the composer takes focus as soon as it can. */
+  useEffect(() => {
     focusComposer();
   }, [focusComposer]);
-
-  useEffect(() => {
-    if (document.documentElement.dataset.boot !== "") {
-      focusComposer();
-      return;
-    }
-    window.addEventListener("keydown", skipBoot, { once: true });
-    window.addEventListener("pointerdown", skipBoot, { once: true });
-    const timer = window.setTimeout(skipBoot, 3400);
-    return () => {
-      window.removeEventListener("keydown", skipBoot);
-      window.removeEventListener("pointerdown", skipBoot);
-      window.clearTimeout(timer);
-    };
-  }, [focusComposer, skipBoot]);
 
   /** "/" focuses the composer from anywhere; Escape hands focus back to the page. */
   useEffect(() => {
@@ -712,21 +692,6 @@ export function ChatDirector({
       data-drawer={drawer ? "" : undefined}
       onClick={onClick}
     >
-      <div className="boot" aria-hidden="true">
-        <p className="boot-line">
-          {["Hello,", "I'm", site.name.split(" ")[0]].map((word, index) => (
-            <span key={word} className="mask" style={{ "--w": index } as CSSProperties}>
-              <span className={index === 2 ? "name" : undefined}>{word}</span>
-            </span>
-          ))}
-        </p>
-        <p className="boot-line boot-line-2">
-          <span className="mask" style={{ "--w": 0 } as CSSProperties}>
-            <span>Welcome</span>
-          </span>
-        </p>
-        <span className="boot-rule" />
-      </div>
       <div className="chat-bg" aria-hidden="true">
         <span className="orb orb-1" />
         <span className="orb orb-2" />

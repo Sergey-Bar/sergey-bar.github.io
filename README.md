@@ -56,9 +56,10 @@ anywhere and Escape hands focus back to the page.
 The first screen is quiet: the name, the role and the portrait, with a line
 at the bottom that pretends to boot the chat (negotiating with the release
 gate, convincing the flaky test, counting bugs): one line per visit, kept for
-the whole wait, with "Ready in 3…1" appended for the last three seconds. The
+the whole wait, with "Ready in 2…1" appended for the last two seconds. The
 line rotates through twelve, so the next load reads a different one.
-After those five seconds, or on a click on the line, or on the first scroll, the
+After those three seconds, or on a click or tap on the line ("tap to skip" is
+written on touch screens, which have no hover), or on the first scroll, the
 intro lifts and the chat opens with one greeting; the topics live only in the
 composer. A hidden tab pauses the countdown. "Read all" in the identity bar shows
 every answer at once in the record's order, with no pacing. Long cards keep their
@@ -101,9 +102,9 @@ as their words arrive, a card
 taller than a phone screen opens folded with a "Show the whole card" button,
 and "Start over" clears the conversation with a single press.
 
-The page opens, once per tab session, on a veil that says "Hello, I'm Sergey"
-and "Welcome" and lifts into the hero; a click or a key ends it early, and it
-never plays with motion off.
+There is no opening veil: the intro is the first thing on screen, and the
+chat opens about three seconds after load. A recruiter with half a minute reads
+the record, not the wait.
 
 ## Palette
 

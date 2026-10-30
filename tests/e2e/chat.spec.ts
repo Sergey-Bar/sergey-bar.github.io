@@ -3,21 +3,19 @@ import { expect, test, type Page } from "@playwright/test";
 
 /**
  * The conversation, tested as a product. Every spec runs against the built
- * static export; the opening veil is skipped by marking the tab session as
- * booted before the page loads, and one spec covers the veil itself.
+ * static export.
  */
 
 const TOPICS = ["about", "projects", "cases", "experience", "recommendations", "toolbox", "contact", "fun"] as const;
 
 async function open(page: Page, path = "/") {
-  await page.addInitScript(() => sessionStorage.setItem("booted", "1"));
   await page.goto(path);
   await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
 }
 
 /**
  * Opens the page under a fake clock and freezes it a moment after load, so the
- * five-second wait is advanced by the test alone and real load time cannot eat
+ * three-second wait is advanced by the test alone and real load time cannot eat
  * into it.
  */
 async function openFrozen(page: Page) {
@@ -53,7 +51,6 @@ async function pressChip(page: Page, id: string) {
 async function expectAxeClean(page: Page) {
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    .exclude(".boot")
     .analyze();
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
 }
@@ -68,15 +65,11 @@ test.describe("intro", () => {
     await expectAxeClean(page);
   });
 
-  test("the opening veil plays once per session and a key ends it", async ({ page }) => {
+  test("there is no opening veil: the intro is the first thing on screen", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("html")).toHaveAttribute("data-boot", "");
-    await expect(page.locator(".boot")).toBeVisible();
-    await page.keyboard.press("Space");
-    await expect(page.locator("html")).toHaveAttribute("data-boot", "skip");
-    await expect(page.locator(".boot")).toBeHidden();
-    await page.reload();
-    await expect(page.locator("html")).not.toHaveAttribute("data-boot", "");
+    await expect(page.locator(".boot")).toHaveCount(0);
+    await expect(page.locator("html")).not.toHaveAttribute("data-boot");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 
   test("the loading line stays for the whole wait, counts down, and changes on the next load", async ({ page }) => {
@@ -85,20 +78,20 @@ test.describe("intro", () => {
     await expect(text).not.toHaveText("Booting the chat…");
     const first = await text.textContent();
     await expect(page.locator(".loader-count")).toHaveCount(0);
-    await page.clock.runFor(2_300);
+    await page.clock.runFor(1_500);
     await expect(text).toHaveText(first ?? "");
-    await expect(page.locator(".loader-count")).toHaveText(/Ready in [1-3]/);
+    await expect(page.locator(".loader-count")).toHaveText(/Ready in [12]/);
     await page.clock.resume();
     await page.reload();
     await expect(text).not.toHaveText("Booting the chat…");
     expect(await text.textContent()).not.toBe(first);
   });
 
-  test("the chat opens by itself after five seconds with every topic offered", async ({ page }) => {
+  test("the chat opens by itself after three seconds with every topic offered", async ({ page }) => {
     await openFrozen(page);
-    await page.clock.runFor(3_000);
+    await page.clock.runFor(1_500);
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "intro");
-    await page.clock.runFor(2_000);
+    await page.clock.runFor(1_500);
     await page.clock.resume();
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat", { timeout: 10_000 });
     await expect(page.locator(".entry .bubble").first()).toBeVisible();
@@ -282,7 +275,6 @@ test.describe("conversations", () => {
   });
 
   test("a legacy anchor opens its conversation on arrival", async ({ page }) => {
-    await page.addInitScript(() => sessionStorage.setItem("booted", "1"));
     await page.goto("/#experience");
     await expect(page.locator('[data-flow="experience"]')).toHaveAttribute("data-sent", "", { timeout: 10_000 });
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat");
