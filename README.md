@@ -74,11 +74,19 @@ accessibility) are not in the sidebar; they stay reachable by their address and
 from one another's footers. On narrower screens the same sidebar is a
 drawer behind the menu button in the identity bar, with a backdrop and Escape
 to close. Under the text field the bar reads like a chat with a model: a plus
-that holds every topic as chips above the field, with GitHub, LinkedIn and
-email on a second row. The panel is open when the chat opens, so the first
-step is in view; a chip asks and closes it, Escape closes it, the plus brings
-it back. Beside the plus a pill names the model, "Sergey Bar" at "Ultra" effort (the one place the palette bends: the word shimmers pink to purple),
-and the send arrow ends the row. There is no microphone. Replies carry no
+that holds every topic as chips above the field. The panel leads with "Read
+everything", set apart as a blue-lit chip and a rule, then the topics, then
+GitHub, LinkedIn and email as icon-only chips at the end of the row (named for
+assistive technology and in a tooltip). The lists flow as one row, so a wide
+screen fits the panel in two rows; a phone keeps two rows and scrolls them
+sideways, faded at the edge. Labels stay on the topics: icons that only open on
+hover would hide them from touch screens and leave visitors guessing. The panel
+is open when the chat opens, so the first step is in view; a chip asks and
+closes it, Escape closes it, the plus brings it back. Beside the plus a pill
+names the model, "Sergey Bar" at "Ultra" effort (the one place the palette
+bends: the word shimmers pink to purple), and the send button ends the row: a
+small filled rounded square with an up arrow, the way a coding agent draws it,
+dimmed while the field is empty. There is no microphone. Replies carry no
 avatar, and the chat has no header beyond the menu button on a phone; the
 portrait and the name stand once, in the sidebar's foot, beside the motion
 control. The corner holds two round buttons in one style: "Start over", one

@@ -904,9 +904,17 @@ export function ChatDirector({
 
       <form className="composer" onSubmit={onSubmit}>
         <div className="composer-panel" data-match={match ?? undefined}>
-          {/* Every topic, behind the plus. Pressing one asks it and closes the panel. */}
+          {/* Every topic, behind the plus, led by reading mode and followed by
+              the profiles as icons, so the panel stays two rows. Pressing a
+              topic asks it and closes the panel. */}
           <div className="composer-topics" id="composer-topics" hidden={!chipsOpen}>
             <ul className="chips" aria-label="Topics">
+              <li className="chips-lead">
+                <button type="button" className="chip chip-read" onClick={readAll}>
+                  <ReadIcon size={15} />
+                  Read everything
+                </button>
+              </li>
               {topics.map((topic) => (
                 <li key={topic.id}>
                   <a href={`#${topic.id}`} className="chip" data-ask={topic.id} data-topic={topic.id}>
@@ -918,21 +926,18 @@ export function ChatDirector({
             </ul>
             <ul className="chips chips-routes" aria-label="Profiles and contact">
               <li>
-                <a href={contact.github} className="chip chip-route">
-                  <GitHubIcon size={14} />
-                  GitHub
+                <a href={contact.github} className="chip chip-route" aria-label="GitHub" title="GitHub">
+                  <GitHubIcon size={15} />
                 </a>
               </li>
               <li>
-                <a href={contact.linkedin} className="chip chip-route">
-                  <LinkedInIcon size={14} />
-                  LinkedIn
+                <a href={contact.linkedin} className="chip chip-route" aria-label="LinkedIn" title="LinkedIn">
+                  <LinkedInIcon size={15} />
                 </a>
               </li>
               <li>
-                <a href={`mailto:${contact.email}`} className="chip chip-route">
-                  <MailIcon size={14} />
-                  Email
+                <a href={`mailto:${contact.email}`} className="chip chip-route" aria-label="Email" title="Email">
+                  <MailIcon size={15} />
                 </a>
               </li>
             </ul>
@@ -975,7 +980,7 @@ export function ChatDirector({
               <span className="model-effort">Ultra</span>
             </span>
             <button type="submit" className="composer-send" aria-label="Send" data-sent={sent ? "" : undefined}>
-              <SendIcon size={17} />
+              <SendIcon size={16} />
             </button>
           </div>
         </div>
