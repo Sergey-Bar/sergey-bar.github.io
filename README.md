@@ -116,6 +116,16 @@ the scan transcript, a recommendation) is shaded at its top edge instead
 (`--well`). Where the browser supports `corner-shape: squircle` the large
 surfaces get superellipse corners at a larger radius; elsewhere they stay round.
 
+## Type
+
+On an Apple device the site reads in Apple's own faces, SF Pro for text and
+SF Mono for data, taken from the system (`-apple-system`, `BlinkMacSystemFont`,
+`ui-monospace`, `SF Mono`). They are named, never shipped: Apple's licence
+allows neither self-hosting them nor using them off Apple platforms. Every other
+device reads the self-hosted Geist and JetBrains Mono, which sit close to them,
+so the font budget is unchanged. The demolition run's canvas follows the same
+order.
+
 ## Stack
 
 Next.js 15 App Router · TypeScript · Tailwind v4 · one shadcn/ui primitive

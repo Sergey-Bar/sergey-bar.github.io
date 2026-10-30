@@ -15,8 +15,8 @@ import {
 
 const PI2 = Math.PI * 2;
 
-const SANS = '"Segoe UI", Roboto, Helvetica, Arial, system-ui, sans-serif';
-const MONO = '"JetBrains Mono", "Cascadia Mono", ui-monospace, Consolas, monospace';
+const SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, system-ui, sans-serif';
+const MONO = 'ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", "Cascadia Mono", Consolas, monospace';
 
 const DOMAIN = new URL(site.domain).hostname;
 

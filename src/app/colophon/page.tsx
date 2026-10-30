@@ -96,8 +96,9 @@ export default function ColophonPage() {
             <article className="colophon-card" data-reveal>
               <h2>The source</h2>
               <p>
-                Next.js 15 App Router, TypeScript, Tailwind v4, Geist and JetBrains Mono,
-                self-hosted. The repository carries the full argument in its README, and the{" "}
+                Next.js 15 App Router, TypeScript, Tailwind v4. Type is Apple&apos;s SF Pro and
+                SF Mono on Apple devices, from the system, and self-hosted Geist and JetBrains
+                Mono everywhere else. The repository carries the full argument in its README, and the{" "}
                 <Link href="/accessibility/" className="link-underline">
                   accessibility statement
                 </Link>{" "}

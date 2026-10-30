@@ -50,8 +50,12 @@
   --color-c-ice: oklch(82.6% 0.089 252);
   --color-c-deep: oklch(40.9% 0.178 262);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular",
+  /* Apple's own faces where the device has them: SF Pro and SF Mono are system
+     fonts there, named here, never shipped (their licence allows neither
+     self-hosting nor use off Apple platforms). Every other device gets the
+     self-hosted Geist and JetBrains Mono, which sit close to them. */
+  --font-sans: -apple-system, BlinkMacSystemFont, var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, var(--font-jetbrains-mono),
     "Cascadia Mono", monospace;
 
   /* Type scale — 1.25 ratio off a 16px base, display sizes clamped. These are
