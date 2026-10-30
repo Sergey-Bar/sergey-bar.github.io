@@ -8,27 +8,30 @@
    --------------------------------------------------------------------------- */
 
 @theme {
-  /* The LinkedIn banner: black, a dark grey panel, and one blue light. */
-  --color-paper: #050608;
-  --color-surface: #14171c;
-  --color-surface-2: #1c2026;
-  --color-ink: #ffffff;
-  --color-muted: #a3acb8;
-  --color-line: #262b33;
-  --color-line-strong: #363d48;
+  /* The LinkedIn banner: black, a dark grey panel, and one blue light. Written
+     in OKLCH so every neutral sits on the blues' own hue (about 258°) and the
+     steps between them are even to the eye; the greys lean a little further
+     into the blue than plain sRGB greys would. */
+  --color-paper: oklch(12.2% 0.009 262);
+  --color-surface: oklch(20.4% 0.014 261);
+  --color-surface-2: oklch(24.2% 0.016 258);
+  --color-ink: oklch(100% 0 0);
+  --color-muted: oklch(74.1% 0.02 256);
+  --color-line: oklch(28.8% 0.018 260);
+  --color-line-strong: oklch(35.8% 0.022 259);
 
-  --color-hero-panel: #0e1116;
+  --color-hero-panel: oklch(17.7% 0.013 261);
 
   /* Every status is a blue: the palette is blue, white and black, nothing else. */
-  --color-accent: #0a66c2;
-  --color-success: #2d8cff;
-  --color-warn: #2d8cff;
-  --color-critical: #0a66c2;
+  --color-accent: oklch(51.6% 0.163 255);
+  --color-success: oklch(64.6% 0.192 256);
+  --color-warn: oklch(64.6% 0.192 256);
+  --color-critical: oklch(51.6% 0.163 255);
 
-  --color-accent-ink: #5aa9ff;
-  --color-success-ink: #7cc0ff;
-  --color-warn-ink: #7cc0ff;
-  --color-critical-ink: #5aa9ff;
+  --color-accent-ink: oklch(72.2% 0.148 252);
+  --color-success-ink: oklch(78.7% 0.114 248);
+  --color-warn-ink: oklch(78.7% 0.114 248);
+  --color-critical-ink: oklch(72.2% 0.148 252);
 
   /* Dark technical surfaces — evidence console, CI/pipeline, release gate */
   --color-dark-bg: #07080a;
@@ -42,10 +45,10 @@
 
   /* The blues. LinkedIn's own, a brighter one for text and glows on black,
      an ice tint for highlights, and a deep one for the ambient light. */
-  --color-c-blue: #0a66c2;
-  --color-c-sky: #2d8cff;
-  --color-c-ice: #9ccaff;
-  --color-c-deep: #0b3ea8;
+  --color-c-blue: oklch(51.6% 0.163 255);
+  --color-c-sky: oklch(64.6% 0.192 256);
+  --color-c-ice: oklch(82.6% 0.089 252);
+  --color-c-deep: oklch(40.9% 0.178 262);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular",
@@ -121,6 +124,11 @@
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  /* A damped spring (ζ 0.72), sampled into linear(): it overshoots by under
+     4% and settles, so things that arrive land instead of stopping dead. It
+     has no meaning on a press, which keeps --ease-out. */
+  --ease-spring: linear(0, 0.062, 0.205, 0.377, 0.546, 0.695, 0.815, 0.904, 0.966, 1.006, 1.028, 1.037, 1.038, 1.034, 1.028, 1.022, 1.015, 1.01, 1.006, 1.003, 1.001, 0.999, 1);
+  --dur-spring: 640ms;
 
   --dur-press: 120ms;
   --dur-hover: 160ms;
@@ -129,9 +137,29 @@
   --dur-stage: 900ms;
   --stagger: 60ms;
 
-  --grad: linear-gradient(118deg, var(--color-c-blue), var(--color-c-sky));
-  --grad-text: linear-gradient(118deg, var(--color-c-sky), var(--color-c-ice) 70%, #ffffff);
+  --grad: linear-gradient(118deg in oklch, var(--color-c-blue), var(--color-c-sky));
+  --grad-text: linear-gradient(118deg in oklch, var(--color-c-sky), var(--color-c-ice) 70%, #ffffff);
   --topic: var(--color-c-sky);
+
+  /* Depth. A raised surface catches light on its top edge and a faint sheen
+     down its face, and casts a short contact shadow plus a long soft one; a
+     well set into a card is the reverse, shaded at its top edge. */
+  --edge: inset 0 1px 0 oklch(100% 0 0 / 0.07);
+  --sheen: linear-gradient(180deg, oklch(100% 0 0 / 0.035), oklch(100% 0 0 / 0) 42%);
+  --elev-1: 0 1px 2px oklch(0% 0 0 / 0.35), 0 12px 32px -16px oklch(0% 0 0 / 0.7);
+  --elev-2: 0 2px 6px oklch(0% 0 0 / 0.3), 0 28px 64px -20px oklch(0% 0 0 / 0.8);
+  --well: inset 0 1px 3px oklch(0% 0 0 / 0.45);
+}
+
+/* A wide-gamut screen gets the blues LinkedIn's sRGB cannot reach. */
+@media (color-gamut: p3) {
+  :root {
+    --color-c-blue: oklch(52% 0.19 256);
+    --color-c-sky: oklch(65% 0.22 256);
+    --color-c-deep: oklch(41% 0.2 262);
+    --color-accent: oklch(52% 0.19 256);
+    --color-success: oklch(65% 0.22 256);
+  }
 }
 
 @layer base {
@@ -805,7 +833,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 .composer .chips { flex-wrap: wrap; overflow: visible; gap: 6px; padding: 2px; }
 .composer .chip { font-size: 12.5px; min-height: 34px; padding: 0 11px 0 9px; gap: 6px; }
 @media (prefers-reduced-motion: no-preference) {
-  .composer-topics .chip { animation: chip-in 320ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 0ms); }
+  .composer-topics .chip { animation: chip-in 480ms var(--ease-spring) both; animation-delay: calc(var(--i, 0) * 0ms); }
 }
 @keyframes chip-in { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
 
@@ -827,7 +855,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   backdrop-filter: blur(16px);
   transform: translateX(-100%);
   visibility: hidden;
-  transition: transform 420ms var(--ease-out), visibility 0s linear 420ms;
+  transition: transform 420ms var(--ease-drawer), visibility 0s linear 420ms;
 }
 /* The head holds only the drawer's close button; on a wide screen it is not there. */
 .side-head { display: none; align-items: center; justify-content: flex-end; padding: 2px 6px 12px; }
@@ -1065,7 +1093,8 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   padding: 13px 18px;
   border-radius: 18px 18px 18px 6px;
   border: 1px solid var(--color-line);
-  background: var(--color-surface);
+  background: var(--sheen), var(--color-surface);
+  box-shadow: var(--edge), var(--elev-1);
   font-size: 15px;
   line-height: 1.65;
   color: var(--color-ink);
@@ -1088,7 +1117,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   background: var(--grad);
   color: #fff;
   font-weight: 500;
-  box-shadow: 0 10px 30px #0a66c233;
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.22), 0 10px 30px #0a66c233;
 }
 
 .msg-card .bubble {
@@ -1096,7 +1125,8 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   max-width: 100%;
   padding: 22px 24px;
   border-radius: 18px;
-  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  background: var(--sheen), color-mix(in oklab, var(--color-surface) 92%, transparent);
+  box-shadow: var(--edge), var(--elev-2);
   position: relative;
   overflow: clip;
 }
@@ -1185,6 +1215,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   background: var(--color-paper);
+  box-shadow: var(--well);
 }
 .evidence-panel h3, .evidence-panel figcaption { font-size: 18px; line-height: 1.35; }
 .evidence-flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 22px; list-style: none; counter-reset: steps; }
@@ -1247,7 +1278,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 .recommendation-meta { border-top: 1px solid var(--color-line); padding-top: 14px; margin-top: 18px; font-size: 12px; line-height: 1.7; color: var(--color-muted); }
 .recommendation-excerpt { margin-top: 10px; font-size: 12px; line-height: 1.6; color: var(--color-muted); }
 .recommendations-grid { display: grid; gap: 18px; margin-top: 22px; }
-.recommendations-grid > .recommendation-card { padding: 20px; border: 1px solid var(--color-line); border-radius: var(--radius-card); background: var(--color-paper); }
+.recommendations-grid > .recommendation-card { padding: 20px; border: 1px solid var(--color-line); border-radius: var(--radius-card); background: var(--color-paper); box-shadow: var(--well); }
 @media (min-width: 48rem) { .recommendations-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .recommendations-more > summary {
   display: flex; width: fit-content; align-items: center; gap: 16px; min-height: 44px; padding: 10px 18px;
@@ -1359,6 +1390,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   background: #07080c;
+  box-shadow: var(--well);
   overflow: hidden;
 }
 .transcript-head { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--color-line); color: var(--color-muted); }
@@ -1390,7 +1422,8 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   padding: 22px 24px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
-  background: var(--color-surface);
+  background: var(--sheen), var(--color-surface);
+  box-shadow: var(--edge), var(--elev-1);
   position: relative;
   overflow: clip;
 }
@@ -1464,14 +1497,14 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   padding: 8px 8px 10px;
   border-radius: 24px;
   border: 1px solid var(--color-line-strong);
-  background: color-mix(in oklab, var(--color-surface) 90%, transparent);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 24px 60px #0008;
+  background: var(--sheen), color-mix(in oklab, var(--color-surface) 90%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: var(--edge), var(--elev-2);
   transition: border-color var(--dur-ui) var(--ease-out), box-shadow var(--dur-ui) var(--ease-out);
 }
 .composer-panel:focus-within {
   border-color: color-mix(in oklab, var(--color-c-sky) 70%, var(--color-line-strong));
-  box-shadow: 0 24px 60px #0008, 0 0 0 4px color-mix(in oklab, var(--color-c-sky) 18%, transparent);
+  box-shadow: var(--edge), var(--elev-2), 0 0 0 4px color-mix(in oklab, var(--color-c-sky) 18%, transparent);
 }
 .composer-row { display: flex; align-items: center; gap: 8px; }
 .composer input {
@@ -1551,6 +1584,31 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   color: var(--color-muted);
 }
 
+/* --- Squircles --------------------------------------------------------------- */
+
+/* Where the browser draws superellipse corners, the large surfaces get them:
+   the curve starts earlier and ends softer than a circular arc, so the radius
+   grows to keep the same visual size. Elsewhere the corners stay round. */
+@supports (corner-shape: squircle) {
+  .bubble,
+  .composer-panel,
+  .evidence-panel,
+  .transcript,
+  .colophon-card,
+  .recommendations-grid > .recommendation-card,
+  .toolbox-search-field,
+  .side-item {
+    corner-shape: squircle;
+  }
+  .bubble { border-radius: 28px 28px 28px 10px; }
+  .msg.user .bubble { border-radius: 28px 28px 10px 28px; }
+  .msg-card .bubble { border-radius: 30px; }
+  .composer-panel { border-radius: 36px; }
+  .evidence-panel, .transcript, .colophon-card, .recommendations-grid > .recommendation-card { border-radius: 28px; }
+  .toolbox-search-field { border-radius: 18px; }
+  .side-item { border-radius: 14px; }
+}
+
 /* --- Responsive ------------------------------------------------------------ */
 
 @media (max-width: 63.99rem) {
@@ -1609,7 +1667,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   /* Each message arrives once, the moment the director shows it, and the
      words of a reply follow one another the way a model's output does. In
      reading mode everything is simply there. */
-  .log .msg { animation: pop 460ms var(--ease-out) both; }
+  .log .msg { animation: pop var(--dur-spring) var(--ease-spring) both; }
   .chat-shell[data-mode="read"] .log .msg { animation: none; }
   .w { display: inline-block; animation: word-in 260ms var(--ease-out) both; }
   .w[hidden] { display: none; }

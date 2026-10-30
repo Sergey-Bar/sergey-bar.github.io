@@ -105,6 +105,17 @@ black, and white type. Every status mark is a blue; there is no second hue.
 The ambient light is three pre-blurred radial gradients moved on the
 compositor, placed to echo the profile banner's glow.
 
+The tokens are written in OKLCH, and the greys sit on the blues' own hue, so
+every neutral is a very dark blue rather than a grey. A wide-gamut (P3) screen
+gets more saturated blues than sRGB can show; the gradients interpolate in
+OKLCH. Surfaces have depth from three tokens: a raised surface (a bubble, a
+card, the composer) catches light on its top edge (`--edge`), carries a faint
+sheen down its face (`--sheen`) and casts a short contact shadow plus a long
+soft one (`--elev-1`, `--elev-2`); a well set into a card (the evidence panel,
+the scan transcript, a recommendation) is shaded at its top edge instead
+(`--well`). Where the browser supports `corner-shape: squircle` the large
+surfaces get superellipse corners at a larger radius; elsewhere they stay round.
+
 ## Stack
 
 Next.js 15 App Router · TypeScript · Tailwind v4 · one shadcn/ui primitive
@@ -112,7 +123,9 @@ Next.js 15 App Router · TypeScript · Tailwind v4 · one shadcn/ui primitive
 `.nojekyll` emitted into `out/`.
 
 No animation library. Motion is one vocabulary in `globals.css`: `--ease-out`
-for anything entering, `--ease-in-out` for anything moving on screen, never
+for anything entering, `--ease-in-out` for anything moving on screen,
+`--ease-spring` (a damped spring sampled into `linear()`, under 4% overshoot)
+for what lands (message arrivals, the topic chips), never
 ease-in on a control, interaction feedback under 300ms, and the longer
 durations reserved for the page-load sequence (the name and role rise word by
 word through a mask; the portrait, quote and actions follow) and for message
@@ -178,8 +191,8 @@ in `src/content/routes.json`, and fails closed:
 
 | Budget | Limit | Current |
 |---|---|---|
-| JavaScript, gzip (external + inline, excluding the `noModule` polyfill chunk) | 150KB | 138.7KB |
-| Stylesheet, gzip | 20KB | 14.4KB |
+| JavaScript, gzip (external + inline, excluding the `noModule` polyfill chunk) | 150KB | 142.4KB |
+| Stylesheet, gzip | 20KB | 17.8KB |
 | Self-hosted fonts | 140KB | 132.6KB |
 
 It also fails if the built page set or the Lighthouse URL list disagrees with
