@@ -226,12 +226,17 @@ test.describe("conversations", () => {
   test("reading mode leads the panel and fits it in two rows on a wide screen", async ({ page, isMobile }) => {
     await enter(page);
     const first = page.locator(".composer-topics .chip").first();
-    await expect(first).toHaveText("Read everything");
+    await expect(first).toHaveAccessibleName("Read everything");
     const tops = await page
       .locator(".composer-topics .chip")
       .evaluateAll((nodes) => new Set(nodes.map((n) => Math.round(n.getBoundingClientRect().top))).size);
-    expect(tops).toBeLessThanOrEqual(2);
-    if (!isMobile) await expect(page.locator(".composer .chip-route")).toHaveCount(3);
+    // Two rows on a wide screen; a phone's grid of tiles is three rows of four, all in view.
+    expect(tops).toBeLessThanOrEqual(isMobile ? 3 : 2);
+    if (isMobile) {
+      const tiles = page.locator(".composer-topics .chip");
+      for (let i = 0; i < (await tiles.count()); i++) await expect(tiles.nth(i)).toBeInViewport();
+    }
+    await expect(page.locator(".composer .chip-route")).toHaveCount(3);
     await first.click();
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-mode", "read");
     await expect(page.locator("[data-flow][data-sent]")).toHaveCount(TOPICS.length);
@@ -252,15 +257,11 @@ test.describe("conversations", () => {
     await expectAxeClean(page);
   });
 
-  test("the panel behind the plus opens with the chat, a chip closes it, the plus reopens it", async ({ page, isMobile }) => {
+  test("the panel behind the plus opens with the chat, a chip closes it, the plus reopens it", async ({ page }) => {
     await enter(page);
     const chips = page.locator(".composer .chip[data-ask]");
     await expect(chips).toHaveCount(TOPICS.length);
-    // A wide screen shows every chip at once; a phone scrolls the two rows sideways.
-    for (let i = 0; i < TOPICS.length; i++) {
-      if (isMobile) await expect(chips.nth(i)).toBeVisible();
-      else await expect(chips.nth(i)).toBeInViewport();
-    }
+    for (let i = 0; i < TOPICS.length; i++) await expect(chips.nth(i)).toBeInViewport();
     await expect(page.getByRole("button", { name: "Hide the topics" })).toHaveAttribute("aria-pressed", "true");
     const routes = page.locator(".composer .chips-routes");
     await expect(routes.getByRole("link", { name: "GitHub" })).toBeVisible();

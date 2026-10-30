@@ -856,25 +856,30 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 }
 .chip-read svg { color: var(--color-c-ice); }
 .chip-read:hover { border-color: var(--color-c-sky); background: color-mix(in oklab, var(--color-c-sky) 24%, transparent); }
-/* A phone keeps the same two rows and scrolls them sideways, fading at the edge. */
+.chip-short { display: none; }
+/* A phone gets every button at once, no scrolling: a grid of tiles, four
+   across and three down, each an icon over a short name (the full label stays
+   the accessible name), like the shortcuts on a phone's own home screen. */
 @media (max-width: 47.99rem) {
-  /* Twelve chips (reading mode, eight topics, three profiles) in two rows of
-     six, filled row by row so they read in the panel's own order. */
-  .composer-topics {
-    display: grid;
-    grid-template-columns: repeat(6, max-content);
-    justify-content: start;
-    gap: 6px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-    padding-inline-end: 28px;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-  }
-  .composer-topics::-webkit-scrollbar { display: none; }
-  .chips-routes > li:first-child { margin-left: 0; }
+  .composer-topics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px 4px 10px; }
+  .composer-topics .chips-lead { display: block; }
   .chips-lead::after { display: none; }
+  .chips-routes > li:first-child { margin-left: 0; }
+  .composer .composer-topics .chip {
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    min-height: 56px;
+    padding: 6px 2px;
+    gap: 4px;
+    border-radius: 14px;
+    font-size: 11px;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+  .composer-topics .chip svg { width: 18px; height: 18px; }
+  .composer-topics .chip-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .composer-topics .chip-short { display: block; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .composer-topics .chip { animation: chip-in 480ms var(--ease-spring) both; animation-delay: calc(var(--i, 0) * 0ms); }

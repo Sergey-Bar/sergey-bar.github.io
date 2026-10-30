@@ -37,6 +37,18 @@ const DestructionGame = dynamic(
   { ssr: false },
 );
 
+/** Names short enough for a phone's grid of tiles; the full label stays the accessible name. */
+const SHORT: Record<TopicId, string> = {
+  about: "About",
+  projects: "Projects",
+  cases: "Cases",
+  experience: "Career",
+  recommendations: "Reviews",
+  toolbox: "Toolbox",
+  contact: "Contact",
+  fun: "Play",
+};
+
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
@@ -895,14 +907,16 @@ export function ChatDirector({
               <li className="chips-lead">
                 <button type="button" className="chip chip-read" onClick={readAll}>
                   <ReadIcon size={15} />
-                  Read everything
+                  <span className="chip-label">Read everything</span>
+                  <span className="chip-short" aria-hidden="true">Read all</span>
                 </button>
               </li>
               {topics.map((topic) => (
                 <li key={topic.id}>
                   <a href={`#${topic.id}`} className="chip" data-ask={topic.id} data-topic={topic.id}>
                     <TopicIcon id={topic.id} size={15} />
-                    {topic.label}
+                    <span className="chip-label">{topic.label}</span>
+                    <span className="chip-short" aria-hidden="true">{SHORT[topic.id]}</span>
                   </a>
                 </li>
               ))}
@@ -911,16 +925,19 @@ export function ChatDirector({
               <li>
                 <a href={contact.github} className="chip chip-route" aria-label="GitHub" title="GitHub">
                   <GitHubIcon size={15} />
+                  <span className="chip-short" aria-hidden="true">GitHub</span>
                 </a>
               </li>
               <li>
                 <a href={contact.linkedin} className="chip chip-route" aria-label="LinkedIn" title="LinkedIn">
                   <LinkedInIcon size={15} />
+                  <span className="chip-short" aria-hidden="true">LinkedIn</span>
                 </a>
               </li>
               <li>
                 <a href={`mailto:${contact.email}`} className="chip chip-route" aria-label="Email" title="Email">
                   <MailIcon size={15} />
+                  <span className="chip-short" aria-hidden="true">Email</span>
                 </a>
               </li>
             </ul>
