@@ -4,14 +4,52 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import { cn } from "@/lib/utils";
 import { CloseIcon } from "@/components/icons";
 import { site } from "@/content/site";
-import { hero } from "@/content/hero";
 
 import {
-  HammerIcon,
   TOOLS,
   TOOL_PALETTE,
   type ToolId,
 } from "@/components/destruction-tools";
+import { Sfx, type LoopId } from "@/components/destruction-audio";
+
+/**
+ * A run's levels: the score each one needs and the rank it earns. A typical
+ * run ends somewhere between Test lead and Bug exterminator.
+ */
+const LEVELS: ReadonlyArray<{ at: number; rank: string }> = [
+  { at: 0, rank: "Intern" },
+  { at: 400, rank: "Junior tester" },
+  { at: 1000, rank: "QA engineer" },
+  { at: 1800, rank: "Senior QA" },
+  { at: 2800, rank: "Test lead" },
+  { at: 4000, rank: "Release captain" },
+  { at: 5500, rank: "Chaos engineer" },
+  { at: 7300, rank: "Bug exterminator" },
+  { at: 9500, rank: "Prod whisperer" },
+  { at: 12000, rank: "Legend" },
+];
+
+/** Combo streaks worth an announcement, in QA's own words. */
+const STREAKS: ReadonlyArray<[number, string]> = [
+  [5, "Smoke test"],
+  [10, "Regression run"],
+  [20, "Load test"],
+  [35, "Chaos monkey"],
+];
+
+/** The tools held down rather than clicked: each runs a sound loop while pressed. */
+const LOOPED: ReadonlySet<ToolId> = new Set<ToolId>(["chainsaw", "flamethrower", "phaser", "washing"]);
+
+function levelFor(score: number) {
+  let level = 1;
+  for (let i = 1; i < LEVELS.length; i++) if (score >= LEVELS[i].at) level = i + 1;
+  return level;
+}
+
+/** Something worth a banner: a level reached or a streak hit. */
+export type RunEvent =
+  | { kind: "level"; level: number; rank: string }
+  | { kind: "streak"; label: string; combo: number };
 
 const PI2 = Math.PI * 2;
 
@@ -82,6 +120,7 @@ type ParticleKind =
   | "arc"
   | "streak"
   | "heat"
+  | "marker"
   | "score";
 
 type Particle = {
@@ -112,6 +151,14 @@ export type RunStats = {
   score: number;
   combo: number;
   bugs: number;
+  /** The run's level, 1 to 10, its rank, and the score band it sits in. */
+  level: number;
+  rank: string;
+  levelAt: number;
+  nextAt: number | null;
+  /** Bugs squashed this run, and the longest combo. */
+  kills: number;
+  maxCombo: number;
 };
 
 type Termite = {
@@ -143,23 +190,6 @@ function rr(
   g.arcTo(x, y + h, x, y, rad);
   g.arcTo(x, y, x + w, y, rad);
   g.closePath();
-}
-
-function wrap(g: CanvasRenderingContext2D, text: string, maxWidth: number) {
-  const words = text.split(" ");
-  const lines: string[] = [];
-  let line = "";
-  for (const word of words) {
-    const test = line ? `${line} ${word}` : word;
-    if (g.measureText(test).width > maxWidth && line) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = test;
-    }
-  }
-  if (line) lines.push(line);
-  return lines;
 }
 
 function pcGlyph(g: CanvasRenderingContext2D, x: number, y: number) {
@@ -259,319 +289,146 @@ function drawDesktopIcon(
   glyph(g, x, y);
   g.font = `500 10.5px ${SANS}`;
   g.textAlign = "center";
-  g.shadowColor = "rgba(0,0,0,0.6)";
-  g.shadowBlur = 3;
+  // White with a hard drop shadow, the way desktop labels sat on a bright sky.
+  g.shadowColor = "rgba(0,0,0,0.85)";
+  g.shadowBlur = 2;
+  g.shadowOffsetX = 1;
+  g.shadowOffsetY = 1;
   g.fillStyle = "#ffffff";
   g.fillText(label, x, y + 34);
   g.shadowColor = "transparent";
   g.shadowBlur = 0;
+  g.shadowOffsetX = 0;
+  g.shadowOffsetY = 0;
+}
+
+/** A small seeded generator, so the clouds sit in the same place after a resize. */
+function seeded(seed: number) {
+  let a = seed;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * The wallpaper: an original painting in the spirit of the early-2000s desktop,
+ * a rolling green hill under a deep blue sky with soft clouds. Drawn here, not
+ * a copy of any photograph.
+ */
+function paintHillside(g: CanvasRenderingContext2D, w: number, h: number) {
+  const horizon = h * 0.6;
+
+  // Sky: deep blue overhead, paling to a hazy blue at the horizon.
+  const sky = g.createLinearGradient(0, 0, 0, horizon + h * 0.1);
+  sky.addColorStop(0, "#0f4fc4");
+  sky.addColorStop(0.45, "#3d82e0");
+  sky.addColorStop(1, "#a9cdf2");
+  g.fillStyle = sky;
+  g.fillRect(0, 0, w, h);
+
+  // Clouds: clusters of soft white puffs, thinner and flatter near the horizon.
+  const random = seeded(20011025);
+  const clouds = Math.round(5 + w / 260);
+  for (let c = 0; c < clouds; c++) {
+    const cx = random() * w;
+    const cy = h * (0.06 + random() * 0.42);
+    const scale = (0.6 + random() * 0.9) * Math.max(0.6, w / 1400) * (1 - (cy / horizon) * 0.45);
+    const puffs = 5 + Math.floor(random() * 6);
+    for (let i = 0; i < puffs; i++) {
+      const px = cx + (random() - 0.5) * 180 * scale;
+      const py = cy + (random() - 0.5) * 34 * scale;
+      const r = (34 + random() * 46) * scale;
+      const puff = g.createRadialGradient(px, py - r * 0.2, 0, px, py, r);
+      puff.addColorStop(0, "rgba(255,255,255,0.78)");
+      puff.addColorStop(0.55, "rgba(255,255,255,0.32)");
+      puff.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = puff;
+      g.beginPath();
+      g.ellipse(px, py, r * 1.5, r * 0.75, 0, 0, PI2);
+      g.fill();
+    }
+  }
+
+  // A second, farther hill on the right, cooler and darker.
+  g.beginPath();
+  g.moveTo(w * 0.42, h);
+  g.bezierCurveTo(w * 0.62, horizon + h * 0.02, w * 0.82, horizon - h * 0.02, w, horizon + h * 0.01);
+  g.lineTo(w, h);
+  g.closePath();
+  const far = g.createLinearGradient(0, horizon - h * 0.02, 0, h);
+  far.addColorStop(0, "#5f9e3a");
+  far.addColorStop(1, "#2c6a1c");
+  g.fillStyle = far;
+  g.fill();
+
+  // The main hill: a long rise from the left to a crest, then away.
+  const crestX = w * 0.36;
+  const crestY = horizon - h * 0.07;
+  g.beginPath();
+  g.moveTo(0, horizon + h * 0.04);
+  g.bezierCurveTo(w * 0.12, crestY + h * 0.01, w * 0.24, crestY, crestX, crestY);
+  g.bezierCurveTo(w * 0.52, crestY, w * 0.7, horizon + h * 0.1, w, horizon + h * 0.16);
+  g.lineTo(w, h);
+  g.lineTo(0, h);
+  g.closePath();
+  const hill = g.createLinearGradient(0, crestY, 0, h);
+  hill.addColorStop(0, "#7cc845");
+  hill.addColorStop(0.35, "#4f9f2a");
+  hill.addColorStop(1, "#2a6b17");
+  g.fillStyle = hill;
+  g.fill();
+
+  // Light on the crest from the upper left, shade on the far slope.
+  g.save();
+  g.clip();
+  const sun = g.createRadialGradient(crestX - w * 0.08, crestY, 0, crestX - w * 0.08, crestY, w * 0.45);
+  sun.addColorStop(0, "rgba(214,255,140,0.35)");
+  sun.addColorStop(1, "rgba(214,255,140,0)");
+  g.fillStyle = sun;
+  g.fillRect(0, 0, w, h);
+  const shade = g.createLinearGradient(crestX, 0, w, 0);
+  shade.addColorStop(0, "rgba(10,40,10,0)");
+  shade.addColorStop(1, "rgba(10,40,10,0.22)");
+  g.fillStyle = shade;
+  g.fillRect(0, 0, w, h);
+  // Grass: short strokes, denser and darker towards the bottom.
+  const blades = Math.round((w * h) / 900);
+  for (let i = 0; i < blades; i++) {
+    const x = random() * w;
+    const y = crestY + random() * (h - crestY);
+    const depth = (y - crestY) / (h - crestY);
+    g.strokeStyle = depth < 0.4 ? `rgba(190,240,120,${0.12 + random() * 0.1})` : `rgba(20,60,12,${0.1 + random() * 0.12})`;
+    g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x + (random() - 0.5) * 3, y - 2 - random() * 4 * (0.5 + depth));
+    g.stroke();
+  }
+  g.restore();
 }
 
 type Rect = { x: number; y: number; w: number; h: number };
 
 function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number): Rect {
   const showIcons = w >= 640;
-  // On a phone the window fills the width, between the HUD above and the
-  // compact toolbox below, and the browser chrome drops its tab.
-  const narrow = w < 640;
 
-  // The site's own ground: near-black, one blue light low on the right.
-  g.fillStyle = "#050608";
-  g.fillRect(0, 0, w, h);
-  const light = g.createRadialGradient(w * 0.86, h * 0.92, 0, w * 0.86, h * 0.92, Math.max(w, h) * 0.75);
-  light.addColorStop(0, "rgba(29,95,217,0.55)");
-  light.addColorStop(0.35, "rgba(11,62,168,0.28)");
-  light.addColorStop(1, "rgba(11,62,168,0)");
-  g.fillStyle = light;
-  g.fillRect(0, 0, w, h);
-  const light2 = g.createRadialGradient(w * 0.9, -h * 0.1, 0, w * 0.9, -h * 0.1, Math.max(w, h) * 0.5);
-  light2.addColorStop(0, "rgba(10,102,194,0.22)");
-  light2.addColorStop(1, "rgba(10,102,194,0)");
-  g.fillStyle = light2;
-  g.fillRect(0, 0, w, h);
-
-  g.fillStyle = "rgba(255,255,255,0.045)";
-  for (let x = 26; x < w - 12; x += 46) {
-    for (let y = 26; y < h - 52; y += 46) g.fillRect(x, y, 2, 2);
-  }
+  paintHillside(g, w, h);
 
   if (showIcons) {
+    // The icons start below the HUD's level panel, which holds the top-left corner.
     const iconX = 44;
-    const step = Math.min(88, Math.max(70, (h - 150) / 4));
-    drawDesktopIcon(g, iconX, 26, pcGlyph, "This PC");
-    drawDesktopIcon(g, iconX, 26 + step, binGlyph, "Recycle Bin");
-    drawDesktopIcon(g, iconX, 26 + step * 2, bugGlyph, "bugs.exe");
-    drawDesktopIcon(g, iconX, 26 + step * 3, docGlyph, "release-gate.yml");
+    const top = 120;
+    const step = Math.min(88, Math.max(70, (h - top - 130) / 4));
+    drawDesktopIcon(g, iconX, top, pcGlyph, "This PC");
+    drawDesktopIcon(g, iconX, top + step, binGlyph, "Recycle Bin");
+    drawDesktopIcon(g, iconX, top + step * 2, bugGlyph, "bugs.exe");
+    drawDesktopIcon(g, iconX, top + step * 3, docGlyph, "release-gate.yml");
   }
 
-  const ww = narrow ? w - 24 : Math.round(Math.min(Math.max(w * 0.6, 330), 860));
-  const wh = narrow ? Math.max(300, h - 64 - 132) : Math.round(Math.min(Math.max(h * 0.7, 360), 700));
-  const wx = narrow ? 12 : Math.round((w - ww) / 2 + (showIcons ? Math.min(72, w * 0.05) : 0));
-  const wy = narrow ? 60 : Math.round((h - 40 - wh) / 2);
-  const titlebar = 34;
-  const chrome = 42;
-
-  // The browser window, in the site's dark theme.
-  g.save();
-  g.shadowColor = "rgba(0,0,0,0.6)";
-  g.shadowBlur = 40;
-  g.shadowOffsetY = 14;
-  rr(g, wx, wy, ww, wh, 12);
-  g.fillStyle = "#0d0f14";
-  g.fill();
-  g.restore();
-
-  rr(g, wx, wy, ww, wh, 12);
-  g.strokeStyle = "rgba(255,255,255,0.12)";
-  g.lineWidth = 1;
-  g.stroke();
-
-  g.save();
-  rr(g, wx, wy, ww, titlebar + 10, 12);
-  g.clip();
-  g.fillStyle = "#1c2026";
-  g.fillRect(wx, wy, ww, titlebar);
-  g.restore();
-  g.fillStyle = "rgba(255,255,255,0.08)";
-  g.fillRect(wx + 1, wy + titlebar, ww - 2, 1);
-
-  const dots = ["#ff5f57", "#febc2e", "#28c840"];
-  let dx = wx + 16;
-  for (const color of dots) {
-    g.fillStyle = color;
-    g.beginPath();
-    g.arc(dx, wy + titlebar / 2, 5, 0, PI2);
-    g.fill();
-    dx += 16;
-  }
-  g.font = `600 12px ${SANS}`;
-  g.textAlign = "center";
-  g.fillStyle = "#a3acb8";
-  g.fillText(narrow ? site.name : site.title, wx + ww / 2 + 20, wy + titlebar / 2 + 4);
-
-  g.fillStyle = "#14171c";
-  g.fillRect(wx, wy + titlebar + 1, ww, chrome);
-  g.fillStyle = "rgba(255,255,255,0.08)";
-  g.fillRect(wx, wy + titlebar + 1 + chrome, ww, 1);
-
-  const tabX = wx + 12;
-  const tabY = wy + titlebar + 7;
-  const tabW = narrow ? 0 : Math.min(200, ww - 150);
-  const tabH = chrome - 14;
-  if (!narrow) {
-    rr(g, tabX, tabY, tabW, tabH, 8);
-    g.fillStyle = "#1c2026";
-    g.fill();
-    g.strokeStyle = "rgba(255,255,255,0.1)";
-    g.lineWidth = 1;
-    g.stroke();
-    g.fillStyle = "#2d8cff";
-    g.beginPath();
-    g.arc(tabX + 15, tabY + tabH / 2, 7, 0, PI2);
-    g.fill();
-    g.font = `700 9px ${SANS}`;
-    g.textAlign = "center";
-    g.fillStyle = "#ffffff";
-    g.fillText("S", tabX + 15, tabY + tabH / 2 + 3.5);
-    g.font = `500 11px ${SANS}`;
-    g.textAlign = "left";
-    g.fillStyle = "#e6e8eb";
-    g.fillText(DOMAIN, tabX + 28, tabY + tabH / 2 + 4);
-  }
-
-  const urlX = narrow ? tabX : tabX + tabW + 10;
-  const urlW = ww - (urlX - wx) - 12;
-  const urlY = tabY + 1;
-  const urlH = tabH - 2;
-  rr(g, urlX, urlY, urlW, urlH, urlH / 2);
-  g.fillStyle = "#0d0f14";
-  g.fill();
-  g.strokeStyle = "rgba(255,255,255,0.12)";
-  g.stroke();
-  g.strokeStyle = "#8b939d";
-  g.lineWidth = 1.2;
-  g.beginPath();
-  g.arc(urlX + 16, urlY + urlH / 2 - 2, 3, Math.PI, 0);
-  g.stroke();
-  g.fillStyle = "#8b939d";
-  g.fillRect(urlX + 13, urlY + urlH / 2 - 2, 6, 5.5);
-  g.font = `400 11px ${MONO}`;
-  g.textAlign = "left";
-  g.fillStyle = "#a3acb8";
-  g.fillText(site.domain, urlX + 27, urlY + urlH / 2 + 4);
-
-  // The page itself: the chat, as it looks today.
-  const pad = narrow ? 16 : 26;
-  const cx = wx + pad;
-  const cw = ww - pad * 2;
-  const contentTop = wy + titlebar + 1 + chrome;
-  const contentBottom = wy + wh;
-
-  g.save();
-  g.beginPath();
-  g.rect(wx + 1, contentTop, ww - 2, wh - titlebar - 2);
-  g.clip();
-
-  const pageLight = g.createRadialGradient(wx + ww * 0.9, contentBottom, 0, wx + ww * 0.9, contentBottom, ww * 0.7);
-  pageLight.addColorStop(0, "rgba(29,95,217,0.3)");
-  pageLight.addColorStop(1, "rgba(29,95,217,0)");
-  g.fillStyle = pageLight;
-  g.fillRect(wx, contentTop, ww, wh);
-
-  const avatar = (x: number, y: number, r: number) => {
-    g.fillStyle = "#1d5fd9";
-    g.beginPath();
-    g.arc(x, y, r, 0, PI2);
-    g.fill();
-    g.fillStyle = "#f5d6c0";
-    g.beginPath();
-    g.arc(x, y - r * 0.15, r * 0.42, 0, PI2);
-    g.fill();
-    g.fillStyle = "#1b1f2b";
-    g.beginPath();
-    g.ellipse(x, y + r * 0.7, r * 0.72, r * 0.48, 0, Math.PI, 0);
-    g.fill();
-    g.fillStyle = "#2a1d12";
-    g.beginPath();
-    g.ellipse(x, y - r * 0.42, r * 0.44, r * 0.22, 0, Math.PI, 0);
-    g.fill();
-  };
-
-  let y = contentTop + 18;
-  avatar(cx + 14, y + 12, 14);
-  g.font = `600 12.5px ${SANS}`;
-  g.textAlign = "left";
-  g.fillStyle = "#ffffff";
-  g.fillText(site.name, cx + 36, y + 10);
-  g.fillStyle = "#2d8cff";
-  g.beginPath();
-  g.arc(cx + 40, y + 21, 3, 0, PI2);
-  g.fill();
-  g.font = `400 10.5px ${SANS}`;
-  g.fillStyle = "#a3acb8";
-  g.fillText("QA Tech Lead", cx + 47, y + 25);
-  g.fillStyle = "rgba(255,255,255,0.08)";
-  g.fillRect(cx, y + 38, cw, 1);
-  y += 56;
-
-  // The visitor's bubble, right-aligned, in the blue gradient.
-  g.font = `500 12px ${SANS}`;
-  const ask = "Walk me through your work";
-  const askW = g.measureText(ask).width + 28;
-  const askH = 30;
-  const bubbleGrad = g.createLinearGradient(cx + cw - askW, y, cx + cw, y + askH);
-  bubbleGrad.addColorStop(0, "#0a66c2");
-  bubbleGrad.addColorStop(1, "#2d8cff");
-  rr(g, cx + cw - askW, y, askW, askH, 14);
-  g.fillStyle = bubbleGrad;
-  g.fill();
-  g.fillStyle = "#ffffff";
-  g.fillText(ask, cx + cw - askW + 14, y + 19);
-  y += askH + 14;
-
-  // The reply, with the avatar beside it.
-  const replyLines = [
-    ...wrap(g, hero.positioning, cw - 90),
-    ...wrap(g, site.description, cw - 90).slice(0, 3),
-  ];
-  g.font = `400 12px ${SANS}`;
-  const replyW = Math.min(cw - 44, Math.max(...replyLines.map((l) => g.measureText(l).width)) + 30);
-  const replyH = replyLines.length * 17 + 20;
-  avatar(cx + 14, y + 14, 12);
-  rr(g, cx + 34, y, replyW, replyH, 14);
-  g.fillStyle = "#14171c";
-  g.fill();
-  g.strokeStyle = "rgba(255,255,255,0.1)";
-  g.lineWidth = 1;
-  g.stroke();
-  let ly = y + 22;
-  replyLines.forEach((line, i) => {
-    g.fillStyle = i === 0 ? "#ffffff" : "#a3acb8";
-    g.fillText(line, cx + 48, ly);
-    ly += 17;
-  });
-  y += replyH + 14;
-
-  // A card with one big figure, the way the site's cards read.
-  const cardH = 92;
-  if (y + cardH + 70 <= contentBottom) {
-    rr(g, cx + 34, y, cw - 34, cardH, 14);
-    g.fillStyle = "#14171c";
-    g.fill();
-    g.strokeStyle = "rgba(255,255,255,0.1)";
-    g.stroke();
-    g.fillStyle = "#2d8cff";
-    g.fillRect(cx + 34, y, (cw - 34) * 0.4, 2);
-    g.font = `400 10px ${MONO}`;
-    g.fillStyle = "#2d8cff";
-    g.fillText("verification trust engine", cx + 50, y + 22);
-    g.font = `700 15px ${SANS}`;
-    g.fillStyle = "#ffffff";
-    g.fillText("Mjolnir", cx + 50, y + 42);
-    g.font = `750 26px ${SANS}`;
-    g.fillText("80/100", cx + 50, y + 72);
-    g.font = `400 10.5px ${SANS}`;
-    g.fillStyle = "#a3acb8";
-    g.fillText("worthiness on the recorded scan", cx + 140, y + 72);
-    y += cardH + 14;
-  }
-
-  // Quick replies.
-  g.font = `500 11px ${SANS}`;
-  let chipX = cx + 34;
-  for (const label of ["Projects", "Experience", "Contact"]) {
-    const chipW = g.measureText(label).width + 26;
-    if (chipX + chipW > cx + cw) break;
-    rr(g, chipX, y, chipW, 26, 13);
-    g.fillStyle = "rgba(255,255,255,0.03)";
-    g.fill();
-    g.strokeStyle = "rgba(255,255,255,0.18)";
-    g.stroke();
-    g.fillStyle = "#2d8cff";
-    g.beginPath();
-    g.arc(chipX + 12, y + 13, 3, 0, PI2);
-    g.fill();
-    g.fillStyle = "#ffffff";
-    g.fillText(label, chipX + 20, y + 17);
-    chipX += chipW + 8;
-  }
-
-  // The composer, pinned to the bottom of the page.
-  const compH = 44;
-  const compY = contentBottom - compH - 14;
-  rr(g, cx, compY, cw, compH, 22);
-  g.fillStyle = "#14171c";
-  g.fill();
-  g.strokeStyle = "rgba(255,255,255,0.14)";
-  g.lineWidth = 1;
-  g.stroke();
-  g.font = `400 12px ${SANS}`;
-  g.fillStyle = "#8b939d";
-  g.fillText("Ask about my projects…", cx + 18, compY + compH / 2 + 4);
-  const sendGrad = g.createLinearGradient(cx + cw - 38, compY, cx + cw - 6, compY + compH);
-  sendGrad.addColorStop(0, "#0a66c2");
-  sendGrad.addColorStop(1, "#2d8cff");
-  g.fillStyle = sendGrad;
-  g.beginPath();
-  g.arc(cx + cw - 22, compY + compH / 2, 15, 0, PI2);
-  g.fill();
-  g.strokeStyle = "#ffffff";
-  g.lineWidth = 1.8;
-  g.beginPath();
-  g.moveTo(cx + cw - 22, compY + compH / 2 + 5);
-  g.lineTo(cx + cw - 22, compY + compH / 2 - 5);
-  g.moveTo(cx + cw - 27, compY + compH / 2);
-  g.lineTo(cx + cw - 22, compY + compH / 2 - 5);
-  g.lineTo(cx + cw - 17, compY + compH / 2);
-  g.stroke();
-
-  g.restore();
-
-  g.fillStyle = "rgba(255,255,255,0.14)";
-  rr(g, wx + ww - 9, contentTop + 8, 4, Math.min(46, wh * 0.2), 2);
-  g.fill();
-
-  // The taskbar, on the same ground.
+  // The taskbar, along the bottom of the hillside.
   const barH = 40;
   const barY = h - barH;
   g.fillStyle = "rgba(13,15,20,0.96)";
@@ -628,7 +485,8 @@ function paintDesktop(g: CanvasRenderingContext2D, w: number, h: number): Rect {
   g.fillStyle = "#8b939d";
   g.fillText(`${dd}.${mo}.${now.getFullYear()}`, w - 16, barY + 30);
 
-  return { x: wx, y: wy, w: ww, h: wh };
+  // The whole desktop above the taskbar is the target.
+  return { x: 0, y: 0, w, h: barY };
 }
 
 function mustContext(canvas: HTMLCanvasElement) {
@@ -641,6 +499,19 @@ class Engine {
   tool: ToolId = "hammer";
   onIntegrity: (value: number) => void;
   onStats: (stats: RunStats) => void;
+  onEvent: (event: RunEvent) => void;
+  readonly sfx: Sfx;
+  private level = 1;
+  private kills = 0;
+  private maxCombo = 0;
+  /** A short zoom towards the last heavy impact, in place of most of the shake. */
+  private punch = 0;
+  private punchAt = { x: 0, y: 0 };
+  /** A heavy blow freezes the world for a few frames: the hit lands. */
+  private hitstopUntil = 0;
+  private lastMarker = 0;
+  /** How hard the chain-saw is cutting, for its engine note. */
+  private sawDrive = 0;
 
   /** The run: a timer from the first hit, a score with a combo, and bugs. */
   private state: RunState = "idle";
@@ -655,7 +526,7 @@ class Engine {
   private statsAt = 0;
   private bugs: Bug[] = [];
   private nextBugAt = 0;
-  /** The browser window on the desktop: integrity is measured there, not on the wallpaper. */
+  /** The desktop above the taskbar: integrity is measured there. */
   private target: Rect = { x: 0, y: 0, w: 1, h: 1 };
 
   private canvas: HTMLCanvasElement;
@@ -692,8 +563,10 @@ class Engine {
     canvas: HTMLCanvasElement,
     options: {
       reduced: boolean;
+      muted: boolean;
       onIntegrity: (value: number) => void;
       onStats: (stats: RunStats) => void;
+      onEvent: (event: RunEvent) => void;
     },
   ) {
     this.canvas = canvas;
@@ -709,6 +582,8 @@ class Engine {
     this.reduced = options.reduced;
     this.onIntegrity = options.onIntegrity;
     this.onStats = options.onStats;
+    this.onEvent = options.onEvent;
+    this.sfx = new Sfx(options.muted);
   }
 
   start() {
@@ -722,6 +597,7 @@ class Engine {
     cancelAnimationFrame(this.raf);
     if (this.resizeRaf) cancelAnimationFrame(this.resizeRaf);
     window.removeEventListener("resize", this.onResize);
+    this.sfx.dispose();
   }
 
   private onResize = () => {
@@ -785,6 +661,10 @@ class Engine {
     this.combo = 0;
     this.pendingScore = 0;
     this.nextBugAt = 0;
+    this.level = 1;
+    this.kills = 0;
+    this.maxCombo = 0;
+    this.sfx.stopLoops();
     this.onIntegrity(100);
     this.emitStats(true);
   }
@@ -807,6 +687,12 @@ class Engine {
       score: Math.round(this.score),
       combo: this.combo,
       bugs: this.bugs.length,
+      level: this.level,
+      rank: LEVELS[this.level - 1].rank,
+      levelAt: LEVELS[this.level - 1].at,
+      nextAt: this.level < LEVELS.length ? LEVELS[this.level].at : null,
+      kills: this.kills,
+      maxCombo: this.maxCombo,
     });
   }
 
@@ -827,6 +713,12 @@ class Engine {
     }
     this.combo = now - this.comboAt < 700 ? Math.min(this.combo + 1, 99) : 1;
     this.comboAt = now;
+    this.maxCombo = Math.max(this.maxCombo, this.combo);
+    const streak = STREAKS.find(([at]) => at === this.combo);
+    if (streak) {
+      this.onEvent({ kind: "streak", label: streak[1], combo: this.combo });
+      this.sfx.play("streak");
+    }
     const multiplier = 1 + Math.min(this.combo, 20) * 0.1;
     const gained = power * multiplier;
     this.score += gained;
@@ -834,7 +726,10 @@ class Engine {
     this.pendingAt = { x, y };
     if (now - this.lastScoreFx > 160 && this.pendingScore >= 8) {
       this.lastScoreFx = now;
-      this.floatText(this.pendingAt.x, this.pendingAt.y, `+${Math.round(this.pendingScore)}`, "#ffffff");
+      // The number grows and warms with the combo: white, then blue, then ice.
+      const heat = Math.min(this.combo, 20) / 20;
+      const color = heat > 0.6 ? "#9ccaff" : heat > 0.25 ? "#5aa9ff" : "#ffffff";
+      this.floatText(this.pendingAt.x, this.pendingAt.y, `+${Math.round(this.pendingScore)}`, color, 13 + Math.min(9, this.pendingScore / 25));
       this.pendingScore = 0;
     }
     for (let i = this.bugs.length - 1; i >= 0; i--) {
@@ -843,15 +738,33 @@ class Engine {
         this.bugs.splice(i, 1);
         this.bonus += 1000;
         this.score += 250;
+        this.kills += 1;
         this.spawn("pop", bug.x, bug.y, 0, 0, 0.35, 10, "#8fd14f");
-        this.floatText(bug.x, bug.y - 8, "bug squashed · −1.0s", "#8fd14f");
+        this.marker(bug.x, bug.y, "#8fd14f", 12, true);
+        this.floatText(bug.x, bug.y - 8, "bug squashed · −1.0s", "#8fd14f", 14);
+        this.sfx.play("squash");
         this.buzz(10);
       }
+    }
+    const level = levelFor(this.score);
+    if (level > this.level) {
+      this.level = level;
+      this.onEvent({ kind: "level", level, rank: LEVELS[level - 1].rank });
+      this.sfx.play("levelup");
+      this.emitStats(true);
     }
     this.emitStats();
   }
 
-  private floatText(x: number, y: number, text: string, color: string) {
+  /** A shooter's hit marker: four ticks round the impact, gone in a blink. */
+  private marker(x: number, y: number, color = "#ffffff", size = 9, force = false) {
+    const now = performance.now();
+    if (!force && now - this.lastMarker < 70) return;
+    this.lastMarker = now;
+    this.spawn("marker", x, y, 0, 0, 0.2, size, color);
+  }
+
+  private floatText(x: number, y: number, text: string, color: string, size = 13) {
     if (this.reduced) return;
     this.particles.push({
       kind: "score",
@@ -861,7 +774,7 @@ class Engine {
       vy: -46,
       life: 0.9,
       maxLife: 0.9,
-      size: 13,
+      size,
       color,
       gravity: -20,
       rot: 0,
@@ -875,6 +788,8 @@ class Engine {
     this.state = "done";
     this.doneAt = performance.now();
     this.pointer.down = false;
+    this.sfx.stopLoops();
+    this.sfx.play("finish");
     this.kick(14);
     for (let i = 0; i < (this.reduced ? 10 : 48); i++) {
       const a = Math.random() * PI2;
@@ -885,7 +800,15 @@ class Engine {
   }
 
   setTool(tool: ToolId) {
+    if (tool === this.tool) return;
     this.tool = tool;
+    this.sfx.stopLoops();
+    if (this.pointer.down && LOOPED.has(tool)) this.sfx.startLoop(tool as LoopId);
+    this.sfx.play("select");
+  }
+
+  setMuted(muted: boolean) {
+    this.sfx.setMuted(muted);
   }
 
   leave() {
@@ -905,6 +828,9 @@ class Engine {
     this.pointer.x = x;
     this.pointer.y = y;
     const tool = this.tool;
+    this.sfx.unlock();
+    if (LOOPED.has(tool)) this.sfx.startLoop(tool as LoopId);
+    if (tool === "phaser") this.sfx.play("zap");
     if (tool === "hammer" || tool === "stamp") this.buzz(14);
     if (tool === "hammer") this.hammer(x, y);
     else if (tool === "chainsaw") this.gouge(x, y, x, y);
@@ -928,6 +854,7 @@ class Engine {
 
   release() {
     this.pointer.down = false;
+    this.sfx.stopLoops();
   }
 
   private loop = (t: number) => {
@@ -939,11 +866,19 @@ class Engine {
   };
 
   private update(dt: number) {
-    this.shake *= Math.exp(-5 * dt);
-    if (this.shake < 0.05) this.shake = 0;
-    this.recoil *= Math.exp(-8 * dt);
-
     const now = performance.now();
+    // Hit-stop: for a few frames after a heavy blow the world holds still.
+    if (now < this.hitstopUntil) return;
+    this.shake *= Math.exp(-9 * dt);
+    if (this.shake < 0.05) this.shake = 0;
+    this.punch *= Math.exp(-14 * dt);
+    if (this.punch < 0.005) this.punch = 0;
+    this.recoil *= Math.exp(-8 * dt);
+    if (this.sawDrive > 0) {
+      this.sawDrive *= Math.exp(-6 * dt);
+      this.sfx.driveLoop("chainsaw", this.sawDrive);
+    }
+
     if (this.pointer.down) {
       const tool = this.tool;
       if (tool === "machinegun" && now - this.lastShot >= 82) {
@@ -1069,12 +1004,26 @@ class Engine {
   }
 
   private lastKick = 0;
+  /**
+   * Impact feedback. The shake is a fraction of what it was and capped low;
+   * most of the weight now comes from a short zoom towards the impact, which
+   * reads as force without throwing the whole screen around.
+   */
   private kick(amount: number) {
     const now = performance.now();
-    const scaled = this.reduced ? amount * 0.15 : amount;
+    const scaled = amount * (this.reduced ? 0.12 : 0.4);
     const gate = now - this.lastKick < 55 ? 0.25 : 1;
     this.lastKick = now;
-    this.shake = Math.min(this.shake + scaled * gate, this.reduced ? 3 : 16);
+    this.shake = Math.min(this.shake + scaled * gate, this.reduced ? 1 : 5);
+    if (!this.reduced) {
+      this.punch = Math.min(1, this.punch + (amount / 12) * gate);
+      this.punchAt = { x: this.pointer.x, y: this.pointer.y };
+    }
+  }
+
+  /** Freezes the world for `ms` after a heavy blow; never with motion reduced. */
+  private hitstop(ms: number) {
+    if (!this.reduced) this.hitstopUntil = performance.now() + ms;
   }
 
   private hole(x: number, y: number, r: number, alpha: number) {
@@ -1144,15 +1093,19 @@ class Engine {
     this.hole(x, y, r * 1.55, 0.4);
     this.glassBruise(x, y, r);
     this.crack(x, y, r);
-    this.spawn("flash", x, y, 0, 0, 0.09, r * 1.6, "#fff6d8");
+    this.spawn("flash", x, y, 0, 0, 0.12, r * 2, "#fff6d8");
+    this.spawn("pop", x, y, 0, 0, 0.32, r * 0.9, "rgba(255,255,255,0.85)");
+    this.marker(x, y, "#ffffff", 11, true);
+    this.sfx.play("hammer");
     this.kick(11);
+    this.hitstop(45);
     this.hit(x, y, 30);
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 18; i++) {
       const a = Math.random() * PI2;
-      const sp = rand(120, 420);
-      this.spawn("spark", x, y, Math.cos(a) * sp, Math.sin(a) * sp, rand(0.25, 0.5), 1.6, "#fff6d8");
+      const sp = rand(140, 520);
+      this.spawn("spark", x, y, Math.cos(a) * sp, Math.sin(a) * sp, rand(0.25, 0.55), 1.6, i % 3 === 0 ? "#9ccaff" : "#fff6d8");
     }
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 9; i++) {
       const a = Math.random() * PI2;
       const sp = rand(60, 180);
       this.spawn("chip", x, y, Math.cos(a) * sp, Math.sin(a) * sp - 80, rand(0.7, 1.3), rand(1.6, 3), "rgba(235,238,244,0.95)", 900);
@@ -1261,6 +1214,7 @@ class Engine {
       this.hole(x, y, rand(8, 12), 0.4);
     }
     this.kerf(x0, y0, x1, y1);
+    this.sawDrive = Math.min(1, this.sawDrive + dist / 30);
     this.kick(0.6);
     this.hit(x1, y1, Math.min(12, 2 + dist * 0.15));
     if (Math.random() < 0.8) {
@@ -1325,6 +1279,8 @@ class Engine {
     this.hole(x, y, 3.4, 1);
     this.bulletHole(x, y);
     this.spawn("flash", x, y, 0, 0, 0.06, 13, "#ffe9a8");
+    this.marker(x, y);
+    this.sfx.play("shot");
     this.kick(1.1);
     this.hit(x, y, 4);
     this.recoil = 5;
@@ -1470,7 +1426,11 @@ class Engine {
     g.fillStyle = color;
     g.fillText(text, 0, 1);
     g.restore();
+    this.spawn("pop", x, y, 0, 0, 0.3, size, color);
+    this.marker(x, y, "#ffffff", 12, true);
+    this.sfx.play("stamp");
     this.kick(3);
+    this.hitstop(30);
     this.hit(x, y, 12);
     for (let i = 0; i < 6; i++) {
       const a = Math.random() * PI2;
@@ -1487,6 +1447,7 @@ class Engine {
       }
     }
     if (this.termites.length >= (this.reduced ? 6 : 12)) return;
+    this.sfx.play("drop");
     for (let i = 0; i < 2; i++) {
       this.termites.push({
         x: x + rand(-13, 13),
@@ -1508,6 +1469,8 @@ class Engine {
     g.ellipse(termite.x, termite.y, 8, 4.5, termite.angle, 0, PI2);
     g.fill();
     this.spawn("pop", termite.x, termite.y, 0, 0, 0.3, 8, "#7a2b18");
+    this.marker(termite.x, termite.y, "#ffffff", 9, true);
+    this.sfx.play("squash");
     this.kick(2.5);
     this.buzz(10);
     this.hit(termite.x, termite.y, 10);
@@ -1574,6 +1537,7 @@ class Engine {
     const x = this.pointer.x + rand(-10, 10);
     const y = this.pointer.y + rand(-10, 10);
     this.paintSplat(x, y, color);
+    this.sfx.play("splat");
     this.hit(x, y, 3);
     for (let i = 0; i < 5; i++) {
       const a = Math.random() * PI2;
@@ -1644,6 +1608,7 @@ class Engine {
   }
 
   private bite(x: number, y: number) {
+    this.sfx.play("crunch");
     this.hole(x, y, rand(2, 4.5), 1);
     this.hit(x, y, 1);
     const g = this.gctx;
@@ -1675,7 +1640,7 @@ class Engine {
     const sctx = this.scratch.getContext("2d", { willReadFrequently: true });
     if (!sctx) return 100;
     sctx.clearRect(0, 0, sw, sh);
-    // Only the window counts: its region of the two damage layers, scaled down.
+    // Only the desktop counts, not the taskbar: its region of the two damage layers, scaled down.
     const { x, y, w, h } = this.target;
     const d = this.dpr;
     sctx.drawImage(this.holes, x * d, y * d, w * d, h * d, 0, 0, sw, sh);
@@ -1686,7 +1651,9 @@ class Engine {
       if (data[i] > 16) damaged++;
     }
     const fraction = damaged / (sw * sh);
-    return Math.max(0, 100 - 100 * Math.pow(fraction, 0.75));
+    // The desktop is far bigger than the old window was, so it is down when
+    // 60% of it is wrecked, not all of it: a run still ends in under a minute.
+    return Math.max(0, 100 - 100 * Math.min(1, fraction / 0.6));
   }
 
   private render() {
@@ -1707,6 +1674,13 @@ class Engine {
     const shake = this.shake;
     if (shake > 0.1) {
       ctx.translate(rand(-shake, shake), rand(-shake, shake));
+    }
+    if (this.punch > 0.005) {
+      const { x, y } = this.punchAt;
+      const zoom = 1 + this.punch * 0.02;
+      ctx.translate(x, y);
+      ctx.scale(zoom, zoom);
+      ctx.translate(-x, -y);
     }
 
     if (this.surfaceDirty) {
@@ -1966,6 +1940,25 @@ class Engine {
           ctx.strokeText(p.text ?? "", p.x, p.y);
           ctx.fillStyle = p.color;
           ctx.fillText(p.text ?? "", p.x, p.y);
+          break;
+        }
+        case "marker": {
+          // Four ticks on the diagonals, pushed out a little as they fade.
+          ctx.globalAlpha = Math.min(1, t * 2.2);
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = 2;
+          ctx.lineCap = "round";
+          const gap = p.size * (0.45 + (1 - t) * 0.25);
+          const len = p.size * 0.55;
+          for (let i = 0; i < 4; i++) {
+            const a = Math.PI / 4 + (i * Math.PI) / 2;
+            const cx = Math.cos(a);
+            const cy = Math.sin(a);
+            ctx.beginPath();
+            ctx.moveTo(p.x + cx * gap, p.y + cy * gap);
+            ctx.lineTo(p.x + cx * (gap + len), p.y + cy * (gap + len));
+            ctx.stroke();
+          }
           break;
         }
         case "heat": {
@@ -2244,31 +2237,91 @@ class Engine {
   }
 }
 
+/** Career XP across runs: level n needs 600·(n−1)² XP in all. */
+const careerLevel = (xp: number) => Math.floor(Math.sqrt(Math.max(0, xp) / 600)) + 1;
+const careerFloor = (level: number) => 600 * (level - 1) ** 2;
+
+function SoundIcon({ muted }: { muted: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+      {muted ? (
+        <path d="m16 9.5 5 5m0-5-5 5" />
+      ) : (
+        <>
+          <path d="M15.5 9a4 4 0 0 1 0 6" />
+          <path d="M18.5 6.5a7.5 7.5 0 0 1 0 11" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/** One bar for every HUD meter: a track, a fill and, optionally, segment ticks. */
+function Meter({ value, segments = 0, className }: { value: number; segments?: number; className?: string }) {
+  return (
+    <span aria-hidden="true" className={cn("relative block h-2 overflow-hidden rounded-full bg-white/10", className)}>
+      <span
+        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#0a66c2] to-[#5aa9ff] transition-[width] duration-300"
+        style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+      />
+      {segments > 1
+        ? Array.from({ length: segments - 1 }, (_, i) => (
+            <span key={i} className="absolute inset-y-0 w-[2px] bg-[#05060a]" style={{ left: `${((i + 1) / segments) * 100}%` }} />
+          ))
+        : null}
+    </span>
+  );
+}
+
+const panel = "rounded-xl border border-white/10 bg-[#0b0d12]/80 shadow-lg shadow-black/50 backdrop-blur-md";
+const label = "text-[10px] font-semibold tracking-[0.16em] text-white/50 uppercase";
+
 export function DestructionGame({ onClose }: { onClose: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const engineRef = useRef<Engine | null>(null);
   const [tool, setTool] = useState<ToolId>("hammer");
   const [integrity, setIntegrity] = useState(100);
-  const [hint, setHint] = useState(true);
   const [quip, setQuip] = useState<string | null>(null);
-  const [stats, setStats] = useState<RunStats>({ state: "idle", elapsed: 0, score: 0, combo: 0, bugs: 0 });
+  const [stats, setStats] = useState<RunStats>({
+    state: "idle",
+    elapsed: 0,
+    score: 0,
+    combo: 0,
+    bugs: 0,
+    level: 1,
+    rank: "Intern",
+    levelAt: 0,
+    nextAt: 400,
+    kills: 0,
+    maxCombo: 0,
+  });
   const [best, setBest] = useState<number | null>(null);
   const [newBest, setNewBest] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const [banner, setBanner] = useState<{ key: number; title: string; sub: string } | null>(null);
+  const bannerTimer = useRef(0);
+  const [career, setCareer] = useState(0);
+  const [gained, setGained] = useState(0);
+  const banked = useRef(false);
 
   useEffect(() => {
     try {
       const stored = Number(localStorage.getItem("demolition-best"));
       if (stored > 0) setBest(stored);
+      setCareer(Number(localStorage.getItem("demolition-xp")) || 0);
+      setMuted(localStorage.getItem("demolition-sound") === "off");
     } catch {
-      /* no storage, no best */
+      /* no storage: no best, no career, sound on */
     }
   }, []);
 
-  /** A finished run is scored against the best one on this device. */
+  /** A finished run is scored against the best one on this device, and its score banked as XP. */
   useEffect(() => {
     if (stats.state !== "done") {
       setNewBest(false);
+      if (stats.state === "idle") banked.current = false;
       return;
     }
     if (best === null || stats.elapsed < best) {
@@ -2280,7 +2333,20 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
         /* no storage, no best */
       }
     }
-  }, [stats.state, stats.elapsed, best]);
+    if (!banked.current) {
+      banked.current = true;
+      setGained(stats.score);
+      setCareer((xp) => {
+        const next = xp + stats.score;
+        try {
+          localStorage.setItem("demolition-xp", String(next));
+        } catch {
+          /* no storage, no career */
+        }
+        return next;
+      });
+    }
+  }, [stats.state, stats.elapsed, stats.score, best]);
   const passedRef = useRef<number>(100);
   const quipTimer = useRef(0);
 
@@ -2314,11 +2380,30 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
     engineRef.current?.setTool(id);
   }, []);
 
-  /** The start card leaves on the first hit, whatever the visitor pressed first. */
-  useEffect(() => {
-    if (stats.state === "running") setHint(false);
-    if (stats.state === "idle" && stats.elapsed === 0 && stats.score === 0) setHint(true);
-  }, [stats.state, stats.elapsed, stats.score]);
+  const toggleSound = useCallback(() => {
+    setMuted((value) => {
+      const next = !value;
+      engineRef.current?.setMuted(next);
+      try {
+        localStorage.setItem("demolition-sound", next ? "off" : "on");
+      } catch {
+        /* no storage: the choice lasts this run */
+      }
+      return next;
+    });
+  }, []);
+
+  /** Level-ups and streaks get a banner across the top of the screen. */
+  const onEvent = useCallback((event: RunEvent) => {
+    window.clearTimeout(bannerTimer.current);
+    setBanner(
+      event.kind === "level"
+        ? { key: Date.now(), title: `Level ${event.level}`, sub: event.rank }
+        : { key: Date.now(), title: event.label, sub: `${event.combo} hit combo` },
+    );
+    bannerTimer.current = window.setTimeout(() => setBanner(null), 1700);
+  }, []);
+  useEffect(() => () => window.clearTimeout(bannerTimer.current), []);
 
   useEffect(() => {
     const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -2337,14 +2422,20 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const reduced = document.documentElement.dataset.motion === "off" || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const engine = new Engine(canvas, { reduced, onIntegrity: setIntegrity, onStats: setStats });
+    let startMuted = false;
+    try {
+      startMuted = localStorage.getItem("demolition-sound") === "off";
+    } catch {
+      /* sound on */
+    }
+    const engine = new Engine(canvas, { reduced, muted: startMuted, onIntegrity: setIntegrity, onStats: setStats, onEvent });
     engineRef.current = engine;
     engine.start();
     return () => {
       engine.destroy();
       engineRef.current = null;
     };
-  }, []);
+  }, [onEvent]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -2371,14 +2462,20 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
         select(TOOLS[digit - 1].id);
         return;
       }
+      if (event.key === "m" || event.key === "M") toggleSound();
       if (event.key === "r" || event.key === "R") engineRef.current?.reset();
       if (event.key === "Enter" && engineRef.current && stats.state === "done") engineRef.current.reset();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, select, stats.state]);
+  }, [onClose, select, toggleSound, stats.state]);
 
-  const clock = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
+  const clock = (ms: number) => {
+    const total = ms / 1000;
+    const minutes = Math.floor(total / 60);
+    const seconds = (total % 60).toFixed(1).padStart(4, "0");
+    return `${String(minutes).padStart(2, "0")}:${seconds}`;
+  };
   const rank = (ms: number) => (ms < 20_000 ? "Ship it." : ms < 40_000 ? "Hotfix." : "Rollback.");
 
   const pointFrom = (event: ReactPointerEvent<HTMLCanvasElement>) => {
@@ -2386,19 +2483,24 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   };
 
+  const xpInLevel = stats.nextAt === null ? 100 : ((stats.score - stats.levelAt) / (stats.nextAt - stats.levelAt)) * 100;
+  const careerNow = careerLevel(career);
+  const careerProgress = ((career - careerFloor(careerNow)) / (careerFloor(careerNow + 1) - careerFloor(careerNow))) * 100;
+  const active = TOOLS.find((item) => item.id === tool);
+
   return (
     <dialog ref={dialogRef}
       onCancel={(event) => { event.preventDefault(); onClose(); }}
       aria-modal="true"
       aria-label="Demolition run: destroy the screen against the clock"
       tabIndex={-1}
-      className="fixed inset-0 z-50 m-0 h-dvh w-screen max-h-none max-w-none select-none border-0 bg-[#05060a] p-0 text-white outline-none"
+      className="fixed inset-0 z-50 m-0 h-dvh w-screen max-h-none max-w-none select-none overflow-hidden border-0 bg-[#05060a] p-0 text-white outline-none"
     >
       <p className="sr-only">
-        A stress-relief toy and a timed run: bring a mock screenshot of this website to zero
-        integrity with {TOOLS.length} tools as fast as you can. Keys 1 to {TOOLS.length} select a
-        tool, right click switches to the next one, R rebuilds the screen, Enter rebuilds after a
-        finished run, and Escape closes.
+        A stress-relief toy and a timed run: wreck a mock desktop to zero integrity with{" "}
+        {TOOLS.length} tools as fast as you can. Keys 1 to {TOOLS.length} select a
+        tool, right click switches to the next one, M turns the sound on or off, R rebuilds the
+        screen, Enter rebuilds after a finished run, and Escape closes.
       </p>
 
       <canvas
@@ -2427,77 +2529,93 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
         }}
       />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-3 sm:p-4">
-        <span className="flex items-center gap-3 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[11px] text-white/60 tabular-nums">
-          <span className="hidden text-white/80 sm:inline">demolition run</span>
-          <span>
-            time <span className="text-white">{clock(stats.elapsed)}</span>
+      {/* HUD, top row: the player, the clock, the target. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 grid grid-cols-[1fr_auto_1fr] items-start gap-2 p-3 tabular-nums sm:gap-3 sm:p-4">
+        <div className={cn(panel, "flex w-full max-w-[15rem] items-center gap-2.5 p-2 sm:p-2.5")}>
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-[#5aa9ff]/50 bg-gradient-to-b from-[#0a66c2] to-[#0b3ea8] text-[15px] font-extrabold shadow-[0_0_18px_rgba(45,140,255,0.35)] sm:size-10">
+            {stats.level}
           </span>
-          {best !== null ? <span>best {clock(best)}</span> : null}
-          <span>
-            score <span className="text-[#2d8cff]">{stats.score}</span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-baseline justify-between gap-2">
+              <span className="truncate text-[12px] font-bold sm:text-[13px]">{stats.rank}</span>
+              <span className="text-[10px] text-white/50 max-sm:hidden">LV {stats.level}</span>
+            </span>
+            <Meter value={xpInLevel} className="mt-1.5" />
+            <span className="mt-1 block text-[10px] text-white/50">
+              {stats.score.toLocaleString("en-US")}
+              {stats.nextAt !== null ? ` / ${stats.nextAt.toLocaleString("en-US")} XP` : " XP · max level"}
+            </span>
           </span>
-        </span>
-        <span className="flex items-center gap-2 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[11px] text-white/60 tabular-nums">
-          <span aria-hidden="true" className="relative h-1.5 w-16 overflow-hidden rounded-full bg-white/10">
-            <span
-              className="absolute inset-y-0 left-0 rounded-full bg-[#2d8cff] transition-[width] duration-500"
-              style={{ width: `${Math.max(0, Math.min(100, integrity))}%` }}
-            />
+        </div>
+
+        <div className={cn(panel, "flex flex-col items-center px-3 py-1.5 sm:px-5 sm:py-2")}>
+          <span className={label}>Time</span>
+          <span className="text-[20px] leading-tight font-extrabold tracking-tight sm:text-[26px]">{clock(stats.elapsed)}</span>
+          <span className="text-[10px] text-white/45">{best !== null ? `best ${clock(best)}` : "no best yet"}</span>
+        </div>
+
+        <div className={cn(panel, "ml-auto w-full max-w-[15rem] p-2 sm:p-2.5")}>
+          <span className="flex items-baseline justify-between gap-2">
+            <span className={label}>Target</span>
+            <span className="text-[12px] font-bold">{integrity >= 99.95 ? "100" : integrity.toFixed(1)}%</span>
           </span>
-          <span className="hidden sm:inline">integrity</span> {integrity >= 99.95 ? "100" : integrity.toFixed(1)}%
-        </span>
+          <Meter value={integrity} segments={10} className="mt-1.5" />
+          <span className="mt-1 flex justify-between text-[10px] text-white/50">
+            <span>bugs squashed {stats.kills}</span>
+            <span className="max-sm:hidden">best combo ×{stats.maxCombo}</span>
+          </span>
+        </div>
       </div>
 
-      {stats.state === "idle" && hint ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 max-sm:items-end max-sm:pb-36">
-          <div className="pointer-events-auto max-w-[24rem] rounded-2xl border border-white/10 bg-[#0d0f14]/92 p-5 text-center shadow-2xl shadow-black/70 backdrop-blur-md">
-            <p className="font-mono text-[11px] text-[#2d8cff]">after hours</p>
-            <h2 className="mt-1 text-xl font-bold tracking-tight">Demolition run</h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-white/70 sm:hidden">
-              Tap and drag to bring this screen&apos;s integrity to zero as fast as you can. Pick
-              a tool below. Quick taps build a combo; squash a bug for a second back.
-            </p>
-            <p className="mt-2 hidden text-[13px] leading-relaxed text-white/70 sm:block">
-              Bring this screen&apos;s integrity to zero as fast as you can. Nine tools, keys 1 to 9.
-              Rapid hits build a combo. Squash a bug for a second back. R rebuilds, Esc leaves.
-            </p>
-            {best !== null ? (
-              <p className="mt-3 font-mono text-[11px] text-white/50">best on this device · {clock(best)}</p>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => setHint(false)}
-              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-[#0a66c2] px-6 text-[13px] font-semibold text-white transition-[background-color,transform] duration-150 hover:bg-[#2d8cff] active:scale-[0.97]"
-            >
-              Start swinging
-            </button>
-          </div>
+      {/* Level-ups and streaks. */}
+      {banner && stats.state !== "done" ? (
+        <div key={banner.key} className="hud-banner pointer-events-none absolute inset-x-0 top-[22%] flex flex-col items-center text-center" role="status">
+          <span className="text-[11px] font-semibold tracking-[0.3em] text-[#5aa9ff] uppercase">{banner.sub}</span>
+          <span className="text-[34px] leading-none font-black tracking-tight uppercase italic drop-shadow-[0_4px_24px_rgba(45,140,255,0.55)] sm:text-[52px]">
+            {banner.title}
+          </span>
         </div>
       ) : null}
 
       {stats.state === "done" ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
-          <div className="pointer-events-auto max-w-[24rem] rounded-2xl border border-[#2d8cff]/40 bg-[#0d0f14]/94 p-5 text-center shadow-2xl shadow-black/70 backdrop-blur-md">
-            <p className="font-mono text-[11px] text-[#2d8cff]">{newBest ? "new best" : "demolished"}</p>
-            <h2 className="mt-1 text-3xl font-extrabold tracking-tight tabular-nums">{clock(stats.elapsed)}</h2>
-            <p className="mt-1 text-lg font-semibold text-white/90">{rank(stats.elapsed)}</p>
-            <p className="mt-2 font-mono text-[11px] text-white/55 tabular-nums">
-              score {stats.score}
-              {best !== null && !newBest ? ` · best ${clock(best)}` : ""}
-            </p>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 p-4">
+          <div className={cn(panel, "pointer-events-auto w-full max-w-[26rem] border-[#2d8cff]/40 p-5 text-center")}>
+            <p className={cn(label, "text-[#5aa9ff]")}>{newBest ? "New best · mission complete" : "Mission complete"}</p>
+            <h2 className="mt-1 text-4xl font-black tracking-tight tabular-nums">{clock(stats.elapsed)}</h2>
+            <p className="mt-1 text-lg font-bold text-white/90 uppercase italic">{rank(stats.elapsed)}</p>
+            <dl className="mt-4 grid grid-cols-4 gap-2 text-center tabular-nums">
+              {[
+                ["Score", stats.score.toLocaleString("en-US")],
+                ["Level", `${stats.level}`],
+                ["Bugs", `${stats.kills}`],
+                ["Combo", `×${stats.maxCombo}`],
+              ].map(([name, value]) => (
+                <div key={name} className="rounded-lg border border-white/10 bg-white/[0.03] px-1 py-2">
+                  <dt className={label}>{name}</dt>
+                  <dd className="mt-0.5 text-[15px] font-extrabold">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.03] p-3 text-left">
+              <span className="flex items-baseline justify-between">
+                <span className="text-[12px] font-bold">Career level {careerNow}</span>
+                <span className="text-[10px] text-[#5aa9ff] tabular-nums">+{gained.toLocaleString("en-US")} XP</span>
+              </span>
+              <Meter value={careerProgress} className="mt-1.5" />
+              <p className="mt-1.5 text-[10px] text-white/50">rank this run: {stats.rank}{best !== null && !newBest ? ` · best ${clock(best)}` : ""}</p>
+            </div>
             <div className="mt-4 flex justify-center gap-2">
               <button
                 type="button"
                 onClick={() => engineRef.current?.reset()}
-                className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0a66c2] px-5 text-[13px] font-semibold text-white transition-[background-color,transform] duration-150 hover:bg-[#2d8cff] active:scale-[0.97]"
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-[#0a66c2] px-5 text-[13px] font-bold text-white transition-[background-color,transform] duration-150 hover:bg-[#2d8cff] active:scale-[0.98]"
               >
                 Rebuild and go again
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 px-5 text-[13px] font-semibold text-white/80 transition-[border-color,transform] duration-150 hover:border-white/40 active:scale-[0.97]"
+                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-white/15 px-5 text-[13px] font-semibold text-white/80 transition-[border-color,transform] duration-150 hover:border-white/40 active:scale-[0.98]"
               >
                 Back to the chat
               </button>
@@ -2508,7 +2626,7 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
 
       <div
         className={cn(
-          "pointer-events-none absolute inset-x-0 bottom-40 flex justify-center transition-opacity duration-700 sm:bottom-64",
+          "pointer-events-none absolute inset-x-0 bottom-36 flex justify-center transition-opacity duration-700 sm:bottom-40",
           quip && stats.state !== "done" ? "opacity-100" : "opacity-0",
         )}
         role="status"
@@ -2525,64 +2643,63 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
         </span>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 sm:p-5">
-        <div className="pointer-events-auto w-full max-w-[27rem] rounded-2xl border border-white/10 bg-[#14171c]/95 p-2.5 shadow-2xl shadow-black/70 backdrop-blur-md sm:p-3">
-          <div className="flex items-center gap-2 px-1 pb-2.5">
-            <HammerIcon className="size-3.5 text-white/80" />
-            <span className="text-[13px] font-bold tracking-[0.14em] text-white uppercase max-sm:hidden">
-              3x3 Toolbox
-            </span>
-            <span className="text-[13px] font-semibold text-white sm:hidden">
-              {TOOLS.find((item) => item.id === tool)?.label}
-            </span>
+      {/* HUD, bottom: the combo meter and the weapon hotbar. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-3 sm:p-4">
+        <div
+          className={cn(
+            "flex items-baseline gap-2 transition-opacity duration-200",
+            stats.combo >= 2 && stats.state === "running" ? "opacity-100" : "opacity-0",
+          )}
+          aria-hidden="true"
+        >
+          <span className="text-[26px] leading-none font-black text-[#9ccaff] italic tabular-nums drop-shadow-[0_2px_14px_rgba(45,140,255,0.6)]">×{stats.combo}</span>
+          <span className={label}>combo</span>
+        </div>
+        <div className={cn(panel, "pointer-events-auto w-full max-w-[40rem] p-1.5 sm:p-2")}>
+          <div className="flex items-center gap-2 px-1 pb-1.5">
+            <span className="text-[12px] font-bold">{active?.label}</span>
+            <span className="text-[10px] text-white/45 max-sm:hidden">1–9 or right click · R rebuild · M sound · Esc chat</span>
+            <button
+              type="button"
+              onClick={toggleSound}
+              aria-label={muted ? "Turn the sound on" : "Turn the sound off"}
+              aria-pressed={!muted}
+              className="ml-auto grid size-8 place-items-center rounded-md text-white/70 transition-colors duration-150 hover:bg-white/10 hover:text-white"
+            >
+              <SoundIcon muted={muted} />
+            </button>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close stress reducer"
-              className="ml-auto grid size-9 place-items-center rounded-full border border-white/15 text-white/80 transition-colors duration-150 hover:bg-white/10 hover:text-white sm:size-auto sm:rounded-md sm:border-0 sm:p-1"
+              className="grid size-8 place-items-center rounded-md text-white/70 transition-colors duration-150 hover:bg-white/10 hover:text-white"
             >
               <CloseIcon size={16} />
             </button>
           </div>
-          <div className="grid grid-cols-9 gap-1 sm:grid-cols-3 sm:gap-2">
+          <div className="grid grid-cols-9 gap-1 sm:gap-1.5">
             {TOOLS.map((item, index) => (
               <button
                 key={item.id}
                 type="button"
                 aria-pressed={item.id === tool}
                 aria-label={item.label}
+                title={`${index + 1}: ${item.label}`}
                 onClick={() => select(item.id)}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-lg border px-0.5 py-2.5 transition-[background-color,border-color,box-shadow] duration-150 sm:px-1 sm:py-2.5",
+                  "relative flex aspect-square items-center justify-center rounded-lg border transition-[background-color,border-color,box-shadow,transform] duration-150 active:scale-95 sm:aspect-[5/4]",
                   item.id === tool
-                    ? "border-[#2d8cff] bg-[#2d8cff]/20 shadow-[0_0_16px_rgba(45,140,255,0.35)]"
-                    : "border-white/10 bg-white/[0.04] hover:bg-white/10",
+                    ? "border-[#5aa9ff] bg-[#2d8cff]/20 shadow-[0_0_18px_rgba(45,140,255,0.4),inset_0_0_12px_rgba(45,140,255,0.25)]"
+                    : "border-white/10 bg-white/[0.04] hover:border-white/25 hover:bg-white/10",
                 )}
               >
+                <span className="absolute top-0.5 left-1 text-[9px] font-bold text-white/45 tabular-nums max-sm:hidden">{index + 1}</span>
                 <item.Icon className="size-5 sm:size-7" />
-                <span
-                  className={cn(
-                    "text-[10px] leading-none max-sm:hidden sm:text-[11px]",
-                    item.id === tool ? "text-white" : "text-white/60",
-                  )}
-                >
-                  <span className="text-white/40">{index + 1}</span>
-                  {": "}
-                  {item.label}
-                </span>
               </button>
             ))}
-          </div>
-          <div className="flex items-center justify-between gap-2 px-1 pt-2.5 text-[10px] font-medium tracking-wider text-white/45 uppercase max-sm:hidden">
-            <span>1–9 / Right click = tool</span>
-            <span>R = Rebuild</span>
-            <span>Esc = Chat</span>
           </div>
         </div>
       </div>
     </dialog>
   );
 }
-
-
-

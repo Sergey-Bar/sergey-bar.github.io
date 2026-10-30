@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { flushSync } from "react-dom";
+import dynamic from "next/dynamic";
 
 
 import { CheckIcon, MailIcon, ReadIcon, RestartIcon, SendIcon, TopicIcon } from "@/chat/icons";
@@ -29,6 +30,12 @@ import { Typed } from "@/chat/typed";
 import { contact, site } from "@/content/site";
 
 type Entry = { key: number; order: number; node: ReactNode };
+
+/** The demolition run: a chunk of its own, fetched only when someone asks for it. */
+const DestructionGame = dynamic(
+  () => import("@/components/destruction-game").then((m) => m.DestructionGame),
+  { ssr: false },
+);
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -188,6 +195,8 @@ export function ChatDirector({
   const [asked, setAsked] = useState<Set<TopicId>>(() => new Set());
   /** The sidebar as a drawer on narrow screens. */
   const [drawer, setDrawer] = useState(false);
+  /** "Something fun" opens the game itself, not an answer about it. */
+  const [game, setGame] = useState(false);
 
   /* ----------------------------------------------------------- helpers */
 
@@ -530,6 +539,13 @@ export function ChatDirector({
     if (!target) return;
     event.preventDefault();
     const id = target.dataset.ask as TopicId;
+    if (id === "fun") {
+      setAsked((prev) => new Set(prev).add("fun"));
+      setDrawer(false);
+      setChipsOpen(false);
+      setGame(true);
+      return;
+    }
     if (topics.some((t) => t.id === id)) void ask(id);
   };
 
@@ -866,6 +882,8 @@ export function ChatDirector({
           <span className="sr-only">The chat opens in a few seconds. Press to open it now.</span>
         </button>
       ) : null}
+
+      {game ? <DestructionGame onClose={() => setGame(false)} /> : null}
 
       <form className="composer" onSubmit={onSubmit}>
         <div className="composer-panel" data-match={match ?? undefined}>

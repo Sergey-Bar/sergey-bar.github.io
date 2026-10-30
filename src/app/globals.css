@@ -1411,6 +1411,16 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   :root:not([data-motion="off"]) .fun-button::before { animation: fun-pulse 2.4s var(--ease-out) infinite; }
 }
 
+/* The game's level-up and streak banner: it lands on the spring, holds, and
+   fades. With motion off it simply shows for its moment. */
+@keyframes hud-banner {
+  0% { opacity: 0; transform: scale(1.35); }
+  14% { opacity: 1; transform: scale(1); }
+  78% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.96) translateY(-8px); }
+}
+.hud-banner { animation: hud-banner 1.7s var(--ease-out) both; }
+
 /* --- Case studies and the scan transcript ------------------------------------ */
 
 .case-context { font-size: 14px; line-height: 1.6; color: var(--color-muted); margin-top: 8px; }

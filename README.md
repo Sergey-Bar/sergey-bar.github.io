@@ -179,20 +179,42 @@ sheet takes over.
 640px of scroll, jumps to the top, and gives a reduced-motion visitor the jump
 without the smooth scroll.
 
-The "do not press" button in the after-hours answer is a client island too, and
-it ships on the boot path. Its game is a `next/dynamic` chunk that is never
-referenced by the HTML, so the budget script never sees it: the full canvas toy
-(nine tools, particles, termites) downloads only when someone actually presses
-the button. It is a timed run: a start card explains it, the clock starts on
-the first hit, rapid hits build a combo that multiplies the score, every
-impact floats its points, bugs crawl the screen and are worth a second each
-when squashed, the screen talks back as its integrity drops, and a result card
-gives the time, a rank (Ship it, Hotfix, Rollback) and the best time on that
-device, kept in localStorage. Integrity is measured on the browser window in
-the mock, not the wallpaper, so a run ends in well under a minute. Its target
-is a mock of this page as it looks today, painted on the site's own ground, a
-touch screen gets a short haptic tick on the blunt tools, and the toolbox
-panel is in the site's style.
+The game opens three ways: the "Something fun" chip (in the panel, the sidebar
+or a quick reply), which goes straight to it rather than to an answer about it;
+the ghost in the corner; and the "do not press" button in the after-hours
+answer. It is a `next/dynamic` chunk that is never referenced by the HTML, so
+the budget script never sees it: the full canvas toy (nine tools, particles,
+termites, its sound) downloads only when someone opens it.
+
+It plays like a shooter. There is no start card: the game is live the moment it
+opens, and the clock starts on the first hit. The HUD carries the run's level
+and rank with an XP bar (ten levels, Intern to Legend, by score), the clock
+and the best time, the target's integrity as a segmented health bar with the
+bugs squashed, a combo counter, and a weapon hotbar on keys 1 to 9 with a
+sound toggle (M). Rapid hits build a combo that multiplies the score; combos
+of 5, 10, 20 and 35 are announced (Smoke test, Regression run, Load test,
+Chaos monkey), and so is every level. Impacts float their points, growing and
+warming with the combo, and draw a hit marker; the hammer and the stamp hold
+the world still for a few frames. The shake is a fraction of what it was and
+capped low: the weight comes from a short zoom towards the impact instead. Bugs
+crawl the screen and are worth a second each when squashed, and the screen
+talks back as its integrity drops. The result card gives the time, a rank
+(Ship it, Hotfix, Rollback), the score, level, bugs and best combo, and banks
+the score as career XP on that device, with the best time, in localStorage.
+The target is a desktop with nothing open on it: an original painting in the
+spirit of the early-2000s wallpaper (a rolling green hill under a deep blue sky
+with soft clouds, drawn in canvas, not a copy of any photograph), its icons and
+a taskbar. Integrity is measured on the desktop above the taskbar and reaches
+zero when 60% of it is wrecked, so a run still ends in under a minute. A touch
+screen gets a short haptic tick on the blunt tools.
+
+The sound is synthesised in the browser with the Web Audio API
+(`src/components/destruction-audio.ts`): no audio files and nothing licensed
+from anyone. Each tool has its own voice from oscillators and filtered noise;
+the held tools (chain-saw, flame-thrower, phaser, washing) run a loop while
+pressed, and the chain-saw revs as it cuts. The context is created on the first
+press, everything passes through one compressor, and the choice to mute is
+remembered.
 
 ## Commands
 

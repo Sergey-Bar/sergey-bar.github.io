@@ -155,7 +155,8 @@ test.describe("intro", () => {
 });
 
 test.describe("conversations", () => {
-  for (const id of TOPICS) {
+  // "Something fun" opens the game rather than an answer; its own spec is below.
+  for (const id of TOPICS.filter((topic) => topic !== "fun")) {
     test(`the ${id} chip reveals every message of its answer`, async ({ page }) => {
       await enter(page);
       await pressChip(page, id);
@@ -190,13 +191,25 @@ test.describe("conversations", () => {
     expect(orders.contact).toBeLessThan(orders.about);
   });
 
-  test("asking the same thing twice points back instead of repeating", async ({ page }) => {
+  test("the fun chip opens the game straight away, with no start card", async ({ page }) => {
     await enter(page);
     await pressChip(page, "fun");
-    await expect(page.locator('[data-flow="fun"] .replies')).toBeVisible({ timeout: 20_000 });
-    await pressChip(page, "fun");
+    const game = page.getByRole("dialog");
+    await expect(game).toBeVisible();
+    await expect(game.getByRole("button", { name: /start/i })).toHaveCount(0);
+    await expect(game.getByRole("button", { name: /sound/i })).toBeVisible();
+    await expect(page.locator('[data-flow="fun"]')).not.toHaveAttribute("data-sent");
+    await page.keyboard.press("Escape");
+    await expect(game).toBeHidden();
+  });
+
+  test("asking the same thing twice points back instead of repeating", async ({ page }) => {
+    await enter(page);
+    await pressChip(page, "contact");
+    await expect(page.locator('[data-flow="contact"] .replies')).toBeVisible({ timeout: 20_000 });
+    await pressChip(page, "contact");
     await expect(page.locator(".entry").getByText("That one is above.")).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('[data-flow="fun"]')).toHaveCount(1);
+    await expect(page.locator('[data-flow="contact"]')).toHaveCount(1);
   });
 
   test("start over returns to the intro and clears the log", async ({ page }) => {
