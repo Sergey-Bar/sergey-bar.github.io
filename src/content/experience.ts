@@ -6,6 +6,9 @@
  *
  * Everything here is already published on the LinkedIn profile and the CV —
  * employer work is written at that same level of detail and not beyond it.
+ * Defense work goes one step further: no unit, no system names, no
+ * infrastructure and no defect specifics, only the kind of platform and the
+ * quality work done on it.
  */
 
 export type Role = {
@@ -19,21 +22,21 @@ export type Role = {
 
 export const roles: readonly Role[] = [
   {
-    company: "Israeli Air Force · Ofek 324",
+    company: "Israeli Air Force",
     role: "Senior QA Engineer",
     period: "2025–Present",
     scope:
-      "A full-stack data analysis platform supporting operational units, in a security-critical environment with zero pre-existing QA infrastructure. Working with DataTeam on the Oracle estate that serves the Air Force.",
+      "A full-stack data analysis platform in a security-critical environment, with zero pre-existing QA infrastructure.",
     ownership: [
       "Sole quality owner, from requirements intake through to release sign-off",
       "Built the complete quality lifecycle from zero: test strategy, quality requirements, coverage planning, quality gates and release criteria",
       "Designed the platform's three-tier test pyramid from scratch (unit, integration and end to end) with full backend and frontend suites",
       "Wired Playwright UI automation and API tests in Python and TypeScript into the pipeline as the scheduled nightly regression pass",
       "Designed the operational project-management system for cross-team visibility",
-      "Serviced the Oracle environment behind the platform alongside the DataTeam, covering both the application and the database beneath it",
+      "Covered the database beneath the platform as well as the application, alongside the data team",
     ],
     impact: [
-      "Blocked a release-critical scoring and data-calculation defect through AI-assisted code review and deep SQL validation, cross-referencing API responses against database records before rollout",
+      "Blocked a release-critical calculation defect before rollout through AI-assisted code review and deep SQL validation, cross-referencing API responses against database records",
       "Reviewed requirements and architecture docs with developers and project leads before implementation, converting ambiguity into quality requirements and prioritised coverage",
       "Set the team's standards for test design, defect reporting and severity, and served as the single quality point of contact on release readiness and triage",
     ],
@@ -41,7 +44,7 @@ export const roles: readonly Role[] = [
   {
     company: "Nova Ltd.",
     role: "QA Engineer",
-    period: "2025–2025",
+    period: "2025",
     scope:
       "Semiconductor metrology and process-control software deployed to tier-1 fabs including Samsung, Intel and TSMC. A maternity-cover role.",
     ownership: [

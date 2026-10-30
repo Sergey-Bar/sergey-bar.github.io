@@ -22,7 +22,7 @@ export const hero = {
   /** The LinkedIn summary's opening line, verbatim. */
   positioning: "Most teams test software. I make sure it deserves to ship.",
   /** The clause after the role line, in the portfolio's `//` convention. */
-  roleSuffix: "// 7+ years in quality",
+  roleSuffix: "// 5 years in software QA",
   /** The glass badge's caption, set statically on a ring. */
   badge: "COME ON LET'S TALK",
 } as const;

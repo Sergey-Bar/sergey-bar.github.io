@@ -16,10 +16,10 @@ export type Metric = {
 
 export const proofRow: readonly Metric[] = [
   {
-    value: "7+",
-    label: "years in quality",
+    value: "5",
+    label: "years in software QA",
     detail:
-      "Software QA since 2021, counting the HP Indigo QC years (2015–2017) the same way the CV counts them.",
+      "Since 2021, after two years of hardware quality control at HP Indigo (2015–2017).",
     source: "linkedin",
   },
   {
@@ -33,7 +33,7 @@ export const proofRow: readonly Metric[] = [
     value: "2×",
     label: "QA built from zero",
     detail:
-      "First and only QA engineer twice: at Enabley, and as sole quality owner of a classified Air Force platform now in operational use.",
+      "First and only QA engineer twice: at Enabley, and as sole quality owner of a security-critical defense platform.",
     source: "linkedin",
   },
   {

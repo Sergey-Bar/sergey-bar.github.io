@@ -35,7 +35,7 @@ export const projects: readonly Project[] = [
       { label: "downloads, all time", value: npmStats.downloadsAllTime.toLocaleString("en-US") },
       { label: "rules", value: String(mjolnir.rules.total) },
       {
-        label: "measured FP",
+        label: "with measured FP rate",
         value: `${mjolnir.rules.measured} of ${mjolnir.rules.total}`,
       },
       { label: "telemetry", value: mjolnir.zeroTelemetry ? "none" : "see docs" },

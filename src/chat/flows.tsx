@@ -106,7 +106,7 @@ function AboutFlow() {
           </Row>
         </dl>
       </Card>
-      <Card eyebrow="verified outcomes" title="Five figures a stranger can check">
+      <Card eyebrow="the record in numbers" title="Five figures from the record">
         <dl className="metrics" data-reveal-stagger>
           {proofRow.map((metric) => (
             <div key={metric.label} className="metric">
@@ -149,8 +149,8 @@ function CasesFlow() {
     <Flow id="cases">
       <Bubble>
         <p>
-          Three pieces of work, each told the same way: the problem, what I did, the evidence a
-          stranger can check, and the outcome. Every figure is read from the record, not retyped.
+          Three pieces of work, each told the same way: the problem, what I did, the evidence
+          behind it, and the outcome. Every figure is read from the record, not retyped.
         </p>
       </Bubble>
       {caseStudies.map((study, index) => (
@@ -240,8 +240,8 @@ function ProjectsFlow() {
           title={project.name}
           stat={
             project.slug === "mjolnir"
-              ? { value: project.facts[1].value, label: project.facts[1].label.replace(",", " ·") }
-              : { value: project.facts[0].value, label: "in the capability register, 26 marked not real" }
+              ? { value: `${mjolnir.rules.total} rules`, label: `${mjolnir.rules.measured} of them carry a measured false-positive rate` }
+              : { value: "3 → 1", label: "test reporters (Playwright, JUnit, legacy) into one result model" }
           }
         >
           {project.slug === "mjolnir" ? (

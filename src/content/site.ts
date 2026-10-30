@@ -2,7 +2,7 @@
  * Site-level constants. Plan §3.3 — no copy lives inside components.
  *
  * The record itself lives on LinkedIn and the work lives on GitHub: this site
- * publishes neither a CV copy nor a direct email or phone number. Aligned with
+ * publishes no CV copy and no phone number; the email is the one direct route. Aligned with
  * the published LinkedIn profile and CV (October 2026).
  */
 
@@ -12,7 +12,7 @@ export const site = {
   domain: "https://sergey-bar.github.io",
   title: "Sergey Bar · QA Tech Lead & AI Automation Engineer",
   description:
-    "QA Tech Lead & AI Automation Engineer with 7+ years across defence platforms, semiconductor metrology and enterprise security. Test strategy from zero, Playwright and Python automation as release gates, and evidence a stranger can check.",
+    "QA Tech Lead & AI Automation Engineer with 5 years in software QA across defence platforms, semiconductor metrology and enterprise security. Test strategy from zero, Playwright and Python automation as release gates, and open-source tools that publish their own limits.",
   locale: "en_US",
   location: "Israel",
 } as const;

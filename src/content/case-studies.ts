@@ -5,7 +5,7 @@ import { roles } from "@/content/experience";
 
 /**
  * Three pieces of work told as cases: the problem, the approach, the evidence
- * a stranger can check, and the outcome. Every sentence here restates a fact
+ * behind it, and the outcome. Every sentence here restates a fact
  * already published in the experience, metrics or project modules, and the
  * figures are read from them rather than typed again, so a case cannot drift
  * from the record it summarises.
@@ -42,7 +42,7 @@ export const caseStudies: readonly CaseStudy[] = [
     title: "Quality from zero on a security-critical platform",
     context: airForce.scope,
     problem:
-      "A security-critical platform with zero pre-existing QA infrastructure, one quality owner, and a release-critical scoring and data-calculation defect on its way to rollout.",
+      "A security-critical platform with zero pre-existing QA infrastructure, one quality owner, and a release-critical calculation defect on its way to rollout.",
     approach: [
       airForce.ownership[1],
       airForce.ownership[2],
@@ -60,7 +60,7 @@ export const caseStudies: readonly CaseStudy[] = [
       },
     ],
     outcome:
-      "A three-tier pyramid with full backend and frontend suites, a nightly regression pass in the pipeline, and one quality point of contact for release readiness. The platform is in operational use.",
+      "A three-tier pyramid with full backend and frontend suites, a nightly regression pass in the pipeline, and one quality point of contact for release readiness.",
     stat: { value: "0 → 3", label: "tiers of tests, built from no QA infrastructure" },
   },
   {
