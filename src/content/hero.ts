@@ -12,7 +12,9 @@
  * defeats the browser cache and the social-preview caches, which key on the URL.
  */
 export const images = {
-  portrait: "/portrait.webp?v=20261029d",
+  /** 480px: the hero shows it at most 232px wide, 464 on a 2x screen. The 900px
+   * source stays beside it for the social preview generator. */
+  portrait: "/portrait-480.webp?v=20261031",
   og: "/og.png?v=20261029d",
 } as const;
 

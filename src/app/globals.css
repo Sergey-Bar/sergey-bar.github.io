@@ -244,8 +244,10 @@
     text-wrap: pretty;
   }
 
+  /* The lighter blue: at least 7:1 on every surface, where the brand blue
+     fell under 3:1 on the raised ones. */
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-accent-ink);
     outline-offset: 2px;
     border-radius: 2px;
   }
@@ -454,53 +456,6 @@
   .cursor-glow { display: none; }
 }
 
-/* Two routes in one pill (the route pages' header). A white highlight sits
-   behind LinkedIn at rest and slides to whichever half is hovered or focused. */
-.social {
-  position: relative;
-  display: flex;
-  padding: 3px;
-  border-radius: 100px;
-  border: 1px solid var(--color-line-strong);
-  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
-  backdrop-filter: blur(12px);
-  --social-at: 1;
-}
-.social::before {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--color-ink);
-  transform: translateX(calc(var(--social-at) * 38px));
-  transition: transform 280ms var(--ease-out);
-}
-.social:has(.social-link:first-child:hover),
-.social:has(.social-link:first-child:focus-visible) { --social-at: 0; }
-.social:has(.social-link:last-child:hover),
-.social:has(.social-link:last-child:focus-visible) { --social-at: 1; }
-.social-link {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  color: var(--color-ink);
-  transition: color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
-}
-.social-link:last-child { margin-left: 2px; }
-.social-link:last-child { color: var(--color-paper); }
-.social:has(.social-link:first-child:hover) .social-link:first-child,
-.social:has(.social-link:first-child:focus-visible) .social-link:first-child { color: var(--color-paper); }
-.social:has(.social-link:first-child:hover) .social-link:last-child,
-.social:has(.social-link:first-child:focus-visible) .social-link:last-child { color: var(--color-ink); }
-.social-link:active { transform: scale(0.94); }
-.social-link:focus-visible { outline-offset: -2px; }
-
 .home-main { display: block; outline: none; }
 .home-column {
   position: relative;
@@ -640,9 +595,7 @@
 }
 .action-secondary:hover { border-color: var(--color-ink); }
 .action:active { transform: scale(0.97); }
-.action-arrow { transition: transform var(--dur-ui) var(--ease-out); }
-.action:hover .action-arrow { transform: translateX(3px); }
-
+.action:hover 
 .chips {
   display: flex;
   gap: 8px;
@@ -683,6 +636,11 @@
    section in view is marked. */
 .composer-topics { display: flex; align-items: center; gap: 6px; padding: 4px 4px 10px; margin-bottom: 4px; border-bottom: 1px solid var(--color-line); }
 .composer-topics[hidden] { display: none; }
+/* The default before the visitor chooses: closed beside the sidebar, which
+   already lists every section; open on a narrow screen. */
+@media (min-width: 64rem) {
+  .composer-topics[data-auto] { display: none; }
+}
 .composer-topics > .chips { display: contents; }
 .composer-topics > .chips:first-child { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; overflow: visible; }
 .composer .chip { font-size: 13px; min-height: 32px; padding: 0 11px 0 9px; gap: 6px; }
@@ -786,7 +744,10 @@
   background: color-mix(in oklab, var(--color-paper) 86%, transparent);
   backdrop-filter: blur(14px) saturate(1.3);
 }
-.topline-person { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--color-ink); }
+.topline-person { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--color-ink); opacity: 0; visibility: hidden; translate: 0 6px; transition: opacity var(--dur-ui) var(--ease-out), translate var(--dur-ui) var(--ease-out), visibility 0s linear var(--dur-ui); }
+.topline-person[data-shown] { opacity: 1; visibility: visible; translate: 0 0; transition: opacity var(--dur-ui) var(--ease-out), translate var(--dur-ui) var(--ease-out), visibility 0s; }
+/* Without JavaScript nothing marks it, so it simply shows. */
+:root:not([data-js]) .topline-person { opacity: 1; visibility: visible; translate: 0 0; }
 .topline-name { font-size: 14.5px; font-weight: 650; white-space: nowrap; }
 .topline-section { overflow: hidden; font-size: 13.5px; color: var(--color-muted); white-space: nowrap; text-overflow: ellipsis; }
 .topline-section::before { content: "/"; margin-right: 8px; color: var(--color-line-strong); }
@@ -894,6 +855,8 @@
 }
 .home-footer-name { font-weight: 600; color: var(--color-ink); }
 .home-footer ul { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; }
+/* Each link a full 32px target, not just its line of text. */
+.home-footer a { display: inline-flex; align-items: center; min-height: 32px; }
 
 /* Without JavaScript the page is the whole record and every contents link
    still jumps; the ask bar and the drawer's button, which need a script, go. */
@@ -959,13 +922,13 @@
 .experience-entry { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: 28px; }
 @media (max-width: 47.99rem) { .experience-entry { grid-template-columns: 1fr; gap: 14px; } }
 .role-details { margin-top: 18px; }
-.role-details summary, .playground-disclosure summary {
+.role-details summary {
   display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 44px;
   cursor: pointer; list-style: none; font-size: 14px; font-weight: 550; color: var(--color-ink);
 }
-.role-details summary::-webkit-details-marker, .playground-disclosure summary::-webkit-details-marker { display: none; }
-.role-details summary span, .playground-disclosure summary span { font-size: 24px; font-weight: 300; color: var(--topic); }
-.role-details[open] summary span, .playground-disclosure[open] summary span { transform: rotate(45deg); }
+.role-details summary::-webkit-details-marker { display: none; }
+.role-details summary span { font-size: 24px; font-weight: 300; color: var(--topic); }
+.role-details[open] summary span { transform: rotate(45deg); }
 .role-details-body { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 16px 0 4px; }
 @media (max-width: 47.99rem) { .role-details-body { grid-template-columns: 1fr; } }
 .role-details-body h4 { margin-bottom: 10px; font-size: 14px; font-weight: 600; }
@@ -1017,16 +980,16 @@
 
 /* Native disclosures open and close with a measured height where the browser
    can interpolate to `auto`; elsewhere they simply open. */
-.role-details, .playground-disclosure, .recommendations-more { interpolate-size: allow-keywords; }
+.role-details, .recommendations-more { interpolate-size: allow-keywords; }
 @media (prefers-reduced-motion: no-preference) {
-  .role-details summary span, .playground-disclosure summary span, .recommendations-toggle { transition: transform 200ms var(--ease-out); }
+  .role-details summary span, .recommendations-toggle { transition: transform 200ms var(--ease-out); }
   @supports (interpolate-size: allow-keywords) {
-    .role-details::details-content, .playground-disclosure::details-content, .recommendations-more::details-content {
+    .role-details::details-content, .recommendations-more::details-content {
       height: 0;
       overflow: clip;
       transition: height var(--dur-ui) var(--ease-out), content-visibility var(--dur-ui) allow-discrete;
     }
-    .role-details[open]::details-content, .playground-disclosure[open]::details-content, .recommendations-more[open]::details-content { height: auto; }
+    .role-details[open]::details-content, .recommendations-more[open]::details-content { height: auto; }
   }
 }
 
@@ -1258,7 +1221,7 @@
 .composer-plus:hover { border-color: var(--color-ink); background: #ffffff0a; }
 .composer-plus:active { transform: scale(0.94); }
 .composer-plus[aria-expanded="true"] { border-color: var(--color-c-sky); color: var(--color-c-sky); }
-.composer-plus[aria-expanded="true"] svg { transform: rotate(45deg); }
+.composer-plus[aria-expanded="true"] svg { transform: rotate(180deg); }
 /* An empty field has nothing to send. */
 .composer-panel:has(input:placeholder-shown) .composer-send { opacity: 0.4; box-shadow: none; }
 /* While the visitor types, the chip the router would answer with lights up. */

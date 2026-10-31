@@ -241,14 +241,22 @@ test.describe("contents", () => {
 });
 
 test.describe("the ask bar", () => {
-  test("its topics are open from the start; only the plus closes them, and they stay closed", async ({ page }) => {
+  test("its topics follow the layout until the visitor chooses, then stay as chosen", async ({ page, isMobile }) => {
     await page.goto("/");
     const chips = page.locator(".composer-topics .chip[data-topic]");
     await expect(chips).toHaveCount(SECTIONS.length);
-    await expect(chips.first()).toBeVisible();
-    await expect(page.locator(".composer .chip-route")).toHaveCount(3);
     await expect(page.locator(".composer .ultra")).toHaveText("Ultra");
-    await chips.filter({ hasText: "Projects" }).click();
+    if (isMobile) {
+      // A phone has no sidebar: the topics are the way round the page.
+      await expect(chips.first()).toBeVisible();
+    } else {
+      // Beside the sidebar, which lists every section, they start put away.
+      await expect(chips.first()).toBeHidden();
+      await page.getByRole("button", { name: "Show every topic" }).click();
+      await expect(chips.first()).toBeVisible();
+    }
+    await expect(page.locator(".composer .chip-route")).toHaveCount(3);
+    await chips.filter({ hasText: /Projects/ }).click();
     await expect(heading(page, "projects")).toBeInViewport();
     await expect(chips.first()).toBeVisible();
     await page.keyboard.press("Escape");
@@ -394,7 +402,8 @@ test.describe("something fun", () => {
     await expect(game.getByRole("button", { name: /sound/i })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(game).toBeHidden();
-    await expect(page.locator(".composer-topics .chip").first()).toBeVisible();
+    await expect(page.locator(".composer-panel")).toBeVisible();
+    await expect(page.locator("#fun")).toBeInViewport();
   });
 });
 
@@ -430,6 +439,51 @@ test.describe("content", () => {
     await expect(page.locator("#fun .fun-tools li")).toHaveCount(9);
     await expect(page.locator("#fun .card-title")).toHaveText("Wreck the release machine");
     await expect(page.locator("#fun .fun-zone").getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  });
+});
+
+test.describe("details", () => {
+  test("the portrait is sized for where it is shown", async ({ page }) => {
+    await page.goto("/");
+    const portrait = page.locator(".portrait-img");
+    await expect(portrait).toHaveJSProperty("complete", true);
+    const { natural, shown } = await portrait.evaluate((img: HTMLImageElement) => ({
+      natural: img.naturalWidth,
+      shown: img.getBoundingClientRect().width * window.devicePixelRatio,
+    }));
+    // No more than the pixels a 2x screen needs at the largest size it is drawn.
+    expect(natural).toBeLessThanOrEqual(480);
+    expect(natural).toBeGreaterThanOrEqual(Math.min(shown, 464));
+  });
+
+  test("the phone's bar names the person only once the hero has gone", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "the bar is the narrow layout");
+    await page.goto("/");
+    const person = page.locator(".topline-person");
+    await expect(person).toBeHidden();
+    await heading(page, "experience").scrollIntoViewIfNeeded();
+    await expect(person).toBeVisible();
+    await expect(person).toContainText("Sergey Bar");
+  });
+
+  test("the focus ring is the light blue and the footer links are full targets", async ({ page }) => {
+    await page.goto("/");
+    const links = page.locator(".home-footer a");
+    await expect(links).toHaveCount(3);
+    for (const height of await links.evaluateAll((all) => all.map((a) => a.getBoundingClientRect().height))) {
+      expect(height).toBeGreaterThanOrEqual(24);
+    }
+    await links.first().focus();
+    const ring = await links.first().evaluate((a) => getComputedStyle(a).outlineColor);
+    const accentInk = await page.evaluate(() => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--color-accent-ink)";
+      document.body.append(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    });
+    expect(ring).toBe(accentInk);
   });
 });
 

@@ -14,7 +14,7 @@ import { Avatar } from "@/home/blocks";
 import { MailIcon, SendIcon, SparkIcon, TopicIcon } from "@/home/icons";
 import { routeInput, topicById, topicForHash, topics, type TopicId } from "@/home/topics";
 import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
-import { CloseIcon, MenuIcon, PlusIcon } from "@/components/icons";
+import { CloseIcon, MenuIcon } from "@/components/icons";
 import { MotionToggle } from "@/components/motion-director";
 import { contact, site } from "@/content/site";
 
@@ -111,18 +111,35 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
 
   /** The section in view, marked in the contents; null while the hero is. */
   const [current, setCurrent] = useState<TopicId | null>(null);
+  /** True once the hero's name has scrolled under the phone's bar, which then names the person. */
+  const [pastHero, setPastHero] = useState(false);
   /** The sidebar as a drawer on narrow screens. */
   const [drawer, setDrawer] = useState(false);
   /**
-   * The topics panel above the field. Open from the start and never closed on
-   * the visitor's behalf: only the button beside the field closes and reopens it.
+   * The topics panel above the field. Until the visitor chooses (null), it
+   * follows the layout: open on a narrow screen, where it is the way round
+   * the page, and closed beside the sidebar, which already lists every
+   * section. The stylesheet applies that default before any script runs, so
+   * nothing jumps on load. Once the visitor uses the toggle, their choice
+   * holds; nothing else opens or closes it.
    */
-  const [chipsOpen, setChipsOpen] = useState(true);
+  const [chipsChoice, setChipsChoice] = useState<boolean | null>(null);
+  const [wide, setWide] = useState(false);
+  const chipsOpen = chipsChoice ?? !wide;
   /** The topic the router would answer with, previewed on the chips as the visitor types. */
   const [match, setMatch] = useState<TopicId | null>(null);
   const [reply, setReply] = useState<Reply | null>(null);
   /** One short line for assistive technology. */
   const [status, setStatus] = useState("");
+
+  /** Whether the sidebar stands beside the page, which decides the panel's default. */
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 64rem)");
+    const update = () => setWide(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
 
   /* ---------------------------------------------------------- navigation */
 
@@ -249,6 +266,8 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
       }
       if (atEnd && sections.length) found = sections[sections.length - 1].dataset.section as TopicId;
       setCurrent(found);
+      const name = document.querySelector(".hero-name");
+      setPastHero(!!name && name.getBoundingClientRect().bottom < 64);
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(measure);
@@ -402,7 +421,15 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
 
       {/* The phone's bar: who, where in the page, and the contents. */}
       <div className="topline">
-        <a href="#main" className="topline-person" onClick={() => window.scrollTo({ top: 0 })}>
+        {/* Hidden while the hero itself shows the name and the photo. */}
+        <a
+          href="#main"
+          className="topline-person"
+          data-shown={pastHero ? "" : undefined}
+          aria-hidden={pastHero ? undefined : true}
+          tabIndex={pastHero ? undefined : -1}
+          onClick={() => window.scrollTo({ top: 0 })}
+        >
           <Avatar size={28} />
           <span className="topline-name">{site.name}</span>
           {current ? (
@@ -559,7 +586,12 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
         <div className="composer-panel" data-match={match ?? undefined}>
           {/* Every topic, a jump away, then the profiles as icons. Open from
               the start; only the plus closes it. */}
-          <div className="composer-topics" id="composer-topics" hidden={!chipsOpen}>
+          <div
+            className="composer-topics"
+            id="composer-topics"
+            hidden={chipsChoice === false}
+            data-auto={chipsChoice === null ? "" : undefined}
+          >
             <ul className="chips" aria-label="Jump to a section">
               {topics.map((topic) => (
                 <li key={topic.id}>
@@ -604,9 +636,12 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
               aria-pressed={chipsOpen}
               aria-expanded={chipsOpen}
               aria-controls="composer-topics"
-              onClick={() => setChipsOpen((v) => !v)}
+              onClick={() => setChipsChoice(!chipsOpen)}
             >
-              <PlusIcon size={17} />
+              {/* A chevron: up opens the topics above the field, down puts them away. */}
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="m6 15 6-6 6 6" />
+              </svg>
             </button>
             <label htmlFor="ask" className="sr-only">
               Ask about my work

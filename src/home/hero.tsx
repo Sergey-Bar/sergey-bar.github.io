@@ -41,8 +41,8 @@ export function Hero() {
             <img
               src={images.portrait}
               alt={site.name}
-              width={900}
-              height={900}
+              width={480}
+              height={480}
               fetchPriority="high"
               className="portrait-img"
             />

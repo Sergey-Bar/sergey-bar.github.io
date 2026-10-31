@@ -58,13 +58,18 @@ the one client island, and it only adds reading aids around the document:
   in view is marked (`aria-current="location"`, a lit number and an edge bar),
   measured as the last section whose top has passed a third of the screen. On
   a phone the contents are a drawer behind the menu button in a slim top bar,
-  which also names the section in view; the drawer takes focus when it opens,
+  which also names the section in view, and shows the person (avatar and name)
+  only once the hero's own name has scrolled under it, so the first screen
+  never shows them twice; the drawer takes focus when it opens,
   and Escape or a jump closes it and hands focus back.
-- **The ask bar.** Fixed under the page: a field, a send button and a plus.
-  The plus holds every section as a chip (one row of short names on a phone,
-  scrolled sideways) and the profiles as icons; the panel is open from the
-  start and only the plus closes it, after which it stays closed until the
-  plus reopens it. The chip for the section in view is marked, and while the
+- **The ask bar.** Fixed under the page: a field, a send button and a
+  chevron. The chevron holds every section as a chip (one row of short names
+  on a phone, scrolled sideways) and the profiles as icons. Until the visitor
+  chooses, the panel follows the layout: open on a narrow screen, where it is
+  the way round the page, and put away beside the sidebar, which already lists
+  every section; the stylesheet applies that default before any script runs.
+  Once the visitor uses the chevron, the choice holds and nothing else opens
+  or closes it. The chip for the section in view is marked, and while the
   visitor types, the chip the router would answer with lights up. A question
   is routed by `routeInput` in `src/home/topics.ts` and answered by the page
   itself: the reader is taken to the section, under its own address, and a
@@ -252,7 +257,9 @@ deploy over a third-party API.
 optimisation or generation runtime, so the OG image is a static 1200×630 PNG by
 necessity; `python scripts/og-image.py` regenerates it on the site's theme from
 the portrait and the content modules (Pillow, Windows system fonts).
-`public/portrait.webp` is the LinkedIn profile photo, cropped to the face and resized to 900×900 from the 1254×1254 original, with a natural finish applied in the file (the upscaler's skin texture filtered, colour eased, fine grain); the crop lives in the file, not in CSS, so nothing is scaled up on screen. `public/favicon.svg` is the vector form of the same mark.
+`public/portrait-480.webp` (13KB) is what the page shows: the hero draws the
+portrait at most 232px wide, 464 on a 2x screen. `public/portrait.webp` (900px)
+is its source and what the social preview generator reads. It is the LinkedIn profile photo, cropped to the face and resized to 900×900 from the 1254×1254 original, with a natural finish applied in the file (the upscaler's skin texture filtered, colour eased, fine grain); the crop lives in the file, not in CSS, so nothing is scaled up on screen. `public/favicon.svg` is the vector form of the same mark.
 
 There is deliberately no `src/app/favicon.ico`: Next emits that convention file
 ahead of the explicit `metadata.icons` list, so a leftover one silently wins the
@@ -317,8 +324,9 @@ the two keys that matter.
 
 Every text on the page is at least 13px, except the uppercase labels (12px,
 tracked) and keyboard keys, and holds at least 4.5:1 against what it sits on.
-Small accent text (eyebrows, section numbers, the case labels) reads in the
-lighter `--color-accent-ink` rather than the brighter sky blue, which stays
+Small accent text (eyebrows, section numbers, the case labels) and the focus
+ring (at least 7:1 on every surface, where the brand blue fell under 3:1 on
+the raised ones) use the lighter `--color-accent-ink` rather than the brighter sky blue, which stays
 for marks, bars and icons. The game's HUD labels are 11.5px at 70% white,
 up from 10px at 50%. A Playwright spec measures size and contrast on every
 visible text node, on desktop and phone.
