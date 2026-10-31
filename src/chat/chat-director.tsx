@@ -198,7 +198,10 @@ export function ChatDirector({
   const [status, setStatus] = useState("");
   /** The topic the router would answer with, previewed on the chips as the visitor types. */
   const [match, setMatch] = useState<TopicId | null>(null);
-  /** On a phone the chip row shows three and folds the rest behind a count. */
+  /**
+   * The topics panel above the field. Open from the start and never closed on
+   * the visitor's behalf: only the button beside the field closes and reopens it.
+   */
   const [chipsOpen, setChipsOpen] = useState(true);
   /** A short pulse on the send button after a question goes. */
   const [sent, setSent] = useState(false);
@@ -402,7 +405,6 @@ export function ChatDirector({
         if (topicForHash(location.hash) !== id) history.pushState(null, "", `#${id}`);
         setAsked((prev) => new Set(prev).add(id));
         setDrawer(false);
-        setChipsOpen(false);
         anchorRef.current = anchor;
         follow(true);
         setStatus(`${site.name} is answering: ${topicById[id].description}.`);
@@ -424,8 +426,6 @@ export function ChatDirector({
         }
         if (run === runRef.current) {
           setStatus(`${site.name} finished answering about ${topicById[id].label.toLowerCase()}.`);
-          // The whole answer is in: every topic comes back, ready for the next question.
-          setChipsOpen(true);
         }
       }),
     [enqueue, follow, openChat, push, think],
@@ -474,7 +474,6 @@ export function ChatDirector({
     orderRef.current = log.querySelectorAll("[data-flow]").length + 1;
     setAsked(new Set(topics.map((t) => t.id)));
     setDrawer(false);
-    setChipsOpen(false);
     rootRef.current?.setAttribute("data-mode", "read");
     window.scrollTo({ top: 0, behavior: "auto" });
     setStatus("Everything, in order.");
@@ -506,7 +505,6 @@ export function ChatDirector({
     rootRef.current?.removeAttribute("data-mode");
     setAsked(new Set());
     setDrawer(false);
-    setChipsOpen(true);
     history.replaceState(null, "", location.pathname);
     window.scrollTo({ top: 0, behavior: motionOff() ? "auto" : "smooth" });
     setStatus("Back at the start.");
@@ -538,7 +536,6 @@ export function ChatDirector({
         input.blur();
       } else if (event.key === "Escape") {
         setDrawer(false);
-        setChipsOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -562,7 +559,6 @@ export function ChatDirector({
     if (id === "fun") {
       setAsked((prev) => new Set(prev).add("fun"));
       setDrawer(false);
-      setChipsOpen(false);
       setGame(true);
       return;
     }

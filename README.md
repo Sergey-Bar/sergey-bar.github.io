@@ -90,8 +90,10 @@ assistive technology and in a tooltip). The lists flow as one row, so a wide
 screen fits the panel in two rows; a phone keeps two rows and scrolls them
 sideways, faded at the edge. Labels stay on the topics: icons that only open on
 hover would hide them from touch screens and leave visitors guessing. The panel
-is open when the chat opens, so the first step is in view; a chip asks and
-closes it, Escape closes it, the plus brings it back. Beside the plus a pill
+is open when the chat opens and stays open: asking, reading mode, the game and
+Escape leave it as it is, so every topic is always one press away. Only the
+button beside the field closes it, and it stays closed until that button
+reopens it. Beside the plus a pill
 names the model, "Sergey Bar" at "Ultra" effort (the one place the palette
 bends: the word shimmers pink to purple), and the send button ends the row: a
 small filled rounded square with an up arrow, the way a coding agent draws it,

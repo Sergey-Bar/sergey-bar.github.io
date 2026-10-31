@@ -240,13 +240,15 @@ test.describe("conversations", () => {
     await first.click();
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-mode", "read");
     await expect(page.locator("[data-flow][data-sent]")).toHaveCount(TOPICS.length);
+    // Reading mode leaves the panel open too.
+    await expect(first).toBeVisible();
   });
 
   test("reading mode shows every answer at once, in order", async ({ page, isMobile }) => {
     test.skip(isMobile, "reading mode is offered on wider screens");
     await enter(page);
     await pressChip(page, "contact");
-    await page.getByRole("button", { name: "Read everything" }).click();
+    await page.locator(".sidebar").getByRole("button", { name: "Read everything" }).click();
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-mode", "read");
     const flows = page.locator("[data-flow]");
     await expect(flows).toHaveCount(TOPICS.length);
@@ -257,7 +259,7 @@ test.describe("conversations", () => {
     await expectAxeClean(page);
   });
 
-  test("the panel behind the plus opens with the chat, a chip closes it, the plus reopens it", async ({ page }) => {
+  test("the topics panel stays open through a whole answer; only its button closes it", async ({ page }) => {
     await enter(page);
     const chips = page.locator(".composer .chip[data-ask]");
     await expect(chips).toHaveCount(TOPICS.length);
@@ -267,15 +269,24 @@ test.describe("conversations", () => {
     await expect(routes.getByRole("link", { name: "GitHub" })).toBeVisible();
     await expect(routes.getByRole("link", { name: "LinkedIn" })).toBeVisible();
     await expect(routes.getByRole("link", { name: "Email" })).toHaveAttribute("href", /^mailto:/);
+    // Asking keeps it open, while the answer arrives and after.
     await page.locator('.composer .chip[data-ask="experience"]').click();
     await expect(page.locator('[data-flow="experience"]')).toHaveAttribute("data-sent", "");
-    await expect(chips.first()).toBeHidden();
-    // Once the whole answer is in, every topic comes back for the next question.
+    await expect(chips.first()).toBeVisible();
     const flow = page.locator('[data-flow="experience"]');
     const total = await flow.locator(":scope > [data-msg]").count();
     await expect(flow.locator(":scope > [data-msg][data-sent]")).toHaveCount(total, { timeout: 20_000 });
     await expect(chips.first()).toBeVisible();
+    // Escape leaves it as it is.
+    await page.locator("body").press("Escape");
+    await expect(chips.first()).toBeVisible();
+    // The visitor closes it, and it stays closed through the next answer.
     await page.getByRole("button", { name: "Hide the topics" }).click();
+    await expect(chips.first()).toBeHidden();
+    await page.getByRole("textbox", { name: "Ask about my work" }).fill("how do I reach you");
+    await page.getByRole("textbox", { name: "Ask about my work" }).press("Enter");
+    const contact = page.locator('[data-flow="contact"]');
+    await expect(contact.locator(".replies")).toBeVisible({ timeout: 20_000 });
     await expect(chips.first()).toBeHidden();
     await page.getByRole("button", { name: "Show every topic" }).click();
     await expect(chips.first()).toBeVisible();
