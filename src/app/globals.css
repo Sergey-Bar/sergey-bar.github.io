@@ -485,8 +485,23 @@
   line-height: 1.6;
   color: var(--color-muted);
 }
-.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
-.action.action-icon { width: 50px; padding: 0; }
+/* Minimal: an outline, an icon and its name; the only colour is the hover. */
+.hero-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; list-style: none; }
+.hero-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 18px 0 15px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 100px;
+  color: var(--color-ink);
+  font-size: 14.5px;
+  font-weight: 500;
+  transition: border-color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
+}
+.hero-link:hover { border-color: var(--color-ink); background: #ffffff0a; }
+.hero-link:active { transform: scale(0.97); }
 
 .hero-portrait {
   position: relative;
@@ -541,9 +556,8 @@
   /* On a phone the portrait leads, small, so the name is still on the first screen. */
   .hero-portrait { order: -1; width: 92px; margin: 4px 0 22px 5px; }
   .portrait-glow { inset: -30%; }
-  .hero-actions { gap: 10px; margin-top: 24px; }
-  .hero-actions .action-lg { min-height: 48px; padding-inline: 18px; font-size: 14.5px; }
-  .hero-actions .action.action-icon { width: 48px; padding: 0; }
+  .hero-links { gap: 8px; margin-top: 22px; }
+  .hero-link { padding: 0 15px 0 13px; font-size: 14px; }
   .hero-employers { margin-top: 40px; }
 }
 
@@ -562,7 +576,6 @@
   white-space: nowrap;
   transition: background-color var(--dur-hover) var(--ease-out), border-color var(--dur-hover) var(--ease-out), box-shadow var(--dur-ui) var(--ease-out), transform var(--dur-press) var(--ease-out);
 }
-.action-lg { min-height: 50px; padding: 12px 24px; font-size: 15px; }
 .action-primary {
   color: #fff;
   background: var(--grad);

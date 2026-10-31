@@ -19,19 +19,27 @@ export function Hero() {
           </h1>
           <p className="hero-role">{site.role}</p>
           <p className="hero-pitch">{hero.positioning}</p>
-          <div className="hero-actions">
-            <a href={contact.linkedin} className="action action-primary action-lg">
-              <LinkedInIcon size={17} />
-              Connect on LinkedIn
-            </a>
-            <a href={`mailto:${contact.email}?subject=CV%20request`} className="action action-secondary action-lg">
-              <MailIcon size={17} />
-              Request my CV
-            </a>
-            <a href={contact.github} className="action action-secondary action-lg action-icon" aria-label="GitHub">
-              <GitHubIcon size={18} />
-            </a>
-          </div>
+          {/* Three plain ways to reach the person, nothing louder than the name. */}
+          <ul className="hero-links" aria-label="Contact">
+            <li>
+              <a href={contact.linkedin} className="hero-link">
+                <LinkedInIcon size={16} />
+                LinkedIn
+              </a>
+            </li>
+            <li>
+              <a href={`mailto:${contact.email}`} className="hero-link">
+                <MailIcon size={16} />
+                Email
+              </a>
+            </li>
+            <li>
+              <a href={contact.github} className="hero-link">
+                <GitHubIcon size={16} />
+                GitHub
+              </a>
+            </li>
+          </ul>
         </div>
         <div className="hero-portrait">
           <span className="portrait-glow" aria-hidden="true" />

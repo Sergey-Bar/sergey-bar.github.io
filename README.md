@@ -29,7 +29,8 @@ never arrives cannot leave the screen up; and it never shows with motion
 under `prefers-reduced-motion`, or without JavaScript.
 
 The page opens on the hero: the name as the page's only `h1`, the role, the
-one-line pitch, three actions (LinkedIn, "Request my CV" by email, GitHub) and
+one-line pitch, three minimal links (LinkedIn, Email, GitHub: an outline, an icon
+and its name, no CV button) and
 the portrait, with the employers underneath on one line. The IAF emblem is
 the official one as drawn, white with navy line work. The wordmarks are white
 versions of each company's own logo, made for the dark ground and kept next

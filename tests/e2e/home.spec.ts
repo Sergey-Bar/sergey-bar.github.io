@@ -60,8 +60,14 @@ test.describe("the first screen", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Sergey Bar" })).toBeInViewport();
     await expect(page.locator(".hero-role")).toHaveText("QA Tech Lead & AI Automation Engineer");
     await expect(page.getByRole("img", { name: "Sergey Bar" })).toBeInViewport();
-    await expect(page.getByRole("link", { name: "Connect on LinkedIn" }).first()).toBeInViewport();
-    await expect(page.getByRole("link", { name: "Request my CV", exact: true })).toHaveAttribute("href", /^mailto:.*CV/);
+    // Three minimal links to reach the person, in view on the first screen, and no CV button.
+    const links = page.locator(".hero-links a");
+    await expect(links).toHaveText(["LinkedIn", "Email", "GitHub"]);
+    for (let i = 0; i < 3; i++) await expect(links.nth(i)).toBeInViewport();
+    await expect(links.nth(0)).toHaveAttribute("href", /linkedin\.com\/in\//);
+    await expect(links.nth(1)).toHaveAttribute("href", /^mailto:[^?]+$/);
+    await expect(links.nth(2)).toHaveAttribute("href", /github\.com\//);
+    await expect(page.locator(".hero").getByText(/CV/)).toHaveCount(0);
     // Nothing to sit through, and no job-board badge.
     await expect(page.locator(".boot")).toBeHidden();
     await expect(page.getByText("Open to work")).toHaveCount(0);
