@@ -300,6 +300,61 @@ test.describe("conversations", () => {
     await expect(page.locator('[data-flow="experience"]')).toHaveAttribute("data-sent", "", { timeout: 10_000 });
     await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat");
   });
+
+  test("a ?topic= link opens its answer under the topic's own address", async ({ page }) => {
+    await page.goto("/?topic=toolbox");
+    await expect(page.locator('[data-flow="toolbox"]')).toHaveAttribute("data-sent", "", { timeout: 10_000 });
+    await expect(page).toHaveURL(/\/#toolbox$/);
+  });
+
+  test("each answer has an address, and Back walks the answers before leaving", async ({ page }) => {
+    await enter(page);
+    await expect(page).toHaveURL(/\/$/);
+    await pressChip(page, "projects");
+    await expect(page).toHaveURL(/#projects$/);
+    await expect(page.locator('[data-flow="projects"] .replies')).toBeVisible({ timeout: 20_000 });
+    await pressChip(page, "contact");
+    await expect(page).toHaveURL(/#contact$/);
+    await expect(page.locator('[data-flow="contact"] .replies')).toBeVisible({ timeout: 20_000 });
+
+    await page.goBack();
+    await expect(page).toHaveURL(/#projects$/);
+    await expect(page.locator('[data-flow="projects"] > [data-msg]:not(.user)').first()).toBeInViewport();
+    await page.goBack();
+    await expect(page).toHaveURL(/localhost:\d+\/$/);
+    await expect(page.locator(".chat-shell")).toHaveAttribute("data-state", "chat");
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(5);
+
+    await page.goForward();
+    await expect(page).toHaveURL(/#projects$/);
+    // Every step stayed inside the one conversation: nothing was asked twice.
+    await expect(page.locator('[data-flow="projects"]')).toHaveCount(1);
+    await expect(page.locator(".entry").getByText("That one is above.")).toHaveCount(0);
+  });
+
+  test("a link reached by Tab is never hidden behind the composer", async ({ page, isMobile }) => {
+    test.skip(isMobile, "sequential focus is for devices with a keyboard");
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await enter(page);
+    await pressChip(page, "projects");
+    await expect(page.locator('[data-flow="projects"] .replies')).toBeVisible({ timeout: 20_000 });
+    await page.locator('[data-flow="projects"] > [data-msg]:not(.user)').first().click();
+    let checked = 0;
+    for (let i = 0; i < 12; i++) {
+      await page.keyboard.press("Tab");
+      const state = await page.evaluate(() => {
+        const el = document.activeElement as HTMLElement | null;
+        if (!el?.closest(".log")) return null;
+        const panel = document.querySelector(".composer-panel")!.getBoundingClientRect();
+        const box = el.getBoundingClientRect();
+        return { name: el.textContent?.trim().slice(0, 40), bottom: box.bottom, limit: panel.top };
+      });
+      if (!state) continue;
+      checked += 1;
+      expect(state.bottom, `"${state.name}" is under the composer`).toBeLessThanOrEqual(state.limit);
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
 });
 
 test.describe("composer", () => {
@@ -347,6 +402,56 @@ test.describe("composer", () => {
     await ask(page, "what is the meaning of life");
     await expect(page.locator(".entry").getByText(/don.t have an answer for that one yet/)).toBeVisible({ timeout: 10_000 });
     await expectAxeClean(page);
+  });
+
+  test("a long word breaks inside the visitor's bubble", async ({ page }) => {
+    await enter(page);
+    await ask(page, "x".repeat(140));
+    const bubble = page.locator(".entry .msg.user .bubble").last();
+    await expect(bubble).toBeVisible();
+    const fit = await bubble.evaluate((el) => ({
+      inside: el.scrollWidth <= el.clientWidth,
+      right: el.getBoundingClientRect().right,
+      viewport: document.documentElement.clientWidth,
+    }));
+    expect(fit.inside).toBe(true);
+    expect(fit.right).toBeLessThanOrEqual(fit.viewport);
+  });
+
+  const routes: [string, string][] = [
+    ["Do you know Java?", "toolbox"],
+    ["Postman", "toolbox"],
+    ["phone number", "contact"],
+    ["Can I get your CV?", "contact"],
+    ["where do you live", "about"],
+  ];
+  for (const [question, id] of routes) {
+    test(`"${question}" is answered by ${id}`, async ({ page }) => {
+      await enter(page);
+      await ask(page, question);
+      await expect(page.locator(`[data-flow="${id}"]`)).toHaveAttribute("data-sent", "", { timeout: 10_000 });
+    });
+  }
+
+  test("a tool the toolbox does not list is said so, not missed", async ({ page }) => {
+    await enter(page);
+    await ask(page, "Do you use Puppeteer?");
+    await expect(page.locator(".entry").getByText(/Puppeteer is not in my toolbox\./)).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.entry .chip[data-ask="toolbox"]')).toBeVisible();
+    await expect(page.locator(".entry").getByText(/don.t have an answer/)).toHaveCount(0);
+  });
+
+  test("a framework Mjolnir reads points to the project that reads it", async ({ page }) => {
+    await enter(page);
+    await ask(page, "Selenium");
+    await expect(page.locator(".entry").getByText(/Mjolnir, my open-source scanner, does read Selenium suites/)).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.entry .chip[data-ask="projects"]')).toBeVisible();
+  });
+
+  test("a greeting in Hebrew is answered as one", async ({ page }) => {
+    await enter(page);
+    await ask(page, "שלום");
+    await expect(page.locator(".entry").getByText(/Ask me anything about my work/)).toBeVisible({ timeout: 10_000 });
   });
 
   test("the slash key focuses the composer and Escape leaves it", async ({ page, isMobile }) => {

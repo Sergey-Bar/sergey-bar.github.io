@@ -200,6 +200,9 @@
     scroll-behavior: smooth;
     /* A sticky header or identity bar would otherwise cover an anchor target. */
     scroll-padding-top: 5.5rem;
+    /* Likewise the fixed composer, whose height the chat measures as it changes:
+       a link reached by Tab scrolls clear of it instead of focusing beneath it. */
+    scroll-padding-bottom: var(--composer-h, 0px);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1167,6 +1170,8 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 .msg.user { grid-template-columns: minmax(0, 1fr); justify-items: end; }
 .msg.user .bubble {
   max-width: 60ch;
+  /* The visitor's words are free text: a URL or one long word breaks inside the bubble. */
+  overflow-wrap: anywhere;
   border: 0;
   border-radius: 18px 18px 6px 18px;
   background: var(--grad);

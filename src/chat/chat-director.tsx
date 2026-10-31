@@ -181,6 +181,7 @@ export function ChatDirector({
   const introducedRef = useRef(false);
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const composerRef = useRef<HTMLFormElement>(null);
   const orderRef = useRef(0);
   const keyRef = useRef(0);
   const runRef = useRef(0);
@@ -396,6 +397,9 @@ export function ChatDirector({
 
         flow.style.order = String(++orderRef.current);
         flow.dataset.sent = "";
+        // Each answer is a place in the visit: the address names it, so it can
+        // be shared, and Back returns to it instead of leaving the site.
+        if (topicForHash(location.hash) !== id) history.pushState(null, "", `#${id}`);
         setAsked((prev) => new Set(prev).add(id));
         setDrawer(false);
         setChipsOpen(false);
@@ -603,6 +607,22 @@ export function ChatDirector({
           <QuickReplies ids={["about", "projects", "experience"]} />
         </>,
       );
+    } else if (route.kind === "unlisted") {
+      void reply(
+        text,
+        <>
+          <Bubble>
+            <p>
+              {route.tool} is not in my toolbox. It lists only the tools I have actually used,
+              grouped by the job each one does.
+            </p>
+            {route.scanned ? (
+              <p>Mjolnir, my open-source scanner, does read {route.tool} suites.</p>
+            ) : null}
+          </Bubble>
+          <QuickReplies ids={route.scanned ? ["projects", "toolbox"] : ["toolbox", "contact"]} />
+        </>,
+      );
     } else {
       void reply(
         text,
@@ -628,24 +648,66 @@ export function ChatDirector({
 
   /* ----------------------------------------------------------- effects */
 
-  /** A legacy anchor or `?topic=` opens that conversation on arrival. */
+  /**
+   * A legacy anchor or `?topic=` opens that conversation on arrival, under the
+   * topic's own address. Back and Forward walk the answers already given, and
+   * past the first one return to the top of the chat; an answer not yet given
+   * is asked. The scroll is ours: the browser restoring an old position would
+   * land mid-answer, or lift the intro on reload.
+   */
   useEffect(() => {
+    history.scrollRestoration = "manual";
     const fromUrl = () =>
       topicForHash(location.hash) ??
       topicForHash(new URLSearchParams(location.search).get("topic") ?? "");
     const initial = fromUrl();
-    if (initial) void ask(initial);
-    const onHash = () => {
+    if (initial) {
+      history.replaceState(null, "", `${location.pathname}#${initial}`);
+      void ask(initial);
+    }
+    // Fires for Back, Forward, an edited address and an in-page link alike.
+    const onNavigate = () => {
       const id = fromUrl();
-      if (!id) return;
+      const chat = rootRef.current?.dataset.state === "chat";
+      const behavior: ScrollBehavior = motionOff() ? "auto" : "smooth";
+      if (!id) {
+        if (!chat) return;
+        followRef.current = false;
+        window.scrollTo({ top: 0, behavior });
+        return;
+      }
       const flow = logRef.current?.querySelector<HTMLElement>(`[data-flow="${id}"]`);
-      // An answer already on screen: the browser's own jump to it is the whole response.
-      if (flow && "sent" in flow.dataset) return;
+      if (flow && "sent" in flow.dataset) {
+        followRef.current = false;
+        flow.scrollIntoView({ block: "start", behavior });
+        return;
+      }
       void ask(id);
     };
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
+    window.addEventListener("popstate", onNavigate);
+    return () => {
+      window.removeEventListener("popstate", onNavigate);
+      history.scrollRestoration = "auto";
+    };
   }, [ask]);
+
+  /**
+   * The composer's height, kept on the root as `--composer-h` for the page's
+   * scroll padding: it grows with the topics panel and is gone on the intro.
+   */
+  useEffect(() => {
+    const composer = composerRef.current;
+    if (!composer) return;
+    const root = document.documentElement;
+    const observer = new ResizeObserver(() => {
+      root.style.setProperty("--composer-h", `${Math.ceil(composer.offsetHeight)}px`);
+    });
+    observer.observe(composer);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--composer-h");
+    };
+  }, []);
 
   /** The typing indicator counts as a message for the view to follow. */
   useEffect(() => {
@@ -901,7 +963,7 @@ export function ChatDirector({
 
       {game ? <DestructionGame onClose={() => setGame(false)} /> : null}
 
-      <form className="composer" onSubmit={onSubmit}>
+      <form ref={composerRef} className="composer" onSubmit={onSubmit}>
         <div className="composer-panel" data-match={match ?? undefined}>
           {/* Every topic, behind the plus, led by reading mode and followed by
               the profiles as icons, so the panel stays two rows. Pressing a

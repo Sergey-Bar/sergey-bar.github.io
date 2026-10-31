@@ -36,8 +36,16 @@ Typed questions are routed by `routeInput` in `src/chat/topics.ts`: a keyword
 and phrase lookup, phrases outweighing words. A greeting gets a greeting; a
 question it cannot place gets an honest "I don't have an answer for that one"
 and the full list of topics. It is a lookup, not a model, and the reply says
-so. Legacy anchors (`/#projects`, `/#experience`, …) and `?topic=` open the
-matching conversation on arrival, so links to the old sections still land.
+so. Every tool name in the toolbox routes to it as a whole word, so "Java" or
+"Postman" is answered without a hand-kept keyword; a well-known tool the
+toolbox does not list ("Selenium") is answered as not listed, and where Mjolnir
+reads suites in it the reply says that too. Legacy anchors (`/#projects`,
+`/#experience`, …) and `?topic=` open the matching conversation on arrival, so
+links to the old sections still land.
+
+Each answer has an address: asking a topic sets `#<topic>`, so the address bar
+can be shared, and Back and Forward walk the answers already given (to the top
+of the chat past the first) before Back leaves the site.
 
 The view follows the conversation the way a reader would: the question is
 pinned under the identity bar and replies fill the screen beneath it; once they
