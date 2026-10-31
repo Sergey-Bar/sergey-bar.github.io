@@ -320,21 +320,24 @@
 
 /* ---------------------------------------------------------------------------
    Scroll reveals (stagger groups inside cards).
-   The hidden state exists only when JavaScript has announced itself, the OS
-   has not asked for reduced motion, and the visitor has not paused motion.
+   The hidden state exists only for what the director armed (off screen when
+   the page opened), and only while motion is on: a reload never blinks what
+   is already in view.
    --------------------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: no-preference) {
-  [data-reveal],
-  [data-reveal-stagger] > * {
+  /* Arming hides at once (off screen, unseen); only the arrival is animated. */
+  [data-reveal][data-in],
+  [data-reveal-stagger][data-in] > * {
     transition:
       opacity var(--dur-reveal) var(--ease-out),
       transform var(--dur-reveal) var(--ease-out);
     transition-delay: calc(var(--reveal-i, 0) * var(--stagger));
   }
 
-  :root[data-js]:not([data-motion="off"]) [data-reveal]:not([data-in]),
-  :root[data-js]:not([data-motion="off"]) [data-reveal-stagger]:not([data-in]) > * {
+  /* Only what the director armed, being off screen when the page opened. */
+  :root[data-js]:not([data-motion="off"]) [data-reveal][data-armed]:not([data-in]),
+  :root[data-js]:not([data-motion="off"]) [data-reveal-stagger][data-armed]:not([data-in]) > * {
     opacity: 0;
     transform: translateY(20px);
   }
@@ -342,7 +345,7 @@
   [data-reveal="rule"] {
     transform-origin: left center;
   }
-  :root[data-js]:not([data-motion="off"]) [data-reveal="rule"]:not([data-in]) {
+  :root[data-js]:not([data-motion="off"]) [data-reveal="rule"][data-armed]:not([data-in]) {
     opacity: 1;
     transform: scaleX(0);
   }
@@ -950,7 +953,7 @@
 .meter-scale { display: flex; justify-content: space-between; margin-top: 8px; }
 @media (prefers-reduced-motion: no-preference) {
   .meter-fill { transition: transform 1200ms var(--ease-out) 240ms; }
-  :root[data-js]:not([data-motion="off"]) [data-reveal="meter"]:not([data-in]) .meter-fill { transform: scaleX(0); }
+  :root[data-js]:not([data-motion="off"]) [data-reveal="meter"][data-armed]:not([data-in]) .meter-fill { transform: scaleX(0); }
 }
 
 .experience-entry { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: 28px; }
@@ -1051,33 +1054,27 @@
 
 /* --- After hours: the button ------------------------------------------------ */
 
+/* The game's own button: a plain, confident pill. */
 .fun-button {
-  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  min-height: 60px;
-  padding: 14px 30px;
+  justify-content: center;
+  gap: 10px;
+  min-width: 168px;
+  min-height: 54px;
+  padding: 12px 30px;
   border-radius: 100px;
   background: var(--grad);
   color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 14px 40px #0a66c24d;
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.2), 0 12px 32px -8px #0a66c280;
   transition: transform var(--dur-press) var(--ease-out), box-shadow var(--dur-ui) var(--ease-out);
 }
-.fun-button::before {
-  content: "";
-  position: absolute;
-  inset: -6px;
-  border-radius: inherit;
-  border: 2px solid color-mix(in oklab, var(--color-c-sky) 55%, transparent);
-  pointer-events: none;
-}
-.fun-button:hover { transform: translateY(-2px); box-shadow: 0 18px 50px #2d8cff66; }
-.fun-button:active { transform: scale(0.96); }
+.fun-button:hover { box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.2), 0 16px 40px -8px #2d8cffaa; }
+.fun-button:active { transform: scale(0.97); }
 .fun-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; }
 .fun-text { margin-top: 10px; max-width: 54ch; font-size: 15.5px; line-height: 1.7; color: var(--color-muted); }
 .fun-text code {
@@ -1121,7 +1118,6 @@
   box-shadow: var(--well);
   text-align: center;
 }
-.fun-zone .fun-button { padding: 14px 24px; font-size: 14px; }
 .fun-keys { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; list-style: none; font-size: 14px; color: var(--color-muted); }
 .fun-keys kbd {
   display: inline-grid;
@@ -1142,11 +1138,6 @@
 @media (max-width: 63.99rem) {
   .fun-grid { grid-template-columns: 1fr; }
 }
-@keyframes fun-pulse { 0%, 100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 0; transform: scale(1.12); } }
-@media (prefers-reduced-motion: no-preference) {
-  :root:not([data-motion="off"]) .fun-button::before { animation: fun-pulse 2.4s var(--ease-out) infinite; }
-}
-
 /* The game's level-up and streak banner: it lands on the spring, holds, and
    fades. With motion off it simply shows for its moment. */
 @keyframes hud-banner {
@@ -1485,7 +1476,11 @@
 :root[data-boot="lifting"] .boot { animation: boot-out 360ms var(--ease-out) both; }
 :root[data-boot="handover"] .boot { animation: none; background-color: transparent; transition: background-color 820ms var(--ease-in-out); }
 :root[data-boot="handover"] .boot::before { opacity: 0; transition: opacity 600ms var(--ease-out); }
-:root[data-boot="handover"] .boot-line { opacity: 0; transition: opacity 160ms linear; }
+/* An animation, not a transition: the line's own entrance holds its opacity,
+   and only another animation can take it away. */
+:root[data-boot="handover"] .boot-line,
+:root[data-boot="lifting"] .boot-line { animation: boot-line-out 160ms linear both; }
+@keyframes boot-line-out { to { opacity: 0; } }
 /* The hero's own name and role wait under the screen, so the two never show
    at once; the late fallback shows them even if the director never runs. */
 :root[data-boot] .hero-name,
@@ -1522,18 +1517,22 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  max-width: 100%;
   margin-top: 34px;
+  white-space: nowrap;
   font-family: var(--font-mono);
   font-size: 13px;
   color: var(--color-muted);
   animation: boot-fade 600ms var(--ease-out) 320ms both;
 }
 .boot-caret { color: var(--color-c-sky); }
+/* On the narrowest screens a line ends in an ellipsis rather than wrapping. */
+.boot-line [data-boot-line] { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .boot-cursor { display: inline-block; width: 7px; height: 15px; border-radius: 1px; background: var(--color-c-sky); animation: blink 1s steps(1) infinite; }
 @keyframes boot-rise { from { opacity: 0; transform: translateY(18px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
 @keyframes boot-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes boot-out { to { opacity: 0; visibility: hidden; } }
 @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 @media (max-width: 47.99rem) {
-  .boot-line { font-size: 12px; max-width: 32ch; text-align: left; }
+  .boot-line { font-size: 12px; }
 }

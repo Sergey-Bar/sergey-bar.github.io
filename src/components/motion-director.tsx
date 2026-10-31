@@ -140,13 +140,25 @@ export function MotionDirector() {
       return;
     }
 
+    // Nothing is hidden until this decides. The observer's first report is
+    // the page as it opened: whatever is on screen then (a reload that
+    // restores the scroll, an address that lands on a section) is left as it
+    // is, and only what is off screen is armed, hidden where no one sees it,
+    // to arrive when it scrolls in.
+    let opening = true;
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
+          const node = entry.target as HTMLElement;
+          if (opening && !entry.isIntersecting) {
+            node.dataset.armed = "";
+            continue;
+          }
           if (!entry.isIntersecting) continue;
-          (entry.target as HTMLElement).dataset.in = "";
-          observer.unobserve(entry.target);
+          node.dataset.in = "";
+          observer.unobserve(node);
         }
+        opening = false;
       },
       { rootMargin: "0px 0px -8% 0px", threshold: 0 },
     );

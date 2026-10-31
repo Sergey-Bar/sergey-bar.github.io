@@ -13,6 +13,9 @@ function splitValue(value: string) {
  * A verified figure that counts up the first time it scrolls into view. The
  * server render, a visitor without JavaScript and a visitor who asks for
  * reduced motion all get the final value; only the animation is conditional.
+ * A figure already on screen when the page opens (a reload that restores the
+ * scroll, an address that lands on its section) is simply shown: counting up
+ * what the reader is already looking at is a flicker, not an arrival.
  */
 export function CountUp({ value }: { value: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -45,10 +48,16 @@ export function CountUp({ value }: { value: string }) {
       if (t < 1) frame = requestAnimationFrame(step);
     };
 
+    // The observer's first report is the page as it opened.
+    let opening = true;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
+        const arrived = entries.some((entry) => entry.isIntersecting);
+        const onScreenAtOpen = opening;
+        opening = false;
+        if (!arrived) return;
         observer.disconnect();
+        if (onScreenAtOpen) return;
         frame = requestAnimationFrame(step);
       },
       { threshold: 0.35 },

@@ -39,18 +39,19 @@ type Reply =
 
 /**
  * One line per opening, in turn, remembered across visits, so a returning
- * visitor reads the next one rather than the same joke twice.
+ * visitor reads the next one rather than the same joke twice. Each is short
+ * enough to stay on one line on a phone.
  */
 const BOOT_LINES: readonly string[] = [
-  "Negotiating with the release gate… it wants evidence.",
-  "Convincing the flaky test to pass. Just once.",
-  "Teaching the AI to say “I don't know”. Harder than it sounds.",
-  "Counting open bugs. Lost count. Counting again.",
-  "Hiding the button you are told not to press.",
-  "Checking whether it works on my machine. It does. Suspicious.",
-  "Reading the fourteen recommendations again. Still blushing.",
-  "Running the scan on this page. The page is fine. The page is nervous.",
+  "Negotiating with the release gate…",
+  "Convincing the flaky test to pass.",
+  "Teaching the AI to say “I don't know”.",
+  "Counting open bugs. Lost count.",
+  "Works on my machine. Suspicious.",
+  "Rereading the recommendations…",
+  "Running the scan on this page…",
   "Asking the termites to wait outside.",
+  "Warming up the chain-saw.",
 ];
 
 function nextBootLine(): string {

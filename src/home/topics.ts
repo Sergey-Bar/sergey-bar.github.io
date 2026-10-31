@@ -175,7 +175,7 @@ export const topics: readonly Topic[] = [
     id: "fun",
     label: "Something fun",
     prompt: "Show me something fun",
-    description: "An after-hours experiment: the button you are told not to press",
+    description: "After hours: a small game, timed, about wrecking a release machine",
     keywords: ["fun", "game", "button", "play", "toy", "bored", "easter", "secret", "surprise"],
     hashes: ["fun", "play"],
   },

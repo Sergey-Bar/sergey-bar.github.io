@@ -15,8 +15,8 @@ the record at once; nothing on the page waits for anything.
 
 The first visit of a browser session opens on a short screen: the name rising
 in like a heading, the role, and one line that pretends to boot the page
-("Negotiating with the release gate… it wants evidence."), a different one
-each time. After a little over a second, or at once on a tap, a key, a wheel
+("Negotiating with the release gate…"), a different one each time and each
+short enough to stay on one line on a phone. After a little over a second, or at once on a tap, a key, a wheel
 or a swipe, it hands over to the hero: the name and the role glide from the
 centre into their places in the hero (measured from the text boxes, scaled by
 the font sizes) while the screen's ground fades round them, and the hero's own
@@ -30,12 +30,12 @@ paused, under `prefers-reduced-motion`, or without JavaScript.
 
 The page opens on the hero: the name as the page's only `h1`, the role, the
 one-line pitch, three actions (LinkedIn, "Request my CV" by email, GitHub) and
-the portrait, with the employers underneath on one line. Each mark is a white
-version of the company's own logo, made for the dark ground and kept next to
-its source in `public/logos/` (`*-on-dark`): FLIR without its tagline, Nova
-without the small print that turned to dots, the IAF emblem's navy line work
-turned white, Enabley without the outline and shadow baked into its PNG, HP in
-white. Then eight
+the portrait, with the employers underneath on one line. The IAF emblem is
+the official one as drawn, white with navy line work. The wordmarks are white
+versions of each company's own logo, made for the dark ground and kept next
+to their sources in `public/logos/` (`*-on-dark`): FLIR without its tagline,
+Nova without the small print that turned to dots, Enabley without the outline
+and shadow baked into its PNG, HP in white. Then eight
 numbered sections, each an `h2` with a lead paragraph and its cards: About me,
 Experience, Toolbox, Recommendations, Projects, Case studies, Contact,
 Something fun. Long cards keep progressive disclosure: a project shows its
@@ -130,13 +130,14 @@ Next.js 15 App Router · TypeScript · Tailwind v4 · one shadcn/ui primitive
 No animation library. Motion is one vocabulary in `globals.css`: `--ease-out`
 for anything entering, `--ease-in-out` for anything moving on screen,
 `--ease-spring` (a damped spring sampled into `linear()`, under 4% overshoot)
-for what lands (message arrivals, the topic chips), never
-ease-in on a control, interaction feedback under 300ms, and the longer
-durations reserved for the page-load sequence (the name and role rise word by
-word through a mask; the portrait, quote and actions follow) and for message
-arrivals, which are CSS animations and run off the main thread. The portrait
-itself does not move: it arrives once and settles after a few seconds, and
-only the thin ring around it turns. A soft light follows a fine pointer across
+for what lands, never ease-in on a control, interaction feedback under 300ms,
+and the longer durations reserved for the opening screen and for content that
+scrolls into view. Nothing is hidden for an entrance until the motion director
+has looked: its observer's first report is the page as it opened, and only
+what is off screen then is armed (`data-armed`) to fade in and count up when
+it arrives. A reload that restores the scroll, or an address that lands on a
+section, shows what is in view as it is, with the final figures, so a refresh
+never blinks. The portrait does not move; only the thin ring around it turns. A soft light follows a fine pointer across
 the page, moved on the compositor from window-level events so it can never be
 left behind; it fades when the pointer leaves the document and does not exist
 on touch screens. Looping ambience (the ring, the status
@@ -148,7 +149,7 @@ be read, so motion off changes only the light.
 
 The toolbox has a small search island, matching disciplines and tool names.
 Group content is server-rendered, with a live result count and clear empty state.
-The game opens from the "do not press" button in the "Something fun" section. It is a `next/dynamic` chunk that is never referenced by the HTML, so
+The game opens from the "Play" button in the "Something fun" section. It is a `next/dynamic` chunk that is never referenced by the HTML, so
 the budget script never sees it: the full canvas toy (nine tools, particles,
 termites, its sound) downloads only when someone opens it.
 
@@ -308,8 +309,9 @@ The last section introduces the game from its own facts: a mock early-2000s
 desktop (`bugs.exe` and `release-gate.yml` included) to take down to zero
 integrity, the nine tools as the game draws them (read from `TOOLS` in
 `src/components/destruction-tools.tsx`, so the list cannot drift), streaks
-named the way QA names them and ranks from Intern to Legend. The "do not press"
-button sits in its own striped well with the two keys that matter.
+named the way QA names them and ranks from Intern to Legend. The "Play" button
+(`PlayButton`, a plain pill with no pulse) sits in its own striped well with
+the two keys that matter.
 
 ## Readability
 

@@ -5,7 +5,7 @@ import { ExperienceRecord } from "@/components/experience-record";
 import { MjolnirConsole } from "@/components/mjolnir-console";
 import { RecommendationCard } from "@/components/recommendation-card";
 import { TOOLS } from "@/components/destruction-tools";
-import { RedButton } from "@/components/red-button";
+import { PlayButton } from "@/components/play-button";
 import { StatusChip } from "@/components/status-chip";
 import { TechnicalTag } from "@/components/technical-tag";
 import { ToolGroup } from "@/components/tool-group";
@@ -435,7 +435,7 @@ function FunSection() {
             </ul>
           </div>
           <div className="fun-zone">
-            <RedButton />
+            <PlayButton />
             <ul className="fun-keys" aria-label="Controls">
               <li>
                 <kbd>Tab</kbd> next tool

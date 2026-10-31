@@ -388,7 +388,7 @@ test.describe("the ask bar", () => {
 test.describe("something fun", () => {
   test("the button opens the game, Escape closes it, and the page is as it was", async ({ page }) => {
     await page.goto("/#fun");
-    await page.getByRole("button", { name: "DO NOT PRESS THIS BUTTON" }).click();
+    await page.getByRole("button", { name: "Play", exact: true }).click();
     const game = page.getByRole("dialog");
     await expect(game).toBeVisible();
     await expect(game.getByRole("button", { name: /sound/i })).toBeVisible();
@@ -415,13 +415,13 @@ test.describe("content", () => {
     await expect(page.locator("#toolbox").getByText(/Used to build and to review/)).toHaveCount(0);
   });
 
-  test("the employers are the white marks made for the dark ground", async ({ page }) => {
+  test("the employers are the IAF emblem as drawn and white wordmarks for the dark ground", async ({ page }) => {
     await page.goto("/");
     const marks = page.locator(".employers img");
     await expect(marks).toHaveCount(5);
-    for (const src of await marks.evaluateAll((imgs) => imgs.map((img) => img.getAttribute("src")))) {
-      expect(src).toMatch(/-on-dark\.(svg|png)$/);
-    }
+    const sources = await marks.evaluateAll((imgs) => imgs.map((img) => img.getAttribute("src")));
+    expect(sources[0]).toBe("/logos/iaf-emblem.svg");
+    for (const src of sources.slice(1)) expect(src).toMatch(/-on-dark\.(svg|png)$/);
     for (let i = 0; i < 5; i++) await expect(marks.nth(i)).toHaveJSProperty("complete", true);
   });
 
@@ -429,7 +429,7 @@ test.describe("content", () => {
     await page.goto("/#fun");
     await expect(page.locator("#fun .fun-tools li")).toHaveCount(9);
     await expect(page.locator("#fun .card-title")).toHaveText("Wreck the release machine");
-    await expect(page.locator("#fun .fun-zone").getByRole("button", { name: "DO NOT PRESS THIS BUTTON" })).toBeVisible();
+    await expect(page.locator("#fun .fun-zone").getByRole("button", { name: "Play", exact: true })).toBeVisible();
   });
 });
 
