@@ -9,14 +9,28 @@ import { expect, test, type Page } from "@playwright/test";
 
 const SECTIONS = [
   ["about", "About me"],
+  ["experience", "Experience"],
+  ["toolbox", "Toolbox"],
+  ["recommendations", "Recommendations"],
   ["projects", "Projects"],
   ["cases", "Case studies"],
-  ["experience", "Experience"],
-  ["recommendations", "Recommendations"],
-  ["toolbox", "Toolbox"],
   ["contact", "Contact"],
   ["fun", "Something fun"],
 ] as const;
+
+/**
+ * The opening screen shows once per browser session. Every spec but the ones
+ * about it starts as a visitor who has already seen it.
+ */
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      sessionStorage.setItem("booted", "1");
+    } catch {
+      /* A page without storage simply sees the screen. */
+    }
+  });
+});
 
 async function expectAxeClean(page: Page) {
   const results = await new AxeBuilder({ page })
@@ -48,8 +62,9 @@ test.describe("the first screen", () => {
     await expect(page.getByRole("img", { name: "Sergey Bar" })).toBeInViewport();
     await expect(page.getByRole("link", { name: "Connect on LinkedIn" }).first()).toBeInViewport();
     await expect(page.getByRole("link", { name: "Request my CV", exact: true })).toHaveAttribute("href", /^mailto:.*CV/);
-    // No loader, no intro to sit through.
-    await expect(page.locator("[data-loader], .intro, .typing")).toHaveCount(0);
+    // Nothing to sit through, and no job-board badge.
+    await expect(page.locator(".boot")).toBeHidden();
+    await expect(page.getByText("Open to work")).toHaveCount(0);
   });
 
   test("the page is one document: one h1, then every section as an h2, in order", async ({ page }) => {
@@ -80,6 +95,39 @@ test.describe("the first screen", () => {
   });
 });
 
+test.describe("the opening screen", () => {
+  test("shows once a session, lifts by itself, and is gone on the next load", async ({ context }) => {
+    const page = await context.newPage();
+    await page.goto("/");
+    const boot = page.locator(".boot");
+    await expect(boot).toBeVisible();
+    await expect(boot.locator(".boot-title")).toHaveText("Sergey Bar");
+    // The page is already there underneath it.
+    await expect(page.getByRole("heading", { level: 1, name: "Sergey Bar" })).toBeAttached();
+    await expect(boot).toBeHidden({ timeout: 4_000 });
+    await page.reload();
+    await expect(page.locator("html")).not.toHaveAttribute("data-boot");
+    await expect(boot).toBeHidden();
+  });
+
+  test("a key lifts it at once", async ({ context }) => {
+    const page = await context.newPage();
+    await page.goto("/");
+    await expect(page.locator(".boot")).toBeVisible();
+    await page.keyboard.press("ArrowDown");
+    await expect(page.locator(".boot")).toBeHidden({ timeout: 1_000 });
+  });
+
+  test("never shows when the system asks for reduced motion", async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto("http://localhost:4173/");
+    await expect(page.locator("html")).not.toHaveAttribute("data-boot");
+    await expect(page.locator(".boot")).toBeHidden();
+    await context.close();
+  });
+});
+
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
@@ -91,7 +139,44 @@ test.describe("without JavaScript", () => {
   });
 });
 
+test.describe("projects", () => {
+  test("lead with a few words; the rest opens on request", async ({ page }) => {
+    await page.goto("/#projects");
+    const card = page.locator("#projects .card").first();
+    await expect(card.locator(".card-title")).toHaveText("Mjolnir");
+    await expect(card.locator(".card-stat-value")).toBeVisible();
+    await expect(card.getByRole("link", { name: "Open on GitHub" })).toBeVisible();
+    const detail = card.locator(".more");
+    await expect(detail).not.toHaveAttribute("open");
+    await expect(card.locator(".facts")).toBeHidden();
+    await detail.locator("summary").click();
+    await expect(card.locator(".facts")).toBeVisible();
+  });
+});
+
 test.describe("contents", () => {
+  test("the pause control is a row of the sidebar that overlaps nothing", async ({ page, isMobile }) => {
+    await page.goto("/");
+    if (isMobile) await page.getByRole("button", { name: "Contents", exact: true }).click();
+    const toggle = page.getByRole("button", { name: "Pause motion" });
+    await expect(toggle).toBeVisible();
+    const clash = await page.evaluate(() => {
+      const control = document.querySelector(".motion-toggle")!.getBoundingClientRect();
+      const others = Array.from(document.querySelectorAll<HTMLElement>(".sidebar a, .sidebar button, .sidebar p"))
+        .filter((el) => !el.classList.contains("motion-toggle") && el.getBoundingClientRect().width > 0);
+      return others
+        .filter((el) => {
+          const box = el.getBoundingClientRect();
+          return box.left < control.right && box.right > control.left && box.top < control.bottom && box.bottom > control.top;
+        })
+        .map((el) => el.textContent?.trim());
+    });
+    expect(clash).toEqual([]);
+    await toggle.click();
+    await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
+    await expect(page.getByRole("button", { name: "Resume motion" })).toBeVisible();
+  });
+
   test("list every section, numbered, and mark the one in view", async ({ page }) => {
     await page.goto("/");
     const nav = await contents(page);
@@ -154,6 +239,7 @@ test.describe("the ask bar", () => {
     await expect(chips).toHaveCount(SECTIONS.length);
     await expect(chips.first()).toBeVisible();
     await expect(page.locator(".composer .chip-route")).toHaveCount(3);
+    await expect(page.locator(".composer .ultra")).toHaveText("Ultra");
     await chips.filter({ hasText: "Projects" }).click();
     await expect(heading(page, "projects")).toBeInViewport();
     await expect(chips.first()).toBeVisible();
@@ -261,7 +347,7 @@ test.describe("the ask bar", () => {
   test("the slash key focuses the field and Escape leaves it", async ({ page, isMobile }) => {
     test.skip(isMobile, "keyboard shortcuts are for devices with a keyboard");
     await page.goto("/");
-    await page.locator("body").click({ position: { x: 600, y: 300 } });
+    await page.locator(".hero-pitch").click();
     await page.keyboard.press("/");
     await expect(field(page)).toBeFocused();
     await page.keyboard.press("Escape");
@@ -304,21 +390,20 @@ test.describe("something fun", () => {
   });
 });
 
-test.describe("routes", () => {
-  for (const path of ["/projects/", "/colophon/", "/accessibility/"]) {
-    test(`${path} renders and passes the accessibility audit`, async ({ page }) => {
-      await page.goto(path);
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      await expect(page.getByRole("link", { name: "LinkedIn" }).first()).toBeVisible();
-      await expectAxeClean(page);
-    });
-  }
-
-  test("a missing page says so and links every section", async ({ page }) => {
+test.describe("the 404", () => {
+  test("says so and links every section", async ({ page }) => {
     const response = await page.goto("/no-such-page/");
     expect(response?.status()).toBe(404);
     await expect(page).toHaveTitle(/Page not found/);
     await expect(page.getByRole("heading", { level: 1, name: "Page not found" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Projects" }).first()).toHaveAttribute("href", /#projects/);
+    await expectAxeClean(page);
+  });
+
+  test("the old long pages are gone", async ({ page }) => {
+    for (const path of ["/projects/", "/colophon/", "/accessibility/"]) {
+      const response = await page.goto(path);
+      expect(response?.status(), path).toBe(404);
+    }
   });
 });

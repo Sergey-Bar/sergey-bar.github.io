@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { Card, More, Note, Section } from "@/home/blocks";
 import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
 import { CountUp } from "@/components/count-up";
@@ -124,39 +122,41 @@ function ProjectsSection() {
             </div>
           ) : null}
           <p className="t-title text-ink">{project.tagline}</p>
-          <p className="mt-3 t-body text-muted">{project.about}</p>
-          <dl className="facts">
-            {project.facts.map((fact) => (
-              <div key={fact.label}>
-                <dt className="data text-muted">{fact.label}</dt>
-                <dd className="mt-1 t-small font-medium text-ink tabular-nums">{fact.value}</dd>
-              </div>
-            ))}
-          </dl>
-          {project.slug === "mjolnir" ? (
-            <MjolnirConsole />
-          ) : (
-            <figure className="evidence-panel mt-8">
-              <figcaption className="t-title">How evidence moves through Automate</figcaption>
-              <ol className="evidence-flow">
-                <li>
-                  <strong>Test producers</strong>
-                  <span>Playwright · JUnit · legacy reporters</span>
-                </li>
-                <li>
-                  <strong>Shared result model</strong>
-                  <span>Results and persisted run evidence</span>
-                </li>
-                <li>
-                  <strong>Quality gates</strong>
-                  <span>Policies that inform release decisions</span>
-                </li>
-              </ol>
-              <p className="mt-5 t-small text-muted">
-                Architecture overview. Capability limits are listed above and in the repository.
-              </p>
-            </figure>
-          )}
+          <More label="How it works, and the numbers">
+            <p className="t-body text-muted">{project.about}</p>
+            <dl className="facts">
+              {project.facts.map((fact) => (
+                <div key={fact.label}>
+                  <dt className="data text-muted">{fact.label}</dt>
+                  <dd className="mt-1 t-small font-medium text-ink tabular-nums">{fact.value}</dd>
+                </div>
+              ))}
+            </dl>
+            {project.slug === "mjolnir" ? (
+              <MjolnirConsole />
+            ) : (
+              <figure className="evidence-panel mt-8">
+                <figcaption className="t-title">How evidence moves through Automate</figcaption>
+                <ol className="evidence-flow">
+                  <li>
+                    <strong>Test producers</strong>
+                    <span>Playwright · JUnit · legacy reporters</span>
+                  </li>
+                  <li>
+                    <strong>Shared result model</strong>
+                    <span>Results and persisted run evidence</span>
+                  </li>
+                  <li>
+                    <strong>Quality gates</strong>
+                    <span>Policies that inform release decisions</span>
+                  </li>
+                </ol>
+                <p className="mt-5 t-small text-muted">
+                  Architecture overview. Capability limits are listed above and in the repository.
+                </p>
+              </figure>
+            )}
+          </More>
           <div className="card-actions">
             <a href={project.repo} className="action action-primary">
               <GitHubIcon size={15} />
@@ -166,13 +166,6 @@ function ProjectsSection() {
           </div>
         </Card>
       ))}
-      <Note>
-        The long version, with each repository&apos;s full design argument, is on the{" "}
-        <Link href="/projects/" className="link-underline">
-          projects page
-        </Link>
-        .
-      </Note>
     </Section>
   );
 }
@@ -246,11 +239,11 @@ function CasesSection() {
       ))}
       <Note>
         This site is tested the same way: a Playwright suite runs every section, the ask bar and
-        an accessibility audit on each deploy, and the{" "}
-        <Link href="/colophon/" className="link-underline">
-          colophon
-        </Link>{" "}
-        links the latest report.
+        an accessibility audit on each deploy, and publishes{" "}
+        <a href="/qa/report/" className="link-underline">
+          the latest report
+        </a>
+        .
       </Note>
     </Section>
   );
@@ -442,11 +435,11 @@ export function Sections() {
   return (
     <>
       <AboutSection />
+      <ExperienceSection />
+      <ToolboxSection />
+      <RecommendationsSection />
       <ProjectsSection />
       <CasesSection />
-      <ExperienceSection />
-      <RecommendationsSection />
-      <ToolboxSection />
       <ContactSection />
       <FunSection />
     </>

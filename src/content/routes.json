@@ -4,23 +4,5 @@
     "file": "index.html",
     "priority": 1,
     "label": "Home"
-  },
-  {
-    "href": "/projects/",
-    "file": "projects/index.html",
-    "priority": 0.9,
-    "label": "Projects"
-  },
-  {
-    "href": "/colophon/",
-    "file": "colophon/index.html",
-    "priority": 0.5,
-    "label": "Colophon"
-  },
-  {
-    "href": "/accessibility/",
-    "file": "accessibility/index.html",
-    "priority": 0.4,
-    "label": "Accessibility"
   }
 ]

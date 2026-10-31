@@ -30,20 +30,10 @@ export const contact = {
   questions: "https://github.com/Sergey-Bar/sergey-bar.github.io/issues/new",
 } as const;
 
-export type NavItem = { label: string; href: string };
-
-export const nav: readonly NavItem[] = [
-  { label: "Home", href: "/" },
-  { label: "Projects", href: "/projects/" },
-  { label: "Case studies", href: "/#cases" },
-  { label: "Experience", href: "/#experience" },
-  { label: "Colophon", href: "/colophon/" },
-];
 export const availability = {
   /**
    * Two lanes, stated plainly: the QA track and the management track the CV
    * and the profile are both open to.
    */
-  text: "Open to work",
   roles: ["QA Roles", "Product Management", "Project Management"],
 } as const;

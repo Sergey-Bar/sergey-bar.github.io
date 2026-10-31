@@ -1,39 +1,103 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const STORAGE_KEY = "motion";
+/** Fired on the window when the visitor pauses or resumes, so every control and effect agrees. */
+const CHANGE_EVENT = "motion-change";
+/** The choice for this page view, kept here too in case storage is unavailable. */
+let pausedNow: boolean | null = null;
+
+function readPaused(): boolean {
+  if (pausedNow !== null) return pausedNow;
+  try {
+    pausedNow = localStorage.getItem(STORAGE_KEY) === "off";
+  } catch {
+    /* Private mode or storage disabled: motion simply does not persist. */
+    pausedNow = false;
+  }
+  return pausedNow;
+}
 
 /**
- * One shared motion preference, plus the one thing on this site that needs
- * JavaScript to happen at all: the scroll reveals. Everything else is CSS.
- *
- * The preference is three-way. The OS can ask for reduced motion, in which
- * case the control is disabled and says so. Otherwise the visitor can pause
+ * The shared motion preference. The OS can ask for reduced motion, in which
+ * case nothing moves and the control says so. Otherwise the visitor can pause
  * motion, and the choice persists in localStorage so the next page load
  * honours it before the first paint: the inline flag in layout.tsx reads the
  * same key and sets `data-motion="off"` on the root before the body parses.
  */
-export function MotionDirector() {
-  const pathname = usePathname();
+export function useMotion() {
   const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
-    try {
-      setPaused(localStorage.getItem(STORAGE_KEY) === "off");
-    } catch {
-      /* Private mode or storage disabled: motion simply does not persist. */
-    }
+    setPaused(readPaused());
+    const onChange = () => setPaused(readPaused());
+    window.addEventListener(CHANGE_EVENT, onChange);
     const media = matchMedia("(prefers-reduced-motion: reduce)");
     const update = () => setReduced(media.matches);
     update();
     media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
+    return () => {
+      window.removeEventListener(CHANGE_EVENT, onChange);
+      media.removeEventListener("change", update);
+    };
   }, []);
 
-  const enabled = !paused && !reduced;
+  const toggle = useCallback(() => {
+    pausedNow = !readPaused();
+    try {
+      if (pausedNow) localStorage.setItem(STORAGE_KEY, "off");
+      else localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* See readPaused. */
+    }
+    window.dispatchEvent(new Event(CHANGE_EVENT));
+  }, []);
+
+  return { paused, reduced, enabled: !paused && !reduced, toggle };
+}
+
+/**
+ * The visitor's pause control, a labelled row rather than a floating button:
+ * it lives in the place the page gives it (the sidebar's foot on the home
+ * page), so it can never sit on top of anything.
+ */
+export function MotionToggle({ className = "" }: { className?: string }) {
+  const { reduced, enabled, toggle } = useMotion();
+  const label = reduced ? "Motion reduced by your system" : enabled ? "Pause motion" : "Resume motion";
+  return (
+    <button
+      className={`motion-toggle ${className}`}
+      type="button"
+      aria-pressed={!enabled}
+      disabled={reduced}
+      onClick={toggle}
+    >
+      {enabled ? (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+          <rect x="6" y="5" width="4" height="14" rx="1" />
+          <rect x="14" y="5" width="4" height="14" rx="1" />
+        </svg>
+      ) : (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+          <path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5Z" />
+        </svg>
+      )}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+/**
+ * The site's motion effects: the root flag the stylesheet reads, the scroll
+ * reveals and the light that follows the pointer. It renders nothing; the
+ * control that pauses it is `MotionToggle`, placed by the page.
+ */
+export function MotionDirector() {
+  const pathname = usePathname();
+  const { enabled } = useMotion();
 
   const wasOffRef = useRef(false);
   useEffect(() => {
@@ -43,17 +107,6 @@ export function MotionDirector() {
     if (enabled && wasOffRef.current) root.dataset.resumed = "";
     if (!enabled) wasOffRef.current = true;
   }, [enabled]);
-
-  const toggle = () => {
-    const next = !paused;
-    setPaused(next);
-    try {
-      if (next) localStorage.setItem(STORAGE_KEY, "off");
-      else localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      /* See above. */
-    }
-  };
 
   /**
    * Scroll reveals. Each `[data-reveal]` element, and each `[data-reveal-stagger]`
@@ -160,28 +213,5 @@ export function MotionDirector() {
     };
   }, [enabled, pathname]);
 
-  const label = reduced ? "Reduced motion" : paused ? "Resume motion" : "Pause motion";
-
-  return (
-    <button
-      className="motion-control"
-      type="button"
-      aria-pressed={!enabled}
-      title={label}
-      disabled={reduced}
-      onClick={toggle}
-    >
-      {enabled ? (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
-          <rect x="6" y="5" width="4" height="14" rx="1" />
-          <rect x="14" y="5" width="4" height="14" rx="1" />
-        </svg>
-      ) : (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
-          <path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5Z" />
-        </svg>
-      )}
-      <span className="motion-label">{label}</span>
-    </button>
-  );
+  return null;
 }

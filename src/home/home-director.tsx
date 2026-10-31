@@ -11,11 +11,12 @@ import {
 } from "react";
 
 import { Avatar } from "@/home/blocks";
-import { MailIcon, SendIcon, TopicIcon } from "@/home/icons";
+import { MailIcon, SendIcon, SparkIcon, TopicIcon } from "@/home/icons";
 import { routeInput, topicById, topicForHash, topics, type TopicId } from "@/home/topics";
 import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
 import { CloseIcon, MenuIcon, PlusIcon } from "@/components/icons";
-import { availability, contact, site } from "@/content/site";
+import { MotionToggle } from "@/components/motion-director";
+import { contact, site } from "@/content/site";
 
 /** Names short enough for a phone's row of chips; the full label stays the accessible name. */
 const SHORT: Record<TopicId, string> = {
@@ -35,6 +36,32 @@ type Reply =
   | { key: number; question: string; kind: "greeting" }
   | { key: number; question: string; kind: "unlisted"; tool: string; scanned: boolean }
   | { key: number; question: string; kind: "unknown" };
+
+/**
+ * One line per opening, in turn, remembered across visits, so a returning
+ * visitor reads the next one rather than the same joke twice.
+ */
+const BOOT_LINES: readonly string[] = [
+  "Negotiating with the release gate… it wants evidence.",
+  "Convincing the flaky test to pass. Just once.",
+  "Teaching the AI to say “I don't know”. Harder than it sounds.",
+  "Counting open bugs. Lost count. Counting again.",
+  "Hiding the button you are told not to press.",
+  "Checking whether it works on my machine. It does. Suspicious.",
+  "Reading the fourteen recommendations again. Still blushing.",
+  "Running the scan on this page. The page is fine. The page is nervous.",
+  "Asking the termites to wait outside.",
+];
+
+function nextBootLine(): string {
+  try {
+    const index = (Number(localStorage.getItem("boot-line") ?? -1) + 1) % BOOT_LINES.length;
+    localStorage.setItem("boot-line", String(index));
+    return BOOT_LINES[index];
+  } catch {
+    return BOOT_LINES[Math.floor(Math.random() * BOOT_LINES.length)];
+  }
+}
 
 const finePointer = () => window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
@@ -131,6 +158,34 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
     settle();
     window.addEventListener("hashchange", settle);
     return () => window.removeEventListener("hashchange", settle);
+  }, []);
+
+  /**
+   * The opening screen, once per browser session. The inline script in the
+   * layout decides before first paint (and marks the session), so the page
+   * never flashes underneath; the stylesheet fades the screen out on its own,
+   * which also covers a script that never arrives. Here a tap, a key, a wheel
+   * or a swipe lifts it at once, and the line it shows is the next in turn.
+   */
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!("boot" in root.dataset)) return;
+    const line = document.querySelector<HTMLElement>("[data-boot-line]");
+    if (line) line.textContent = nextBootLine();
+    const done = () => {
+      delete root.dataset.boot;
+      for (const type of ["pointerdown", "keydown", "wheel", "touchmove"]) window.removeEventListener(type, lift);
+    };
+    const lift = () => {
+      root.dataset.boot = "lifting";
+      window.setTimeout(done, 380);
+    };
+    for (const type of ["pointerdown", "keydown", "wheel", "touchmove"]) window.addEventListener(type, lift, { passive: true });
+    const timer = window.setTimeout(done, 2400);
+    return () => {
+      window.clearTimeout(timer);
+      done();
+    };
   }, []);
 
   /**
@@ -388,8 +443,7 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
         </ul>
 
         <div className="side-foot">
-          <span className="status-dot" aria-hidden="true" />
-          <span>{availability.text}</span>
+          <MotionToggle />
         </div>
       </aside>
       <button
@@ -520,13 +574,19 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
               type="text"
               autoComplete="off"
               enterKeyHint="go"
-              placeholder="Ask about my work, e.g. “Playwright”"
+              placeholder="Ask about my work…"
               maxLength={140}
               onInput={onInput}
             />
             <kbd className="composer-kbd" aria-hidden="true">
               /
             </kbd>
+            {/* The effort a coding agent would show beside its field: here the
+                answers are written, not generated, at the highest setting. */}
+            <span className="ultra" title="Written by hand, at maximum effort" aria-hidden="true">
+              <SparkIcon size={13} />
+              Ultra
+            </span>
             <button type="submit" className="composer-send" aria-label="Ask">
               <SendIcon size={16} />
             </button>

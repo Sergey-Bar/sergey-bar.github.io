@@ -173,7 +173,6 @@
 @layer base {
   :root {
     color-scheme: dark;
-    --shell: 1240px;
     --gutter: 20px;
   }
 
@@ -273,23 +272,6 @@
 }
 
 @layer components {
-  .shell {
-    width: 100%;
-    max-width: var(--shell);
-    margin-inline: auto;
-    padding-inline: var(--gutter);
-  }
-
-  .rhythm {
-    padding-block: 80px;
-  }
-
-  @media (min-width: 64rem) {
-    .rhythm {
-      padding-block: 112px;
-    }
-  }
-
   .measure {
     max-width: 80ch;
   }
@@ -325,7 +307,7 @@
 }
 
 /* ---------------------------------------------------------------------------
-   View Transitions. The wordmark is named; everything else cross-fades.
+   View Transitions: a page change cross-fades.
    --------------------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: no-preference) {
@@ -336,12 +318,8 @@
   }
 }
 
-.vt-wordmark {
-  view-transition-name: wordmark;
-}
-
 /* ---------------------------------------------------------------------------
-   Scroll reveals (the projects route, and stagger groups inside cards).
+   Scroll reveals (stagger groups inside cards).
    The hidden state exists only when JavaScript has announced itself, the OS
    has not asked for reduced motion, and the visitor has not paused motion.
    --------------------------------------------------------------------------- */
@@ -371,110 +349,31 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Shared chrome: header (projects route), nav pill, menu sheet, back to top,
-   motion control.
+   The pause control: a labelled row in the place the page gives it (the
+   sidebar's foot on the home page), never a button floating over anything.
    --------------------------------------------------------------------------- */
 
-.header-elevate {
-  background: color-mix(in oklab, var(--color-paper) 86%, transparent);
-  backdrop-filter: blur(18px);
-}
-
-@keyframes header-elevate {
-  to {
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: scroll()) {
-    .header-elevate {
-      animation: header-elevate linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 72px;
-    }
-  }
-}
-
-.nav-pill {
-  transition:
-    transform 320ms var(--ease-out),
-    width 320ms var(--ease-out);
-}
-
-.menu-sheet {
-  transition:
-    opacity var(--dur-ui) var(--ease-out),
-    translate var(--dur-ui) var(--ease-out),
-    display var(--dur-ui) allow-discrete;
-}
-.menu-sheet[hidden] {
-  opacity: 0;
-  translate: 0 -8px;
-}
-@starting-style {
-  .menu-sheet:not([hidden]) {
-    opacity: 0;
-    translate: 0 -8px;
-  }
-}
-
-.motion-control {
-  position: fixed;
-  z-index: 45;
-  bottom: 20px;
-  left: 20px;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+.motion-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 10px;
   color: var(--color-muted);
-  border: 1px solid var(--color-line-strong);
-  border-radius: 50%;
+  font-size: 13.5px;
+  text-align: left;
   cursor: pointer;
-  backdrop-filter: blur(12px);
-  transition: border-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
+  transition: background-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out);
 }
-.motion-control:hover { border-color: var(--color-ink); color: var(--color-ink); }
-.motion-control:active { transform: scale(0.94); }
-.motion-control:disabled { cursor: default; opacity: 0.6; }
-.motion-control[aria-pressed="true"] { color: var(--color-c-sky); border-color: color-mix(in oklab, var(--color-c-sky) 50%, var(--color-line-strong)); }
-.motion-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-/* On the home page the ask bar owns the bottom edge. On a wide screen the
-   control sits in the sidebar's foot, beside the availability line; on a
-   narrow one it lives in the drawer and shows with it. */
-@media (min-width: 64rem) {
-  .home ~ .motion-control {
-    top: auto;
-    right: auto;
-    bottom: max(12px, env(safe-area-inset-bottom));
-    left: calc(var(--sidebar-w) - 12px - 36px);
-    width: 36px;
-    height: 36px;
-  }
-}
-@media (max-width: 63.99rem) {
-  .home ~ .motion-control {
-    top: auto;
-    right: auto;
-    bottom: max(12px, env(safe-area-inset-bottom));
-    left: calc(var(--sidebar-w) - 12px - 36px);
-    z-index: 37;
-    width: 36px;
-    height: 36px;
-    visibility: hidden;
-  }
-  .home[data-drawer] ~ .motion-control { visibility: visible; }
-}
+.motion-toggle svg { flex-shrink: 0; width: 15px; color: var(--color-ink); }
+.motion-toggle:hover { background: #ffffff0a; color: var(--color-ink); }
+.motion-toggle[aria-pressed="true"] svg { color: var(--color-c-sky); }
+.motion-toggle:disabled { cursor: default; opacity: 0.7; }
+.motion-toggle:disabled:hover { background: none; color: var(--color-muted); }
+/* Inline, in a line of links (the 404): the label and the glyph, no row. */
+.motion-toggle-inline { width: auto; min-height: 32px; padding: 0 6px; margin-left: -6px; font-size: inherit; }
 
 /* ---------------------------------------------------------------------------
    The home page: one document, with the contents beside it and the ask bar
@@ -621,21 +520,7 @@
   align-items: center;
   gap: 48px;
 }
-.hero-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 6px 14px 6px 12px;
-  border-radius: 100px;
-  border: 1px solid var(--color-line-strong);
-  background: color-mix(in oklab, var(--color-surface) 70%, transparent);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-ink);
-}
-.hero-status-sep { color: var(--color-line-strong); }
 .hero-name {
-  margin-top: 22px;
   font-size: clamp(2.75rem, 6.2vw, 4.5rem);
   font-weight: 750;
   letter-spacing: -0.05em;
@@ -701,14 +586,6 @@
   object-position: 50% 50%;
   filter: saturate(0.95) contrast(1.02);
 }
-.status-dot {
-  width: 8px;
-  height: 8px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--color-c-sky);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-c-sky) 25%, transparent);
-}
 
 .hero-employers {
   display: grid;
@@ -725,7 +602,6 @@
   /* On a phone the portrait leads, small, so the name is still on the first screen. */
   .hero-portrait { order: -1; width: 92px; margin: 4px 0 22px 5px; }
   .portrait-glow { inset: -30%; }
-  .hero-name { margin-top: 18px; }
   .hero-actions { gap: 10px; margin-top: 24px; }
   .hero-actions .action-lg { min-height: 48px; padding-inline: 18px; font-size: 14.5px; }
   .hero-actions .action.action-icon { width: 48px; padding: 0; }
@@ -879,7 +755,7 @@
 .side-item[aria-current="location"] .side-number { color: var(--color-c-sky); }
 .side-item[aria-current="location"]::before { content: ""; position: absolute; left: -12px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--color-c-sky); }
 .side-profile svg { flex-shrink: 0; color: var(--color-ink); }
-.side-foot { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 14px 52px 0 10px; border-top: 1px solid var(--color-line); font-size: 13px; font-weight: 500; color: var(--color-ink); }
+.side-foot { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--color-line); }
 .drawer-backdrop { position: fixed; inset: 0; z-index: 35; background: #000000a0; border: 0; cursor: pointer; }
 
 .avatar {
@@ -1049,9 +925,6 @@
 .metric-label { margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--color-ink); }
 .metric-detail { margin-top: 6px; font-size: 12px; line-height: 1.55; color: var(--color-muted); }
 
-.employers { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 36px; list-style: none; }
-.employers img { filter: grayscale(1) invert(1); mix-blend-mode: screen; opacity: 0.75; transition: opacity var(--dur-hover) var(--ease-out); }
-.employers li:hover img { opacity: 1; }
 
 .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin-top: 22px; }
 @media (min-width: 40rem) { .facts { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -1271,24 +1144,7 @@
   .transcript-body { font-size: 11.5px; padding: 12px; }
 }
 
-/* --- Route pages: colophon, accessibility, 404 -------------------------------- */
-
-.colophon-grid { display: grid; gap: 18px; }
-@media (min-width: 48rem) { .colophon-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.colophon-card {
-  padding: 22px 24px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-card);
-  background: var(--sheen), var(--color-surface);
-  box-shadow: var(--edge), var(--elev-1);
-  position: relative;
-  overflow: clip;
-}
-.colophon-card::before { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, var(--color-c-sky), transparent 70%); }
-.colophon-card h2 { font-size: 1.15rem; font-weight: 650; letter-spacing: -0.02em; }
-.colophon-card p { margin-top: 10px; font-size: 15px; line-height: 1.65; color: var(--color-muted); }
-.colophon-list { margin-top: 10px; padding-left: 18px; list-style: disc; font-size: 15px; line-height: 1.65; color: var(--color-muted); }
-.colophon-list li + li { margin-top: 8px; }
+/* --- The 404 ------------------------------------------------------------------ */
 
 .lost { position: relative; display: grid; align-content: center; min-height: 100dvh; padding-block: 80px; }
 .lost-column { display: grid; gap: 16px; width: min(100% - 2 * var(--gutter), 640px); margin-inline: auto; }
@@ -1475,7 +1331,6 @@
   .ask-reply-card,
   .evidence-panel,
   .transcript,
-  .colophon-card,
   .recommendations-grid > .recommendation-card,
   .toolbox-search-field,
   .side-item {
@@ -1484,7 +1339,7 @@
   .card { border-radius: 30px; }
   .composer-panel { border-radius: 34px; }
   .ask-reply-card { border-radius: 28px; }
-  .evidence-panel, .transcript, .colophon-card, .recommendations-grid > .recommendation-card { border-radius: 28px; }
+  .evidence-panel, .transcript, .recommendations-grid > .recommendation-card { border-radius: 28px; }
   .toolbox-search-field { border-radius: 18px; }
   .composer-send { corner-shape: squircle; border-radius: 16px; }
   .side-item { border-radius: 14px; }
@@ -1506,11 +1361,9 @@
 @keyframes orb-drift-1 { to { transform: translate3d(12vmax, 8vmax, 0) scale(1.12); } }
 @keyframes orb-drift-2 { to { transform: translate3d(-10vmax, 10vmax, 0) scale(1.08); } }
 @keyframes orb-drift-3 { to { transform: translate3d(8vmax, -8vmax, 0) scale(1.15); } }
-@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-c-sky) 25%, transparent); } 50% { box-shadow: 0 0 0 7px color-mix(in oklab, var(--color-c-sky) 8%, transparent); } }
 
 @media (prefers-reduced-motion: no-preference) {
   :root:not([data-motion="off"]) .portrait-ring { animation: ring-spin 14s linear infinite; }
-  :root:not([data-motion="off"]) .status-dot { animation: pulse 2.2s ease-in-out infinite; }
   :root:not([data-motion="off"]) .orb-1 { animation: orb-drift-1 26s ease-in-out infinite alternate; }
   :root:not([data-motion="off"]) .orb-2 { animation: orb-drift-2 32s ease-in-out infinite alternate; }
   :root:not([data-motion="off"]) .orb-3 { animation: orb-drift-3 28s ease-in-out infinite alternate; }
@@ -1524,31 +1377,136 @@
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
 
-/* ---------------------------------------------------------------------------
-   The projects route: the long-form page, on the same theme.
-   --------------------------------------------------------------------------- */
+/* --- The employers: five marks, one even row of tiles ---------------------------- */
 
-.project-feature { background: transparent; }
-.project-feature { position: relative; overflow: clip; }
-.project-feature h2 { font-size: clamp(2rem, 3.3vw, 2.75rem); letter-spacing: -0.045em; overflow-wrap: anywhere; }
-.project-feature > .shell > div { min-width: 0; }
-.project-feature p { overflow-wrap: anywhere; max-width: 66ch; }
-.project-feature .evidence-panel { background: var(--color-surface); }
-.contact-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.8fr); align-items: start; gap: 70px; }
-.contact-description { max-width: 49ch; }
-.contact-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 30px; }
-.contact-actions a { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 12px 20px; border-radius: 100px; font-size: 14px; font-weight: 500; transition: background-color var(--dur-hover) var(--ease-out), border-color var(--dur-hover) var(--ease-out), box-shadow var(--dur-ui) var(--ease-out), transform var(--dur-press) var(--ease-out); }
-.contact-actions a:active { transform: scale(0.97); }
-.contact-primary { color: #fff; background: var(--grad); box-shadow: 0 10px 30px #0a66c24d; }
-.contact-primary:hover { box-shadow: 0 14px 40px #2d8cff66; }
-.contact-secondary { color: var(--color-ink); border: 1px solid var(--color-line-strong); }
-.contact-secondary:hover { border-color: var(--color-ink); }
-.playground-panel { padding: 22px 0; border-top: 1px solid var(--color-line); margin-top: 12px; }
-#contact.rhythm h2 { font-size: clamp(2.5rem, 5vw, 4.5rem); max-width: 21ch; }
-footer { padding-bottom: 50px; }
-@media (max-width: 63.99rem) {
-  .contact-layout { grid-template-columns: 1fr; gap: 40px; }
+.employers {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  list-style: none;
 }
+.employers li {
+  display: grid;
+  place-items: center;
+  height: 76px;
+  padding: 0 14px;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--color-surface) 45%, transparent);
+  transition: border-color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out);
+}
+.employers img {
+  max-width: 100%;
+  object-fit: contain;
+  opacity: 0.82;
+  transition: opacity var(--dur-hover) var(--ease-out);
+}
+/* Each mark drawn the way its file reads best on the dark ground. */
+.employers [data-tone="silhouette"] img { filter: brightness(0) invert(1); }
+.employers [data-tone="light"] img { filter: grayscale(1) brightness(1.1); }
+.employers [data-tone="soft"] img { filter: grayscale(1) brightness(1.45) contrast(0.95); }
+.employers li:hover { border-color: var(--color-line-strong); background: color-mix(in oklab, var(--color-surface) 80%, transparent); }
+.employers li:hover img { opacity: 1; }
+/* A phone: three tiles, then two that share the row's whole width. */
 @media (max-width: 47.99rem) {
-  .contact-actions { flex-direction: column; }
+  .employers { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+  .employers li { grid-column: span 2; height: 64px; padding: 0 10px; }
+  .employers li:nth-child(n + 4) { grid-column: span 3; }
+}
+
+/* --- Ultra: the effort beside the field ------------------------------------------ */
+
+/* The one place the palette bends: "Ultra" shimmers pink to purple, the way
+   the highest effort reads beside a coding agent's field. */
+.ultra {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  flex-shrink: 0;
+  padding: 0 10px 0 8px;
+  border-radius: 100px;
+  border: 1px solid color-mix(in oklab, #c084fc 38%, transparent);
+  background: color-mix(in oklab, #c084fc 9%, transparent);
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+  color: #e879f9;
+  background-image: linear-gradient(100deg, #f472b6 0%, #c084fc 30%, #818cf8 50%, #c084fc 70%, #f472b6 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.ultra svg { color: #d8b4fe; }
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="off"]) .ultra { animation: ultra-shimmer 2.6s linear infinite; }
+}
+@keyframes ultra-shimmer { from { background-position: 0% 50%; } to { background-position: 220% 50%; } }
+
+/* --- The opening screen, once a session ------------------------------------------- */
+
+/* Shown only while the layout's inline script has marked the root, and it
+   leaves by itself: the name rises in like a heading, the line follows, then
+   the whole screen fades and the page is already there underneath. */
+.boot { display: none; }
+:root[data-boot] .boot {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter);
+  background: var(--color-paper);
+  animation: boot-out 520ms var(--ease-out) 1500ms both;
+}
+:root[data-boot="lifting"] .boot { animation: boot-out 360ms var(--ease-out) both; }
+.boot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60vmax 50vmax at 80% 110%, #1d5fd955, transparent 60%), radial-gradient(50vmax 40vmax at 90% -20%, #0a66c230, transparent 60%);
+  pointer-events: none;
+}
+.boot-inner { position: relative; display: grid; justify-items: center; text-align: center; }
+.boot-title {
+  font-size: clamp(2.75rem, 8vw, 5.5rem);
+  font-weight: 750;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  color: var(--color-ink);
+  animation: boot-rise 700ms var(--ease-out) both;
+}
+.boot-role {
+  margin-top: 14px;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  background: var(--grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: boot-rise 700ms var(--ease-out) 120ms both;
+}
+.boot-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 34px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-muted);
+  animation: boot-fade 600ms var(--ease-out) 320ms both;
+}
+.boot-caret { color: var(--color-c-sky); }
+.boot-cursor { display: inline-block; width: 7px; height: 15px; border-radius: 1px; background: var(--color-c-sky); animation: blink 1s steps(1) infinite; }
+@keyframes boot-rise { from { opacity: 0; transform: translateY(18px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes boot-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes boot-out { to { opacity: 0; visibility: hidden; } }
+@keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@media (max-width: 47.99rem) {
+  .boot-line { font-size: 12px; max-width: 32ch; text-align: left; }
 }

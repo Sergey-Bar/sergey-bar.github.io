@@ -74,11 +74,17 @@ export const viewport: Viewport = {
  * Runs before the body parses. `data-js` is the switch that lets the stylesheet
  * hold scroll-reveal targets hidden at all: without it a visitor who never runs
  * JavaScript sees the finished page. The stored motion preference is applied in
- * the same breath so a visitor who paused motion never sees a frame of it.
+ * the same breath so a visitor who paused motion never sees a frame of it, and
+ * the home page's opening screen is decided here too: once per browser session,
+ * never with motion off, never for a script-less visitor (who gets no
+ * `data-boot` and so never a screen that only a script would lift).
  */
 const motionFlag =
   'try{var d=document.documentElement;d.dataset.js="";' +
-  'if(localStorage.getItem("motion")==="off")d.dataset.motion="off"}catch(e){}';
+  'var off=localStorage.getItem("motion")==="off";if(off)d.dataset.motion="off";' +
+  'if(!off&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&' +
+  'location.pathname==="/"&&!sessionStorage.getItem("booted"))' +
+  '{d.dataset.boot="";sessionStorage.setItem("booted","1")}}catch(e){}';
 
 export default function RootLayout({
   children,

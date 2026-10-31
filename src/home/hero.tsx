@@ -1,7 +1,7 @@
 import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
 import { MailIcon } from "@/home/icons";
 import { employers, hero, images } from "@/content/hero";
-import { availability, contact, site } from "@/content/site";
+import { contact, site } from "@/content/site";
 
 /**
  * The top of the page: who, what, and the two ways to act on it, beside the
@@ -14,14 +14,6 @@ export function Hero() {
     <header className="hero">
       <div className="hero-grid">
         <div className="hero-text">
-          <p className="hero-status">
-            <span className="status-dot" aria-hidden="true" />
-            {availability.text}
-            <span className="hero-status-sep" aria-hidden="true">
-              ·
-            </span>
-            Based in {site.location}
-          </p>
           <h1 id="hero-heading" className="hero-name" tabIndex={-1}>
             {site.name}
           </h1>
@@ -62,7 +54,7 @@ export function Hero() {
         <p className="data">Experience across teams at</p>
         <ul className="employers" aria-label="Employers">
           {employers.map((employer) => (
-            <li key={employer.name} title={employer.name}>
+            <li key={employer.name} title={employer.name} data-tone={employer.tone}>
               {/* eslint-disable-next-line @next/next/no-img-element -- static export, brand assets */}
               <img
                 src={employer.logo}

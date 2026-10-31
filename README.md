@@ -3,9 +3,7 @@
 Personal site for Sergey Bar, QA Tech Lead & AI Automation Engineer.
 Static export, GitHub Pages, no analytics, no CV file; the CV is sent on request by email or on LinkedIn.
 
-Four routes: `/` (the whole record as one document), `/projects` (Mjolnir and
-Automate in long form, each linked to its public repository), plus `/colophon`
-(how the site is built and tested) and `/accessibility`. LinkedIn is the
+One page: `/`, the whole record as one document, plus the 404. LinkedIn is the
 contact route; GitHub is the evidence. There is no contact form and no CV file:
 the CV is sent on request, by email or on LinkedIn.
 
@@ -13,20 +11,33 @@ the CV is sent on request, by email or on LinkedIn.
 
 The home page is one document: everything the old chat answered, shown at
 once, in the order a reader takes it in. A recruiter with thirty seconds gets
-the record on the first frame; there is no loader, no intro and nothing typed
-out.
+the record at once; nothing on the page waits for anything.
 
-It opens on the hero: an "Open to work · Based in Israel" line, the name as the
-page's only `h1`, the role, the one-line pitch, three actions (LinkedIn,
-"Request my CV" by email, GitHub) and the portrait, with the employers'
-marks underneath. Then eight numbered sections, each an `h2` with a lead
-paragraph and its cards: About me, Projects, Case studies, Experience,
-Recommendations, Toolbox, Contact, Something fun. Long cards keep progressive
-disclosure: a case study shows the problem, the outcome and one figure, with
-the approach and evidence behind one line; a role shows its scope with the
-responsibilities and outcomes behind one line; three recommendations lead and
-the other eleven open on request. The foot links the long pages (projects in
-full, the colophon, accessibility), which are not in the contents.
+The first visit of a browser session opens on a short screen: the name rising
+in like a heading, the role, and one line that pretends to boot the page
+("Negotiating with the release gate… it wants evidence."), a different one
+each time. It fades by itself after about a second and a half, and a tap, a
+key, a wheel or a swipe lifts it at once. The page is already rendered
+underneath it, so nothing waits for it. The layout's inline script decides
+before first paint (and marks the session), the stylesheet times the fade (so
+a script that never arrives cannot leave it up), and it never shows with motion
+paused, under `prefers-reduced-motion`, or without JavaScript.
+
+The page opens on the hero: the name as the page's only `h1`, the role, the
+one-line pitch, three actions (LinkedIn, "Request my CV" by email, GitHub) and
+the portrait, with the employers underneath as a row of five equal tiles. Each
+mark is drawn the way its file reads best on the dark ground (`tone` in
+`src/content/hero.ts`): Nova, FLIR and HP as white silhouettes, the already
+pale IAF emblem greyed, Enabley's outlined PNG lifted to grey. Then eight
+numbered sections, each an `h2` with a lead paragraph and its cards: About me,
+Experience, Toolbox, Recommendations, Projects, Case studies, Contact,
+Something fun. Long cards keep progressive disclosure: a project shows its
+figure, its one-line pitch and the repository, with how it works and its
+numbers behind one line; a case study shows the problem, the outcome and one
+figure, with the approach and evidence behind one line; a role shows its scope
+with the responsibilities and outcomes behind one line; three recommendations
+lead and the other eleven open on request. The foot repeats the three ways to
+reach Sergey.
 
 All of it is rendered on the server (`src/home/sections.tsx`,
 `src/home/hero.tsx`), so a crawler or a visitor without JavaScript reads the
@@ -35,7 +46,8 @@ the one client island, and it only adds reading aids around the document:
 
 - **Contents.** On a wide screen a sidebar stands beside the page: the person,
   the eight sections numbered 01 to 08, the profiles (LinkedIn, GitHub, email)
-  and the availability line, with the motion control in its foot. The section
+  and, in its foot, the "Pause motion" control as a labelled row of its own,
+  so it never sits on top of anything. The section
   in view is marked (`aria-current="location"`, a lit number and an edge bar),
   measured as the last section whose top has passed a third of the screen. On
   a phone the contents are a drawer behind the menu button in a slim top bar,
@@ -122,29 +134,14 @@ the page, moved on the compositor from window-level events so it can never be
 left behind; it fades when the pointer leaves the document and does not exist
 on touch screens. Looping ambience (the ring, the status
 pulse, the background light) stops entirely under `prefers-reduced-motion` or
-the visitor's own "Pause motion" control, which persists in localStorage and
-is applied before first paint. Nothing on the page waits for an animation to
+the visitor's own "Pause motion" control (`MotionToggle`, sharing one
+preference with `MotionDirector` through `useMotion`), which persists in
+localStorage and is applied before first paint. Nothing on the page waits for an animation to
 be read, so motion off changes only the light.
 
 The toolbox has a small search island, matching disciplines and tool names.
 Group content is server-rendered, with a live result count and clear empty state.
-The header is a client island and deliberately does not import the Button
-primitive: `cn` pulls `tailwind-merge`, which measured 8.4KB gzip of the route
-budget to serve a boolean that toggles one attribute. It also carries the
-desktop segment control: a sliding dark pill whose position is measured from
-the active link, and a scroll spy that marks the section crossing a line a
-third of the way down the viewport. On a route page the pill follows the
-pathname instead, and the whole indicator is hidden below `md` where the menu
-sheet takes over.
-
-`src/components/back-to-top.tsx` is the other small island: it fades in past
-640px of scroll, jumps to the top, and gives a reduced-motion visitor the jump
-without the smooth scroll.
-
-The game opens three ways: the "Something fun" chip (in the panel, the sidebar
-or a quick reply), which goes straight to it rather than to an answer about it;
-the ghost in the corner; and the "do not press" button in the after-hours
-answer. It is a `next/dynamic` chunk that is never referenced by the HTML, so
+The game opens from the "do not press" button in the "Something fun" section. It is a `next/dynamic` chunk that is never referenced by the HTML, so
 the budget script never sees it: the full canvas toy (nine tools, particles,
 termites, its sound) downloads only when someone opens it.
 
@@ -221,7 +218,7 @@ a plausible-looking value, and worthiness bands are read from `census.json`
 rather than hardcoded, so the bands exist in exactly one place.
 
 Hand-written content modules that state a Mjolnir figure interpolate it from the
-generated `mjolnir` constant instead of typing it: the `/projects` facts do
+generated `mjolnir` constant instead of typing it: the project facts do
 exactly that, and the proof row deliberately holds no Mjolnir number at all.
 
 See `data/mjolnir/README.md` for provenance, the two derivations the generator
@@ -282,11 +279,13 @@ outline, every section, the page without JavaScript, no horizontal overflow
 down to 320px, the contents and the phone's drawer, Back through visited
 sections, old anchors, the ask bar's topics panel, typed routing and the
 toolbox search hand-off, the unlisted-tool, greeting and fallback replies, the
-keyboard shortcuts, focus never hidden under the ask bar, the game, the three
-route pages and the 404, at desktop and phone sizes, with an axe-core audit
+keyboard shortcuts, focus never hidden under the ask bar, the opening screen
+(once a session, lifted by a key, never under reduced motion), projects folded
+behind one line, the pause control overlapping nothing, the game, and the 404
+(with the old long pages gone), at desktop and phone sizes, with an axe-core audit
 (WCAG 2.2 A and AA) of each state. CI runs it on every push; the deploy job
-downloads the HTML report and publishes it at `/qa/report/`, which the colophon
-links. Traces, screenshots and video are kept on failure. `npm run verify`
+downloads the HTML report and publishes it at `/qa/report/`, which the case
+studies section links. Traces, screenshots and video are kept on failure. `npm run verify`
 ends with it.
 
 ## Case studies

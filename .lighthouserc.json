@@ -3,10 +3,7 @@
     "collect": {
       "staticDistDir": "./out",
       "url": [
-        "http://localhost/",
-        "http://localhost/projects/",
-        "http://localhost/colophon/",
-        "http://localhost/accessibility/"
+        "http://localhost/"
       ],
       "numberOfRuns": 2,
       "settings": {

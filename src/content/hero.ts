@@ -29,28 +29,22 @@ export const hero = {
 
 /**
  * The employers under the hero, most recent first. Each carries its real logo,
- * downloaded from the company's own asset or a public brand source. `h` is the
- * rendered height. The wordmarks (Nova, FLIR, Enabley) share one height; the
- * two square emblems (IAF, HP) stand taller, because a square glyph at wordmark
- * height reads as the small one on the strip. The marks sit muted and gain
- * their colour on hover.
+ * downloaded from the company's own asset or a public brand source, and sits
+ * in a tile of its own so five different marks read as one even row.
+ *
+ * `h` is the rendered height: the two square emblems (IAF, HP) stand taller
+ * than the wordmarks, because a square glyph at wordmark height reads as the
+ * small one. `tone` is how the mark is drawn on the dark ground, chosen per
+ * file because no single filter suits all five: a `silhouette` is drawn in
+ * white (Nova, FLIR, HP); a `light` mark is already pale and only loses its
+ * colour (the IAF emblem, which inverting would turn to mud); a `soft` mark
+ * keeps its outline and is lifted to grey (Enabley's PNG, whose white stroke
+ * would fill in as a silhouette).
  */
 export const employers = [
-  {
-    name: "Israeli Air Force",
-    logo: "/logos/iaf-emblem.svg",
-    iw: 519,
-    ih: 546,
-    h: "h-11",
-  },
-  { name: "Nova", logo: "/logos/nova.svg", iw: 184, ih: 31, h: "h-7" },
-  {
-    name: "Teledyne FLIR",
-    logo: "/logos/flir.svg",
-    iw: 274,
-    ih: 44,
-    h: "h-7",
-  },
-  { name: "Enabley", logo: "/logos/enabley.png", iw: 968, ih: 348, h: "h-7" },
-  { name: "HP Indigo", logo: "/logos/hp.svg", iw: 100, ih: 100, h: "h-10" },
+  { name: "Israeli Air Force", logo: "/logos/iaf-emblem.svg", iw: 519, ih: 546, h: "h-10", tone: "light" },
+  { name: "Nova", logo: "/logos/nova.svg", iw: 184, ih: 31, h: "h-6", tone: "silhouette" },
+  { name: "Teledyne FLIR", logo: "/logos/flir.svg", iw: 274, ih: 44, h: "h-7", tone: "silhouette" },
+  { name: "Enabley", logo: "/logos/enabley.png", iw: 968, ih: 348, h: "h-7", tone: "soft" },
+  { name: "HP Indigo", logo: "/logos/hp.svg", iw: 100, ih: 100, h: "h-9", tone: "silhouette" },
 ] as const;

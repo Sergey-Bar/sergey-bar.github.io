@@ -161,9 +161,6 @@ jobs:
         run: |
           test -f out/.nojekyll
           test -f out/index.html
-          test -f out/projects/index.html
-          test -f out/colophon/index.html
-          test -f out/accessibility/index.html
           test -f out/404.html
           test -f out/qa/report/index.html
 

@@ -1,11 +1,31 @@
-import Link from "next/link";
-
 import { Hero } from "@/home/hero";
 import { HomeDirector } from "@/home/home-director";
 import { Sections } from "@/home/sections";
-import { site } from "@/content/site";
+import { contact, site } from "@/content/site";
 
-/** The page's foot: the long pages, which are not in the contents. */
+/**
+ * The opening screen: the name rising in like a heading, the role, and one
+ * line that pretends to boot the page. It is in the HTML but shown only when
+ * the layout's inline script has marked a session's first visit, and it fades
+ * by itself; nothing behind it waits for it, so the page is already there.
+ */
+function BootScreen() {
+  return (
+    <div className="boot" aria-hidden="true">
+      <div className="boot-inner">
+        <p className="boot-title">{site.name}</p>
+        <p className="boot-role">{site.role}</p>
+        <p className="boot-line">
+          <span className="boot-caret">▸</span>
+          <span data-boot-line>Booting the page…</span>
+          <span className="boot-cursor" />
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** The page's foot: who, and the three ways to reach them. */
 function HomeFooter() {
   return (
     <footer className="home-footer">
@@ -14,19 +34,19 @@ function HomeFooter() {
       </p>
       <ul>
         <li>
-          <Link href="/projects/" className="link-underline">
-            Projects in full
-          </Link>
+          <a href={contact.linkedin} className="link-underline">
+            LinkedIn
+          </a>
         </li>
         <li>
-          <Link href="/colophon/" className="link-underline">
-            How this site is built
-          </Link>
+          <a href={contact.github} className="link-underline">
+            GitHub
+          </a>
         </li>
         <li>
-          <Link href="/accessibility/" className="link-underline">
-            Accessibility
-          </Link>
+          <a href={`mailto:${contact.email}`} className="link-underline">
+            Email
+          </a>
         </li>
       </ul>
     </footer>
@@ -39,5 +59,10 @@ function HomeFooter() {
  * island) adds the contents and the ask bar around it.
  */
 export function HomeShell() {
-  return <HomeDirector hero={<Hero />} sections={<Sections />} footer={<HomeFooter />} />;
+  return (
+    <>
+      <BootScreen />
+      <HomeDirector hero={<Hero />} sections={<Sections />} footer={<HomeFooter />} />
+    </>
+  );
 }
