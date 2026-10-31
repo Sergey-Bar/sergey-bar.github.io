@@ -16,19 +16,26 @@ the record at once; nothing on the page waits for anything.
 The first visit of a browser session opens on a short screen: the name rising
 in like a heading, the role, and one line that pretends to boot the page
 ("Negotiating with the release gate… it wants evidence."), a different one
-each time. It fades by itself after about a second and a half, and a tap, a
-key, a wheel or a swipe lifts it at once. The page is already rendered
-underneath it, so nothing waits for it. The layout's inline script decides
-before first paint (and marks the session), the stylesheet times the fade (so
-a script that never arrives cannot leave it up), and it never shows with motion
+each time. After a little over a second, or at once on a tap, a key, a wheel
+or a swipe, it hands over to the hero: the name and the role glide from the
+centre into their places in the hero (measured from the text boxes, scaled by
+the font sizes) while the screen's ground fades round them, and the hero's own
+heading takes over in the same spot. With the hero out of view (an address
+that opened on a section) the screen simply fades. The page is already
+rendered underneath, so nothing waits for it. The layout's inline script
+decides before first paint (and marks the session); the stylesheet keeps a
+late fade of its own and shows the hero's name regardless, so a script that
+never arrives cannot leave the screen up; and it never shows with motion
 paused, under `prefers-reduced-motion`, or without JavaScript.
 
 The page opens on the hero: the name as the page's only `h1`, the role, the
 one-line pitch, three actions (LinkedIn, "Request my CV" by email, GitHub) and
-the portrait, with the employers underneath as a row of five equal tiles. Each
-mark is drawn the way its file reads best on the dark ground (`tone` in
-`src/content/hero.ts`): Nova, FLIR and HP as white silhouettes, the already
-pale IAF emblem greyed, Enabley's outlined PNG lifted to grey. Then eight
+the portrait, with the employers underneath on one line. Each mark is a white
+version of the company's own logo, made for the dark ground and kept next to
+its source in `public/logos/` (`*-on-dark`): FLIR without its tagline, Nova
+without the small print that turned to dots, the IAF emblem's navy line work
+turned white, Enabley without the outline and shadow baked into its PNG, HP in
+white. Then eight
 numbered sections, each an `h2` with a lead paragraph and its cards: About me,
 Experience, Toolbox, Recommendations, Projects, Case studies, Contact,
 Something fun. Long cards keep progressive disclosure: a project shows its
@@ -290,11 +297,29 @@ ends with it.
 
 ## Case studies
 
-`src/content/case-studies.ts` tells three pieces of work as problem, approach,
-evidence and outcome. It imports the experience, metrics and project modules
-and reads its figures from them rather than restating them, and throws at
-build time if a referenced record is missing. The Mjolnir case renders the
-recorded scan as a transcript, finding by finding, from `data/mjolnir/demo-report.json`.
+`src/content/case-studies.ts` tells two pieces of work as problem, approach,
+evidence and outcome. It imports the experience and metrics modules and reads
+its figures from them rather than restating them, and throws at build time if
+a referenced record is missing. Mjolnir is told once, under Projects.
+
+## Something fun
+
+The last section introduces the game from its own facts: a mock early-2000s
+desktop (`bugs.exe` and `release-gate.yml` included) to take down to zero
+integrity, the nine tools as the game draws them (read from `TOOLS` in
+`src/components/destruction-tools.tsx`, so the list cannot drift), streaks
+named the way QA names them and ranks from Intern to Legend. The "do not press"
+button sits in its own striped well with the two keys that matter.
+
+## Readability
+
+Every text on the page is at least 13px, except the uppercase labels (12px,
+tracked) and keyboard keys, and holds at least 4.5:1 against what it sits on.
+Small accent text (eyebrows, section numbers, the case labels) reads in the
+lighter `--color-accent-ink` rather than the brighter sky blue, which stays
+for marks, bars and icons. The game's HUD labels are 11.5px at 70% white,
+up from 10px at 50%. A Playwright spec measures size and contrast on every
+visible text node, on desktop and phone.
 
 ## Interaction checks
 

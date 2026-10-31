@@ -28,23 +28,22 @@ export const hero = {
 } as const;
 
 /**
- * The employers under the hero, most recent first. Each carries its real logo,
- * downloaded from the company's own asset or a public brand source, and sits
- * in a tile of its own so five different marks read as one even row.
+ * The employers under the hero, most recent first. Each mark is a white
+ * version of the company's own logo, drawn for the dark ground and kept next
+ * to its source file in `public/logos/`: FLIR without its tagline and with
+ * the wordmark centred on the icon; Nova's four letters without the small
+ * "PROCESS INSIGHT" and registered mark, which turn to dots at this size; the
+ * IAF emblem with its navy line work turned white (navy on near-black
+ * vanished); Enabley's letters without the white outline and grey shadow
+ * baked into its PNG; HP's disc in white.
  *
- * `h` is the rendered height: the two square emblems (IAF, HP) stand taller
- * than the wordmarks, because a square glyph at wordmark height reads as the
- * small one. `tone` is how the mark is drawn on the dark ground, chosen per
- * file because no single filter suits all five: a `silhouette` is drawn in
- * white (Nova, FLIR, HP); a `light` mark is already pale and only loses its
- * colour (the IAF emblem, which inverting would turn to mud); a `soft` mark
- * keeps its outline and is lifted to grey (Enabley's PNG, whose white stroke
- * would fill in as a silhouette).
+ * `h` is the rendered height in pixels, set by eye so the five read at one
+ * weight: the square emblems stand taller than the wordmarks.
  */
 export const employers = [
-  { name: "Israeli Air Force", logo: "/logos/iaf-emblem.svg", iw: 519, ih: 546, h: "h-10", tone: "light" },
-  { name: "Nova", logo: "/logos/nova.svg", iw: 184, ih: 31, h: "h-6", tone: "silhouette" },
-  { name: "Teledyne FLIR", logo: "/logos/flir.svg", iw: 274, ih: 44, h: "h-7", tone: "silhouette" },
-  { name: "Enabley", logo: "/logos/enabley.png", iw: 968, ih: 348, h: "h-7", tone: "soft" },
-  { name: "HP Indigo", logo: "/logos/hp.svg", iw: 100, ih: 100, h: "h-9", tone: "silhouette" },
+  { name: "Israeli Air Force", logo: "/logos/iaf-on-dark.svg", iw: 519, ih: 546, h: 52 },
+  { name: "Nova", logo: "/logos/nova-on-dark.svg", iw: 136, ih: 31, h: 24 },
+  { name: "Teledyne FLIR", logo: "/logos/flir-on-dark.svg", iw: 247, ih: 44, h: 30 },
+  { name: "Enabley", logo: "/logos/enabley-on-dark.png", iw: 890, ih: 297, h: 28 },
+  { name: "HP Indigo", logo: "/logos/hp-on-dark.svg", iw: 100, ih: 100, h: 40 },
 ] as const;

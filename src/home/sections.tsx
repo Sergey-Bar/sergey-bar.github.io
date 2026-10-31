@@ -4,8 +4,8 @@ import { CountUp } from "@/components/count-up";
 import { ExperienceRecord } from "@/components/experience-record";
 import { MjolnirConsole } from "@/components/mjolnir-console";
 import { RecommendationCard } from "@/components/recommendation-card";
+import { TOOLS } from "@/components/destruction-tools";
 import { RedButton } from "@/components/red-button";
-import { ScanTranscript } from "@/components/scan-transcript";
 import { StatusChip } from "@/components/status-chip";
 import { TechnicalTag } from "@/components/technical-tag";
 import { ToolGroup } from "@/components/tool-group";
@@ -176,7 +176,7 @@ function CasesSection() {
       id="cases"
       lead={
         <p>
-          Three pieces of work, each told the same way: the problem, what I did, the evidence
+          Two pieces of work, each told the same way: the problem, what I did, the evidence
           behind it, and the outcome. Every figure is read from the record, not retyped.
         </p>
       }
@@ -234,7 +234,6 @@ function CasesSection() {
               </div>
             </dl>
           </More>
-          {study.artifact === "scan" ? <ScanTranscript /> : null}
         </Card>
       ))}
       <Note>
@@ -412,21 +411,43 @@ function ContactSection() {
 
 function FunSection() {
   return (
-    <Section id="fun" lead={<p>Not everything here is a release gate. This one is for after hours.</p>}>
-      <Card eyebrow="after hours" title="A stress-relief toy">
-        <p className="t-body text-muted">
-          A small canvas game that hands you nine tools and this page&apos;s own headline to take
-          them to. It downloads only when the button is pressed, and Escape brings you back.
-        </p>
-        <div className="fun-stage">
-          <RedButton />
+    <Section
+      id="fun"
+      lead={<p>A stress test you are allowed to fail. It is for after hours, and it is timed.</p>}
+    >
+      <article className="card fun-card">
+        <div className="fun-grid">
+          <div className="fun-copy">
+            <p className="data card-eyebrow">After hours</p>
+            <h3 className="card-title">Wreck the release machine</h3>
+            <p className="fun-text">
+              A mock early-2000s desktop, <code>bugs.exe</code> and <code>release-gate.yml</code>{" "}
+              included, and nine tools to take it down to zero integrity. Streaks are named the way QA
+              names them, from Smoke test to Chaos monkey, and a run climbs from Intern to Legend.
+            </p>
+            <ul className="fun-tools" aria-label="The nine tools">
+              {TOOLS.map((tool) => (
+                <li key={tool.id}>
+                  <tool.Icon className="fun-tool-icon" />
+                  {tool.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="fun-zone">
+            <RedButton />
+            <ul className="fun-keys" aria-label="Controls">
+              <li>
+                <kbd>Tab</kbd> next tool
+              </li>
+              <li>
+                <kbd>Esc</kbd> back to the page
+              </li>
+            </ul>
+            <p className="fun-note">It loads only when pressed. Nothing is saved, nothing is sent.</p>
+          </div>
         </div>
-        <ul className="fun-hints" aria-label="How it works">
-          <li>Nine tools, particles, and a few termites</li>
-          <li>Keyboard: Tab cycles the tools, Escape returns</li>
-          <li>Nothing is saved and nothing is sent</li>
-        </ul>
-      </Card>
+      </article>
     </Section>
   );
 }

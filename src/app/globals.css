@@ -109,7 +109,7 @@
 
 /* Labels, eyebrows, tags and figures read in the text face, with tabular
    figures so numbers still line up. Mono is kept for what really is terminal
-   output: the scan transcript, the loading line and the key hint. */
+   output: the opening screen's line and the key hint. */
 @utility t-data {
   font-family: var(--font-sans);
   font-size: var(--ts-data);
@@ -682,7 +682,7 @@
 .composer-topics[hidden] { display: none; }
 .composer-topics > .chips { display: contents; }
 .composer-topics > .chips:first-child { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; overflow: visible; }
-.composer .chip { font-size: 12.5px; min-height: 32px; padding: 0 11px 0 9px; gap: 6px; }
+.composer .chip { font-size: 13px; min-height: 32px; padding: 0 11px 0 9px; gap: 6px; }
 .chips-routes > li:first-child { margin-left: auto; }
 .composer .chip-route { justify-content: center; width: 32px; padding: 0; }
 .chip-route svg { color: var(--color-ink); }
@@ -728,10 +728,10 @@
 .side-person { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .side-person > span:last-child { display: grid; min-width: 0; }
 .side-name { font-size: 14.5px; font-weight: 650; letter-spacing: -0.01em; color: var(--color-ink); }
-.side-role { font-size: 12px; line-height: 1.4; color: var(--color-muted); }
+.side-role { font-size: 13px; line-height: 1.4; color: var(--color-muted); }
 .side-close { display: none; width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--color-line-strong); color: var(--color-muted); place-items: center; cursor: pointer; }
 .side-close:hover { color: var(--color-ink); border-color: var(--color-ink); }
-.side-label { margin: 20px 0 6px; padding-inline: 10px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-muted); }
+.side-label { margin: 20px 0 6px; padding-inline: 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-muted); }
 .side-list { display: grid; gap: 1px; list-style: none; }
 .side-item {
   position: relative;
@@ -748,11 +748,11 @@
   transition: background-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out);
 }
 .side-item:hover { background: #ffffff0a; color: var(--color-ink); }
-.side-number { width: 18px; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--color-line-strong); transition: color var(--dur-hover) var(--ease-out); }
-.side-item:hover .side-number { color: var(--color-muted); }
+.side-number { width: 20px; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--color-muted); transition: color var(--dur-hover) var(--ease-out); }
+.side-item:hover .side-number { color: var(--color-ink); }
 /* The section in view: ink, its number lit, and a bar at the edge. */
 .side-item[aria-current="location"] { color: var(--color-ink); background: #ffffff08; font-weight: 550; }
-.side-item[aria-current="location"] .side-number { color: var(--color-c-sky); }
+.side-item[aria-current="location"] .side-number { color: var(--color-accent-ink); }
 .side-item[aria-current="location"]::before { content: ""; position: absolute; left: -12px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--color-c-sky); }
 .side-profile svg { flex-shrink: 0; color: var(--color-ink); }
 .side-foot { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--color-line); }
@@ -816,7 +816,7 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
-  color: var(--color-c-sky);
+  color: var(--color-accent-ink);
 }
 .section-title {
   margin-top: 10px;
@@ -830,8 +830,8 @@
 .section-lead { margin-top: 14px; max-width: 64ch; font-size: 17px; line-height: 1.65; color: var(--color-muted); }
 .section-lead p + p { margin-top: 10px; }
 .section-lead a { color: var(--color-ink); }
-/* One column whose cards never grow past it: a transcript's long line scrolls
-   inside its own box instead of widening the page. */
+/* One column whose cards never grow past it: a long line scrolls inside its
+   own box instead of widening the page. */
 .section-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .section-note { margin-top: 4px; font-size: 14px; line-height: 1.6; color: var(--color-muted); }
 
@@ -867,7 +867,7 @@
   opacity: 0.75;
 }
 .card-head { margin-bottom: 16px; }
-.card-eyebrow { color: var(--topic); }
+.card-eyebrow { color: var(--color-accent-ink); }
 .card-title { margin-top: 4px; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2; }
 .card-stat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-top: 10px; }
 .card-stat-value { font-size: clamp(2rem, 3.4vw, 2.6rem); font-weight: 750; letter-spacing: -0.045em; line-height: 1; color: var(--color-ink); font-variant-numeric: tabular-nums; }
@@ -923,7 +923,7 @@
 .metric dd { display: flex; flex-direction: column; }
 .metric-value { font-size: clamp(2.2rem, 3.4vw, 2.8rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1; color: var(--color-ink); }
 .metric-label { margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--color-ink); }
-.metric-detail { margin-top: 6px; font-size: 12px; line-height: 1.55; color: var(--color-muted); }
+.metric-detail { margin-top: 6px; font-size: 13px; line-height: 1.55; color: var(--color-muted); }
 
 
 .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin-top: 22px; }
@@ -990,13 +990,13 @@
 
 .recommendation-card { min-width: 0; }
 .recommendation-card figcaption { display: flex; gap: 14px; align-items: start; }
-.recommendation-avatar { display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%; background: color-mix(in oklab, var(--topic) 22%, transparent); color: var(--topic); font-size: 13px; font-weight: 700; }
+.recommendation-avatar { display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%; background: color-mix(in oklab, var(--topic) 22%, transparent); color: var(--color-c-ice); font-size: 13px; font-weight: 700; }
 .recommendation-card h3 { font-size: 16px; line-height: 1.4; font-weight: 600; letter-spacing: -0.015em; }
-.recommendation-role { margin-top: 4px; font-size: 12px; line-height: 1.6; color: var(--color-muted); overflow-wrap: anywhere; }
+.recommendation-role { margin-top: 4px; font-size: 13px; line-height: 1.6; color: var(--color-muted); overflow-wrap: anywhere; }
 .recommendation-card blockquote { margin-top: 18px; font-size: 15px; line-height: 1.75; color: var(--color-ink); }
 .recommendation-card blockquote p + p { margin-top: 12px; }
-.recommendation-meta { border-top: 1px solid var(--color-line); padding-top: 14px; margin-top: 18px; font-size: 12px; line-height: 1.7; color: var(--color-muted); }
-.recommendation-excerpt { margin-top: 10px; font-size: 12px; line-height: 1.6; color: var(--color-muted); }
+.recommendation-meta { border-top: 1px solid var(--color-line); padding-top: 14px; margin-top: 18px; font-size: 13px; line-height: 1.7; color: var(--color-muted); }
+.recommendation-excerpt { margin-top: 10px; font-size: 13px; line-height: 1.6; color: var(--color-muted); }
 .recommendations-grid { display: grid; gap: 18px; margin-top: 22px; }
 .recommendations-grid > .recommendation-card { padding: 20px; border: 1px solid var(--color-line); border-radius: var(--radius-card); background: var(--color-paper); box-shadow: var(--well); }
 @media (min-width: 48rem) { .recommendations-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -1051,7 +1051,6 @@
 
 /* --- After hours: the button ------------------------------------------------ */
 
-.fun-stage { display: grid; place-items: center; padding: 30px 0 14px; }
 .fun-button {
   position: relative;
   display: inline-flex;
@@ -1079,9 +1078,70 @@
 }
 .fun-button:hover { transform: translateY(-2px); box-shadow: 0 18px 50px #2d8cff66; }
 .fun-button:active { transform: scale(0.96); }
-.fun-hints { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; list-style: none; font-size: 12px; color: var(--color-muted); }
-.fun-hints li { position: relative; padding-left: 12px; }
-.fun-hints li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 5px; height: 5px; border-radius: 50%; background: var(--color-c-sky); }
+.fun-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; }
+.fun-text { margin-top: 10px; max-width: 54ch; font-size: 15.5px; line-height: 1.7; color: var(--color-muted); }
+.fun-text code {
+  padding: 1px 6px;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  background: #ffffff0a;
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+/* The nine tools, as the game draws them: chips that wrap, so no name breaks. */
+.fun-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; list-style: none; }
+.fun-tools li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px 0 8px;
+  border: 1px solid var(--color-line);
+  border-radius: 100px;
+  white-space: nowrap;
+  background: #ffffff05;
+  font-size: 14px;
+  color: var(--color-ink);
+}
+.fun-tool-icon { width: 22px; height: 22px; flex-shrink: 0; }
+/* The button's own corner: a well with faint hazard stripes. */
+.fun-zone {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 20px;
+  padding: 32px 20px;
+  border: 1px solid color-mix(in oklab, var(--color-c-sky) 30%, var(--color-line));
+  border-radius: 16px;
+  background:
+    repeating-linear-gradient(-45deg, transparent 0 14px, color-mix(in oklab, var(--color-c-sky) 6%, transparent) 14px 28px),
+    color-mix(in oklab, var(--color-paper) 75%, transparent);
+  box-shadow: var(--well);
+  text-align: center;
+}
+.fun-zone .fun-button { padding: 14px 24px; font-size: 14px; }
+.fun-keys { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; list-style: none; font-size: 14px; color: var(--color-muted); }
+.fun-keys kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  height: 26px;
+  margin-right: 6px;
+  padding: 0 7px;
+  border: 1px solid var(--color-line-strong);
+  border-bottom-width: 2px;
+  border-radius: 7px;
+  background: var(--color-surface-2);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--color-ink);
+}
+.fun-note { font-size: 13.5px; color: var(--color-muted); }
+@media (max-width: 63.99rem) {
+  .fun-grid { grid-template-columns: 1fr; }
+}
 @keyframes fun-pulse { 0%, 100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 0; transform: scale(1.12); } }
 @media (prefers-reduced-motion: no-preference) {
   :root:not([data-motion="off"]) .fun-button::before { animation: fun-pulse 2.4s var(--ease-out) infinite; }
@@ -1097,12 +1157,12 @@
 }
 .hud-banner { animation: hud-banner 1.7s var(--ease-out) both; }
 
-/* --- Case studies and the scan transcript ------------------------------------ */
+/* --- Case studies ------------------------------------------------------------- */
 
 .case-context { font-size: 14px; line-height: 1.6; color: var(--color-muted); margin-top: 8px; }
 .case { display: grid; gap: 18px; margin-top: 14px; }
 .case > div { display: grid; gap: 6px; padding-top: 14px; border-top: 1px solid var(--color-line); }
-.case dt { font-size: var(--ts-data); font-weight: 600; color: var(--topic); }
+.case dt { font-size: var(--ts-data); font-weight: 600; color: var(--color-accent-ink); }
 .case dd { font-size: 15px; line-height: 1.65; color: var(--color-ink); }
 .case dd ul { padding-left: 18px; list-style: disc; }
 .case dd li + li { margin-top: 8px; }
@@ -1115,34 +1175,6 @@
   .case > div { grid-template-columns: 9rem minmax(0, 1fr); gap: 24px; }
 }
 
-.transcript {
-  margin-top: 22px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-card);
-  background: #07080c;
-  box-shadow: var(--well);
-  overflow: hidden;
-}
-.transcript-head { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--color-line); color: var(--color-muted); }
-.transcript-dots { display: inline-flex; gap: 5px; }
-.transcript-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--color-line-strong); }
-.transcript-dots i:first-child { background: var(--color-c-sky); }
-.transcript-body { max-height: 420px; overflow: auto; padding: 16px 18px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6; color: var(--color-muted); white-space: pre; }
-.t-ink { color: var(--color-ink); }
-.t-muted { color: var(--color-muted); }
-.t-ok { color: var(--color-c-sky); font-weight: 600; }
-.t-warn { color: var(--color-c-ice); }
-.t-line { display: block; }
-.t-sev { font-weight: 600; }
-.t-sev-error { color: var(--color-ink); }
-.t-sev-warning { color: var(--color-c-ice); }
-.t-sev-info { color: var(--color-muted); }
-.t-rule { color: var(--color-c-sky); }
-.t-loc { color: var(--color-ink); }
-.t-msg { color: var(--color-muted); white-space: pre-wrap; }
-@media (max-width: 47.99rem) {
-  .transcript-body { font-size: 11.5px; padding: 12px; }
-}
 
 /* --- The 404 ------------------------------------------------------------------ */
 
@@ -1299,7 +1331,7 @@
 .ask-answer { margin-top: 4px; }
 .ask-answer a { color: var(--color-c-ice); text-decoration: underline; text-underline-offset: 3px; }
 .ask-reply-card .replies-list { margin-top: 10px; gap: 6px; }
-.ask-reply-card .chip { min-height: 32px; font-size: 12.5px; }
+.ask-reply-card .chip { min-height: 32px; font-size: 13px; }
 .ask-close {
   position: absolute;
   top: 10px;
@@ -1330,7 +1362,6 @@
   .composer-panel,
   .ask-reply-card,
   .evidence-panel,
-  .transcript,
   .recommendations-grid > .recommendation-card,
   .toolbox-search-field,
   .side-item {
@@ -1339,7 +1370,7 @@
   .card { border-radius: 30px; }
   .composer-panel { border-radius: 34px; }
   .ask-reply-card { border-radius: 28px; }
-  .evidence-panel, .transcript, .recommendations-grid > .recommendation-card { border-radius: 28px; }
+  .evidence-panel, .recommendations-grid > .recommendation-card { border-radius: 28px; }
   .toolbox-search-field { border-radius: 18px; }
   .composer-send { corner-shape: squircle; border-radius: 16px; }
   .side-item { border-radius: 14px; }
@@ -1377,41 +1408,26 @@
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
 
-/* --- The employers: five marks, one even row of tiles ---------------------------- */
+/* --- The employers: five white marks on one line ---------------------------------- */
 
+/* The marks are white versions of each logo (see src/content/hero.ts), so
+   they need no filter: they sit at one weight, spread across the column, and
+   brighten under the pointer. A phone wraps them three and two, centred. */
 .employers {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px 32px;
   list-style: none;
 }
-.employers li {
-  display: grid;
-  place-items: center;
-  height: 76px;
-  padding: 0 14px;
-  border: 1px solid var(--color-line);
-  border-radius: 14px;
-  background: color-mix(in oklab, var(--color-surface) 45%, transparent);
-  transition: border-color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out);
-}
-.employers img {
-  max-width: 100%;
-  object-fit: contain;
-  opacity: 0.82;
-  transition: opacity var(--dur-hover) var(--ease-out);
-}
-/* Each mark drawn the way its file reads best on the dark ground. */
-.employers [data-tone="silhouette"] img { filter: brightness(0) invert(1); }
-.employers [data-tone="light"] img { filter: grayscale(1) brightness(1.1); }
-.employers [data-tone="soft"] img { filter: grayscale(1) brightness(1.45) contrast(0.95); }
-.employers li:hover { border-color: var(--color-line-strong); background: color-mix(in oklab, var(--color-surface) 80%, transparent); }
+.employers li { display: flex; align-items: center; justify-content: center; min-height: 56px; }
+.employers img { max-width: 100%; opacity: 0.8; transition: opacity var(--dur-hover) var(--ease-out); }
 .employers li:hover img { opacity: 1; }
-/* A phone: three tiles, then two that share the row's whole width. */
 @media (max-width: 47.99rem) {
-  .employers { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
-  .employers li { grid-column: span 2; height: 64px; padding: 0 10px; }
-  .employers li:nth-child(n + 4) { grid-column: span 3; }
+  .employers { justify-content: center; gap: 22px 36px; }
+  .employers li { min-height: 48px; }
+  .employers img { scale: 0.86; }
 }
 
 /* --- Ultra: the effort beside the field ------------------------------------------ */
@@ -1449,9 +1465,12 @@
 
 /* --- The opening screen, once a session ------------------------------------------- */
 
-/* Shown only while the layout's inline script has marked the root, and it
-   leaves by itself: the name rises in like a heading, the line follows, then
-   the whole screen fades and the page is already there underneath. */
+/* Shown only while the layout's inline script has marked the root. The name
+   rises in like a heading and the line follows; then the director hands over
+   to the hero (`handover`): the name and the role glide into the hero's own,
+   the screen's ground fades round them, and the hero's heading takes over.
+   `lifting` is the plain fade, for a hero out of view. If no script ever
+   arrives, the screen fades by itself and the hero's text shows anyway. */
 .boot { display: none; }
 :root[data-boot] .boot {
   position: fixed;
@@ -1461,9 +1480,17 @@
   place-items: center;
   padding: var(--gutter);
   background: var(--color-paper);
-  animation: boot-out 520ms var(--ease-out) 1500ms both;
+  animation: boot-out 520ms var(--ease-out) 3200ms both;
 }
 :root[data-boot="lifting"] .boot { animation: boot-out 360ms var(--ease-out) both; }
+:root[data-boot="handover"] .boot { animation: none; background-color: transparent; transition: background-color 820ms var(--ease-in-out); }
+:root[data-boot="handover"] .boot::before { opacity: 0; transition: opacity 600ms var(--ease-out); }
+:root[data-boot="handover"] .boot-line { opacity: 0; transition: opacity 160ms linear; }
+/* The hero's own name and role wait under the screen, so the two never show
+   at once; the late fallback shows them even if the director never runs. */
+:root[data-boot] .hero-name,
+:root[data-boot] .hero-role { animation: hero-wait 0s linear 3200ms both; }
+@keyframes hero-wait { from { visibility: hidden; } to { visibility: visible; } }
 .boot::before {
   content: "";
   position: absolute;

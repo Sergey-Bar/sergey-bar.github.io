@@ -2275,7 +2275,7 @@ function Meter({ value, segments = 0, className }: { value: number; segments?: n
 }
 
 const panel = "rounded-xl border border-white/10 bg-[#0b0d12]/80 shadow-lg shadow-black/50 backdrop-blur-md";
-const label = "text-[10px] font-semibold tracking-[0.16em] text-white/50 uppercase";
+const label = "text-[11.5px] font-semibold tracking-[0.16em] text-white/70 uppercase";
 
 export function DestructionGame({ onClose }: { onClose: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -2538,10 +2538,10 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
           <span className="min-w-0 flex-1">
             <span className="flex items-baseline justify-between gap-2">
               <span className="truncate text-[12px] font-bold sm:text-[13px]">{stats.rank}</span>
-              <span className="text-[10px] text-white/50 max-sm:hidden">LV {stats.level}</span>
+              <span className="text-[11.5px] text-white/70 max-sm:hidden">LV {stats.level}</span>
             </span>
             <Meter value={xpInLevel} className="mt-1.5" />
-            <span className="mt-1 block text-[10px] text-white/50">
+            <span className="mt-1 block text-[11.5px] text-white/70">
               {stats.score.toLocaleString("en-US")}
               {stats.nextAt !== null ? ` / ${stats.nextAt.toLocaleString("en-US")} XP` : " XP · max level"}
             </span>
@@ -2551,7 +2551,7 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
         <div className={cn(panel, "flex flex-col items-center px-3 py-1.5 sm:px-5 sm:py-2")}>
           <span className={label}>Time</span>
           <span className="text-[20px] leading-tight font-extrabold tracking-tight sm:text-[26px]">{clock(stats.elapsed)}</span>
-          <span className="text-[10px] text-white/45">{best !== null ? `best ${clock(best)}` : "no best yet"}</span>
+          <span className="text-[11.5px] text-white/70">{best !== null ? `best ${clock(best)}` : "no best yet"}</span>
         </div>
 
         <div className={cn(panel, "ml-auto w-full max-w-[15rem] p-2 sm:p-2.5")}>
@@ -2560,7 +2560,7 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
             <span className="text-[12px] font-bold">{integrity >= 99.95 ? "100" : integrity.toFixed(1)}%</span>
           </span>
           <Meter value={integrity} segments={10} className="mt-1.5" />
-          <span className="mt-1 flex justify-between text-[10px] text-white/50">
+          <span className="mt-1 flex justify-between text-[11.5px] text-white/70">
             <span>bugs squashed {stats.kills}</span>
             <span className="max-sm:hidden">best combo ×{stats.maxCombo}</span>
           </span>
@@ -2570,7 +2570,7 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
       {/* Level-ups and streaks. */}
       {banner && stats.state !== "done" ? (
         <div key={banner.key} className="hud-banner pointer-events-none absolute inset-x-0 top-[22%] flex flex-col items-center text-center" role="status">
-          <span className="text-[11px] font-semibold tracking-[0.3em] text-[#5aa9ff] uppercase">{banner.sub}</span>
+          <span className="text-[12px] font-semibold tracking-[0.3em] text-[#5aa9ff] uppercase">{banner.sub}</span>
           <span className="text-[34px] leading-none font-black tracking-tight uppercase italic drop-shadow-[0_4px_24px_rgba(45,140,255,0.55)] sm:text-[52px]">
             {banner.title}
           </span>
@@ -2599,10 +2599,10 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
             <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.03] p-3 text-left">
               <span className="flex items-baseline justify-between">
                 <span className="text-[12px] font-bold">Career level {careerNow}</span>
-                <span className="text-[10px] text-[#5aa9ff] tabular-nums">+{gained.toLocaleString("en-US")} XP</span>
+                <span className="text-[11.5px] text-[#5aa9ff] tabular-nums">+{gained.toLocaleString("en-US")} XP</span>
               </span>
               <Meter value={careerProgress} className="mt-1.5" />
-              <p className="mt-1.5 text-[10px] text-white/50">rank this run: {stats.rank}{best !== null && !newBest ? ` · best ${clock(best)}` : ""}</p>
+              <p className="mt-1.5 text-[11.5px] text-white/70">rank this run: {stats.rank}{best !== null && !newBest ? ` · best ${clock(best)}` : ""}</p>
             </div>
             <div className="mt-4 flex justify-center gap-2">
               <button
@@ -2658,7 +2658,7 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
         <div className={cn(panel, "pointer-events-auto w-full max-w-[40rem] p-1.5 sm:p-2")}>
           <div className="flex items-center gap-2 px-1 pb-1.5">
             <span className="text-[12px] font-bold">{active?.label}</span>
-            <span className="text-[10px] text-white/45 max-sm:hidden">1–9 or right click · R rebuild · M sound · Esc chat</span>
+            <span className="text-[11.5px] text-white/70 max-sm:hidden">1–9 or right click · R rebuild · M sound · Esc chat</span>
             <button
               type="button"
               onClick={toggleSound}
@@ -2693,7 +2693,7 @@ export function DestructionGame({ onClose }: { onClose: () => void }) {
                     : "border-white/10 bg-white/[0.04] hover:border-white/25 hover:bg-white/10",
                 )}
               >
-                <span className="absolute top-0.5 left-1 text-[9px] font-bold text-white/45 tabular-nums max-sm:hidden">{index + 1}</span>
+                <span className="absolute top-0.5 left-1 text-[9px] font-bold text-white/70 tabular-nums max-sm:hidden">{index + 1}</span>
                 <item.Icon className="size-5 sm:size-7" />
               </button>
             ))}

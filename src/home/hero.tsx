@@ -54,14 +54,14 @@ export function Hero() {
         <p className="data">Experience across teams at</p>
         <ul className="employers" aria-label="Employers">
           {employers.map((employer) => (
-            <li key={employer.name} title={employer.name} data-tone={employer.tone}>
+            <li key={employer.name} title={employer.name}>
               {/* eslint-disable-next-line @next/next/no-img-element -- static export, brand assets */}
               <img
                 src={employer.logo}
                 alt={employer.name}
                 width={employer.iw}
                 height={employer.ih}
-                className={`${employer.h} w-auto`}
+                style={{ height: employer.h, width: "auto" }}
               />
             </li>
           ))}

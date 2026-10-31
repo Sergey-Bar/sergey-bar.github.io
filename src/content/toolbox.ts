@@ -32,7 +32,6 @@ export const toolbox: readonly ToolGroup[] = [
   {
     id: "agents",
     title: "AI coding agents",
-    note: "Used to build and to review, with the same rule applied to generated code as to any other.",
     items: [
       "OpenCode",
       "Claude Code",

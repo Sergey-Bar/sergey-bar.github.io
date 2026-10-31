@@ -96,15 +96,23 @@ test.describe("the first screen", () => {
 });
 
 test.describe("the opening screen", () => {
-  test("shows once a session, lifts by itself, and is gone on the next load", async ({ context }) => {
+  test("shows once a session, hands over to the hero by itself, and is gone on the next load", async ({ context }) => {
     const page = await context.newPage();
+    // The page's own timers wait for the test, so the handover happens when the test says.
+    await page.clock.install();
     await page.goto("/");
     const boot = page.locator(".boot");
     await expect(boot).toBeVisible();
     await expect(boot.locator(".boot-title")).toHaveText("Sergey Bar");
-    // The page is already there underneath it.
-    await expect(page.getByRole("heading", { level: 1, name: "Sergey Bar" })).toBeAttached();
-    await expect(boot).toBeHidden({ timeout: 4_000 });
+    // The page is already there underneath, its own name waiting for the handover.
+    await expect(page.getByRole("heading", { level: 1, name: "Sergey Bar", includeHidden: true })).toBeAttached();
+    await expect(page.locator(".hero-name")).toHaveCSS("visibility", "hidden");
+    await page.clock.runFor(1_400);
+    await expect(page.locator("html")).toHaveAttribute("data-boot", /handover|lifting/);
+    await page.clock.runFor(1_000);
+    await expect(page.locator("html")).not.toHaveAttribute("data-boot");
+    await expect(boot).toBeHidden();
+    await expect(page.locator(".hero-name")).toHaveCSS("visibility", "visible");
     await page.reload();
     await expect(page.locator("html")).not.toHaveAttribute("data-boot");
     await expect(boot).toBeHidden();
@@ -387,6 +395,103 @@ test.describe("something fun", () => {
     await page.keyboard.press("Escape");
     await expect(game).toBeHidden();
     await expect(page.locator(".composer-topics .chip").first()).toBeVisible();
+  });
+});
+
+test.describe("content", () => {
+  test("case studies are the two cases; Mjolnir is told once, under Projects", async ({ page }) => {
+    await page.goto("/#cases");
+    await expect(page.locator("#cases .card-title")).toHaveText([
+      "Quality from zero on a security-critical platform",
+      "A memory leak root-caused on a $30M video platform",
+    ]);
+    await expect(page.locator("#cases").getByText(/green build means anything/)).toHaveCount(0);
+    await expect(page.locator("#cases").getByText("80/100")).toHaveCount(0);
+  });
+
+  test("the toolbox carries no note about generated code", async ({ page }) => {
+    await page.goto("/#toolbox");
+    await page.locator("#toolbox").getByRole("button", { name: /Explore all/ }).click();
+    await expect(page.locator("#toolbox").getByText(/Used to build and to review/)).toHaveCount(0);
+  });
+
+  test("the employers are the white marks made for the dark ground", async ({ page }) => {
+    await page.goto("/");
+    const marks = page.locator(".employers img");
+    await expect(marks).toHaveCount(5);
+    for (const src of await marks.evaluateAll((imgs) => imgs.map((img) => img.getAttribute("src")))) {
+      expect(src).toMatch(/-on-dark\.(svg|png)$/);
+    }
+    for (let i = 0; i < 5; i++) await expect(marks.nth(i)).toHaveJSProperty("complete", true);
+  });
+
+  test("something fun lists the game's nine tools and opens it from its own corner", async ({ page }) => {
+    await page.goto("/#fun");
+    await expect(page.locator("#fun .fun-tools li")).toHaveCount(9);
+    await expect(page.locator("#fun .card-title")).toHaveText("Wreck the release machine");
+    await expect(page.locator("#fun .fun-zone").getByRole("button", { name: "DO NOT PRESS THIS BUTTON" })).toBeVisible();
+  });
+});
+
+test.describe("readability", () => {
+  /**
+   * Every visible text: at least 12px, and at least 4.5:1 against what it
+   * sits on (3:1 for large text). Backgrounds are composed up the tree from
+   * the page's own ground, the way they are painted.
+   */
+  test("every text is large enough and has the contrast to read", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    await page.evaluate(() => document.querySelectorAll("details").forEach((d) => (d.open = true)));
+    const problems = await page.evaluate(() => {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      const g = canvas.getContext("2d", { willReadFrequently: true })!;
+      const rgba = (c: string) => {
+        g.clearRect(0, 0, 1, 1);
+        g.fillStyle = "#000";
+        g.fillStyle = c;
+        g.fillRect(0, 0, 1, 1);
+        const d = g.getImageData(0, 0, 1, 1).data;
+        return [d[0], d[1], d[2], d[3] / 255];
+      };
+      const lum = ([r, gg, b]: number[]) => {
+        const f = (v: number) => ((v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+        return 0.2126 * f(r) + 0.7152 * f(gg) + 0.0722 * f(b);
+      };
+      const ground = rgba(getComputedStyle(document.querySelector(".page-bg")!).backgroundColor);
+      const behind = (el: Element) => {
+        const layers: number[][] = [];
+        for (let n: Element | null = el; n; n = n.parentElement) {
+          const c = rgba(getComputedStyle(n).backgroundColor);
+          if (c[3] > 0) layers.push(c);
+          if (c[3] >= 0.99) break;
+        }
+        return layers.reverse().reduce((base, c) => base.map((v, i) => (i < 3 ? v * (1 - c[3]) + c[i] * c[3] : 1)), ground);
+      };
+      const out: string[] = [];
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      for (let t = walker.nextNode(); t; t = walker.nextNode()) {
+        const el = t.parentElement!;
+        if (!t.textContent?.trim() || el.closest(".sr-only, script, style, .boot, [aria-hidden='true']")) continue;
+        const box = el.getBoundingClientRect();
+        const cs = getComputedStyle(el);
+        if (box.width < 2 || cs.visibility === "hidden" || !el.checkVisibility()) continue;
+        const size = parseFloat(cs.fontSize);
+        const label = `"${t.textContent.trim().slice(0, 30)}" (${el.className || el.tagName})`;
+        if (size < 12) out.push(`${label} is ${size}px`);
+        const fill = cs.webkitTextFillColor ? rgba(cs.webkitTextFillColor) : null;
+        if (fill && fill[3] === 0) continue; // gradient text, drawn by its background
+        const bg = behind(el);
+        const c = rgba(cs.color);
+        const fg = c.map((v, i) => (i < 3 ? v * c[3] + bg[i] * (1 - c[3]) : 1));
+        const ratio = (Math.max(lum(fg), lum(bg)) + 0.05) / (Math.min(lum(fg), lum(bg)) + 0.05);
+        const large = size >= 24 || (size >= 18.66 && parseInt(cs.fontWeight) >= 700);
+        if (ratio < (large ? 3 : 4.5)) out.push(`${label} is ${ratio.toFixed(2)}:1`);
+      }
+      return [...new Set(out)];
+    });
+    expect(problems).toEqual([]);
   });
 });
 

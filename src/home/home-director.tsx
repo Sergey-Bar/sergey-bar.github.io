@@ -63,6 +63,13 @@ function nextBootLine(): string {
   }
 }
 
+/** The box of an element's text itself, not of the block it sits in. */
+function textBox(element: HTMLElement): DOMRect {
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  return range.getBoundingClientRect();
+}
+
 const finePointer = () => window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
 /** True when the visitor, or the OS, has asked this site not to move. */
@@ -163,27 +170,63 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
   /**
    * The opening screen, once per browser session. The inline script in the
    * layout decides before first paint (and marks the session), so the page
-   * never flashes underneath; the stylesheet fades the screen out on its own,
-   * which also covers a script that never arrives. Here a tap, a key, a wheel
-   * or a swipe lifts it at once, and the line it shows is the next in turn.
+   * never flashes underneath; the stylesheet has its own late fade, which
+   * covers a script that never arrives. Here the screen hands over to the
+   * hero: after a moment, or at once on a tap, a key, a wheel or a swipe, the
+   * name and the role glide from the centre into their places in the hero
+   * while the screen fades round them, and the hero's own heading takes over.
+   * With the hero out of view (an address that opened on a section) the
+   * screen simply fades.
    */
   useEffect(() => {
     const root = document.documentElement;
     if (!("boot" in root.dataset)) return;
     const line = document.querySelector<HTMLElement>("[data-boot-line]");
     if (line) line.textContent = nextBootLine();
+    const events = ["pointerdown", "keydown", "wheel", "touchmove"] as const;
+    let timer = 0;
+    let finished = false;
     const done = () => {
+      if (finished) return;
+      finished = true;
       delete root.dataset.boot;
-      for (const type of ["pointerdown", "keydown", "wheel", "touchmove"]) window.removeEventListener(type, lift);
     };
     const lift = () => {
-      root.dataset.boot = "lifting";
-      window.setTimeout(done, 380);
+      // Once only: the timer and the first gesture race to lift it.
+      if (root.dataset.boot !== "" || finished) return;
+      window.clearTimeout(timer);
+      for (const type of events) window.removeEventListener(type, lift);
+      const pairs = [
+        [".boot-title", ".hero-name"],
+        [".boot-role", ".hero-role"],
+      ].map(([from, to]) => [document.querySelector<HTMLElement>(from), document.querySelector<HTMLElement>(to)] as const);
+      const hero = pairs[0][1]?.getBoundingClientRect();
+      const inView = hero && hero.bottom > 0 && hero.top < window.innerHeight;
+      if (!inView || pairs.some(([a, b]) => !a || !b)) {
+        root.dataset.boot = "lifting";
+        timer = window.setTimeout(done, 380);
+        return;
+      }
+      root.dataset.boot = "handover";
+      const duration = 820;
+      for (const [from, to] of pairs) {
+        if (!from || !to) continue;
+        const a = textBox(from);
+        const b = textBox(to);
+        const scale = parseFloat(getComputedStyle(to).fontSize) / parseFloat(getComputedStyle(from).fontSize);
+        from.style.transformOrigin = "0 0";
+        from.animate(
+          [{ transform: "none" }, { transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${scale})` }],
+          { duration, easing: "cubic-bezier(0.65, 0, 0.35, 1)", fill: "forwards" },
+        );
+      }
+      timer = window.setTimeout(done, duration);
     };
-    for (const type of ["pointerdown", "keydown", "wheel", "touchmove"]) window.addEventListener(type, lift, { passive: true });
-    const timer = window.setTimeout(done, 2400);
+    for (const type of events) window.addEventListener(type, lift, { passive: true });
+    timer = window.setTimeout(lift, 1300);
     return () => {
       window.clearTimeout(timer);
+      for (const type of events) window.removeEventListener(type, lift);
       done();
     };
   }, []);

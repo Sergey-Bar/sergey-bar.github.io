@@ -143,7 +143,7 @@ export const topics: readonly Topic[] = [
     keywords: [
       "project", "mjolnir", "automate", "open source", "open-source", "repo",
       "github", "your work", "my work", "see work", "portfolio", "built", "build",
-      "scanner", "npm", "product", "show me", "what have you made", "side project",
+      "scanner", "green build", "npm", "product", "show me", "what have you made", "side project",
     ],
     hashes: ["projects"],
   },
@@ -154,7 +154,7 @@ export const topics: readonly Topic[] = [
     description: "Case studies: the problem, the approach, the evidence and the outcome",
     keywords: [
       "case stud", "case-stud", "walk me", "deep dive", "example", "story", "how did you",
-      "memory leak", "from zero", "green build", "evidence", "proof", "outcome", "impact",
+      "memory leak", "from zero", "evidence", "proof", "outcome", "impact",
       "problem you solved", "hardest", "proud",
     ],
     hashes: ["cases", "case-studies", "work"],
