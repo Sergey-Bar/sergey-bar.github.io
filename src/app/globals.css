@@ -175,13 +175,11 @@
     color-scheme: dark;
     --shell: 1240px;
     --gutter: 20px;
-    --composer-space: 196px;
   }
 
   @media (min-width: 48rem) {
     :root {
       --gutter: 32px;
-      --composer-space: 176px;
     }
   }
 
@@ -198,11 +196,20 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
-    /* A sticky header or identity bar would otherwise cover an anchor target. */
+    /* A sticky header (the route pages' header, the phone's bar on the home
+       page) would otherwise cover an anchor target. */
     scroll-padding-top: 5.5rem;
-    /* Likewise the fixed composer, whose height the chat measures as it changes:
+    /* Likewise the fixed ask bar, whose height the page measures as it changes:
        a link reached by Tab scrolls clear of it instead of focusing beneath it. */
     scroll-padding-bottom: var(--composer-h, 0px);
+  }
+
+  /* A wide screen has no bar at the top of the home page, so a section's
+     heading lands near the top edge with a little air above it. */
+  @media (min-width: 64rem) {
+    html:has(.home) {
+      scroll-padding-top: 2rem;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -442,23 +449,11 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
-/* On the chat page the composer owns the bottom edge, so the control moves to
-   the top-left corner as a glyph alone; the identity bar leaves it room. */
-main:has(.chat-shell) ~ .motion-control {
-  top: 14px;
-  right: 64px;
-  left: auto;
-  bottom: auto;
-  width: 42px;
-  height: 42px;
-}
-/* The loading screen shows no controls at all: no corner, no motion button. */
-.chat-shell[data-state="intro"] .topbar { display: none; }
-main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
-/* Once the chat is open the control lives in the sidebar's foot, beside the
-   person: the chat's own header stays clear. */
+/* On the home page the ask bar owns the bottom edge. On a wide screen the
+   control sits in the sidebar's foot, beside the availability line; on a
+   narrow one it lives in the drawer and shows with it. */
 @media (min-width: 64rem) {
-  main:has(.chat-shell[data-state="chat"]) ~ .motion-control {
+  .home ~ .motion-control {
     top: auto;
     right: auto;
     bottom: max(12px, env(safe-area-inset-bottom));
@@ -466,11 +461,9 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
     width: 36px;
     height: 36px;
   }
-  .chat-shell[data-state="chat"] .side-foot { padding-right: 44px; }
 }
-/* On a narrow screen it is in the drawer, so it shows with the drawer. */
 @media (max-width: 63.99rem) {
-  main:has(.chat-shell[data-state="chat"]) ~ .motion-control {
+  .home ~ .motion-control {
     top: auto;
     right: auto;
     bottom: max(12px, env(safe-area-inset-bottom));
@@ -480,45 +473,47 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
     height: 36px;
     visibility: hidden;
   }
-  main:has(.chat-shell[data-drawer]) ~ .motion-control { visibility: visible; }
-  .chat-shell[data-drawer] .side-foot { padding-right: 44px; }
-  .chat-shell[data-drawer] .topbar { z-index: 34; }
-}
-@media (min-width: 64rem) and (max-width: 84.99rem) {
-  .chat-shell[data-state="chat"] .identity { padding-left: 0; }
+  .home[data-drawer] ~ .motion-control { visibility: visible; }
 }
 
 /* ---------------------------------------------------------------------------
-   The chat page.
+   The home page: one document, with the contents beside it and the ask bar
+   under it.
    --------------------------------------------------------------------------- */
 
-.chat-shell {
+:root {
+  --sidebar-w: 264px;
+  /* The reading column. Wide enough for a five-figure row, narrow enough
+     that a lead paragraph stays near 70 characters a line. */
+  --column: 820px;
+}
+
+.home {
   position: relative;
   min-height: 100dvh;
   overflow-x: clip;
 }
 
-.chat-bg {
+.page-bg {
   position: fixed;
   inset: 0;
   z-index: -1;
   overflow: hidden;
   background: var(--color-paper);
 }
-.chat-grain {
+.page-grain {
   position: absolute;
   inset: 0;
 }
-/* Pre-blurred radials moved on the compositor: no filter, no repaint. */
+/* Pre-blurred radials moved on the compositor: no filter, no repaint. Kept
+   faint, so the light never competes with the text. */
 .orb {
   position: absolute;
   width: 72vmax;
   height: 72vmax;
   border-radius: 50%;
-  opacity: 0.55;
+  opacity: 0.4;
 }
-/* The banner's light: one blue glow low on the right, a fainter one above it,
-   and the merest wash on the left so the black is not flat. */
 .orb-1 {
   right: -26vmax;
   bottom: -30vmax;
@@ -536,7 +531,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 }
 
 /* The light that follows the pointer: painted once, moved on the compositor,
-   faded by the director when the pointer is gone. Never on touch screens. */
+   faded by the motion director when the pointer is gone. Never on touch screens. */
 .cursor-glow {
   position: absolute;
   top: 0;
@@ -545,7 +540,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   height: 620px;
   margin: -310px 0 0 -310px;
   border-radius: 50%;
-  background: radial-gradient(circle, #2d8cff30 0%, #0a66c218 32%, transparent 64%);
+  background: radial-gradient(circle, #2d8cff22 0%, #0a66c212 32%, transparent 64%);
   opacity: 0;
   pointer-events: none;
   will-change: transform;
@@ -557,37 +552,8 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   .cursor-glow { display: none; }
 }
 
-.watermark {
-  position: fixed;
-  top: 50%;
-  z-index: 0;
-  writing-mode: vertical-rl;
-  font-size: clamp(2rem, 3.6vw, 3.4rem);
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #ffffff07;
-  user-select: none;
-  pointer-events: none;
-  white-space: nowrap;
-}
-.watermark-l { left: 22px; transform: translateY(-50%) rotate(180deg); }
-.watermark-r { right: 22px; transform: translateY(-50%); }
-@media (max-width: 79.99rem) {
-  .watermark { display: none; }
-}
-
-.topbar {
-  position: fixed;
-  top: 14px;
-  right: 14px;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-/* Two routes in one pill. A white highlight sits behind LinkedIn at rest and
-   slides to whichever half is hovered or focused; the icon over it turns dark. */
+/* Two routes in one pill (the route pages' header). A white highlight sits
+   behind LinkedIn at rest and slides to whichever half is hovered or focused. */
 .social {
   position: relative;
   display: flex;
@@ -633,91 +599,81 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 .social-link:active { transform: scale(0.94); }
 .social-link:focus-visible { outline-offset: -2px; }
 
-.chat-main { transition: padding-left 420ms var(--ease-out); }
-.chat-column {
+.home-main { display: block; outline: none; }
+.home-column {
   position: relative;
   z-index: 1;
-  width: min(100% - 2 * var(--gutter), 960px);
+  width: min(100% - 2 * var(--gutter), var(--column));
   margin-inline: auto;
+  /* Room for the ask bar, so the foot of the page scrolls clear of it. */
+  padding-bottom: calc(var(--composer-h, 160px) + 24px);
+}
+@media (min-width: 64rem) {
+  .home-main { padding-left: var(--sidebar-w); }
 }
 
-/* --- Intro ---------------------------------------------------------------- */
+/* --- Hero ---------------------------------------------------------------- */
 
-/* Centred in the room above the composer, then lifted: the extra bottom
-   padding pulls the centre up without pinning the block to the top edge. */
-.intro {
+.hero { padding: 88px 0 0; }
+.hero-grid {
   display: grid;
-  align-content: center;
-  justify-items: center;
-  text-align: center;
-  min-height: 100dvh;
-  padding-top: 64px;
-  padding-bottom: calc(var(--composer-space) + 56px);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 48px;
 }
-
-.intro-title {
-  margin-top: 0;
-  font-size: clamp(2.6rem, 7vw, 5.5rem);
-  font-weight: 750;
-  letter-spacing: -0.05em;
-  line-height: 1.02;
+.hero-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 14px 6px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--color-line-strong);
+  background: color-mix(in oklab, var(--color-surface) 70%, transparent);
+  font-size: 13px;
+  font-weight: 500;
   color: var(--color-ink);
 }
-.intro-line { display: block; }
-.intro-title .name {
+.hero-status-sep { color: var(--color-line-strong); }
+.hero-name {
+  margin-top: 22px;
+  font-size: clamp(2.75rem, 6.2vw, 4.5rem);
+  font-weight: 750;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  color: var(--color-ink);
+  outline: none;
+}
+.hero-role {
+  margin-top: 14px;
+  font-size: clamp(1.125rem, 2vw, 1.375rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
   background: var(--grad-text);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  padding-inline: 0.04em;
 }
-
-.intro-sub {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px 10px;
-  margin-top: 22px;
-  max-width: 56ch;
-  font-size: clamp(1rem, 1.6vw, 1.2rem);
-  line-height: 1.5;
+.hero-pitch {
+  margin-top: 16px;
+  max-width: 46ch;
+  font-size: clamp(1.0625rem, 1.6vw, 1.1875rem);
+  line-height: 1.6;
   color: var(--color-muted);
 }
-.intro-role { color: var(--color-ink); font-weight: 500; }
-.intro-dot { color: var(--color-line-strong); }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.action.action-icon { width: 50px; padding: 0; }
 
-.intro-stage {
-  display: grid;
-  justify-items: center;
-  margin-top: 40px;
-}
-
-/* The intro lifts away when the chat opens on its own. */
-.intro-wrap { transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out); }
-.chat-shell[data-leaving] .intro-wrap { opacity: 0; transform: translateY(-28px); }
-
-/* Centred, a little larger now that it stands alone, and after a few seconds
-   it settles: the ring goes and the photo dims a little. A pointer over it,
-   or focus near it, brings it back. */
-.intro-portrait {
+.hero-portrait {
   position: relative;
-  width: clamp(180px, min(22vw, 28vh), 260px);
+  width: clamp(168px, 20vw, 232px);
   aspect-ratio: 1;
 }
-@media (prefers-reduced-motion: no-preference) {
-  :root:not([data-motion="off"]) .portrait-disc { animation: portrait-settle-dim 1200ms var(--ease-out) 6s both; }
-  :root:not([data-motion="off"]) .portrait-ring { animation: ring-spin 14s linear infinite, portrait-settle-ring 1200ms var(--ease-out) 6s both; }
-  .intro-stage:hover .portrait-disc, .intro-stage:focus-within .portrait-disc { animation: none; opacity: 1; filter: none; }
-  .intro-stage:hover .portrait-ring, .intro-stage:focus-within .portrait-ring { animation: ring-spin 14s linear infinite; opacity: 1; }
-}
-@keyframes portrait-settle-dim { to { opacity: 0.78; filter: saturate(0.85); } }
-@keyframes portrait-settle-ring { to { opacity: 0.25; } }
 .portrait-glow {
   position: absolute;
   inset: -22%;
   border-radius: 50%;
-  background: radial-gradient(circle, #2d8cff55 0%, #0a66c230 35%, transparent 65%);
-  opacity: 0.9;
+  background: radial-gradient(circle, #2d8cff40 0%, #0a66c224 35%, transparent 65%);
 }
 .portrait-ring {
   position: absolute;
@@ -725,6 +681,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   border-radius: 50%;
   background: conic-gradient(from 0deg, var(--color-c-blue), var(--color-c-sky), #ffffff, var(--color-c-sky), var(--color-c-blue));
   mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  opacity: 0.85;
 }
 .portrait-disc {
   position: absolute;
@@ -744,32 +701,36 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   object-position: 50% 50%;
   filter: saturate(0.95) contrast(1.02);
 }
-.portrait-badge {
-  position: absolute;
-  left: 50%;
-  bottom: -14px;
-  translate: -50% 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
-  border-radius: 100px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-line-strong);
-  box-shadow: 0 10px 30px #0007;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  color: var(--color-ink);
-}
 .status-dot {
   width: 8px;
   height: 8px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: var(--color-c-sky);
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-c-sky) 25%, transparent);
 }
 
+.hero-employers {
+  display: grid;
+  gap: 16px;
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-line);
+}
+.hero-employers > .data { color: var(--color-muted); }
+
+@media (max-width: 47.99rem) {
+  .hero { padding-top: 28px; }
+  .hero-grid { grid-template-columns: 1fr; gap: 0; }
+  /* On a phone the portrait leads, small, so the name is still on the first screen. */
+  .hero-portrait { order: -1; width: 92px; margin: 4px 0 22px 5px; }
+  .portrait-glow { inset: -30%; }
+  .hero-name { margin-top: 18px; }
+  .hero-actions { gap: 10px; margin-top: 24px; }
+  .hero-actions .action-lg { min-height: 48px; padding-inline: 18px; font-size: 14.5px; }
+  .hero-actions .action.action-icon { width: 48px; padding: 0; }
+  .hero-employers { margin-top: 40px; }
+}
 
 /* --- Actions and chips ---------------------------------------------------- */
 
@@ -836,68 +797,42 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 .chip:hover { border-color: var(--topic); background: color-mix(in oklab, var(--topic) 16%, transparent); transform: translateY(-1px); }
 .chip:hover svg { transform: scale(1.25) rotate(-6deg); }
 .chip:active { transform: scale(0.96); }
-/* The topics panel behind the plus. Its two lists flow as one row of chips
-   (the lists themselves step out of the layout), so reading mode, the topics
-   and the profiles share two rows on a wide screen. The profiles are icons,
-   named for assistive technology and in a tooltip, and stand at the end. */
-.composer-topics { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 6px 10px; margin-bottom: 2px; border-bottom: 1px solid var(--color-line); }
+/* The topics panel behind the plus: every section a jump away, then the
+   profiles as icons, named for assistive technology and in a tooltip. A wide
+   screen fits it in one or two rows; a phone keeps one row of short names and
+   scrolls it sideways, faded at the edge, so the page keeps the screen. The
+   section in view is marked. */
+.composer-topics { display: flex; align-items: center; gap: 6px; padding: 4px 4px 10px; margin-bottom: 4px; border-bottom: 1px solid var(--color-line); }
 .composer-topics[hidden] { display: none; }
 .composer-topics > .chips { display: contents; }
-.composer .chip { font-size: 12.5px; min-height: 34px; padding: 0 11px 0 9px; gap: 6px; }
+.composer-topics > .chips:first-child { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; overflow: visible; }
+.composer .chip { font-size: 12.5px; min-height: 32px; padding: 0 11px 0 9px; gap: 6px; }
 .chips-routes > li:first-child { margin-left: auto; }
-.composer .chip-route { justify-content: center; width: 34px; padding: 0; }
+.composer .chip-route { justify-content: center; width: 32px; padding: 0; }
 .chip-route svg { color: var(--color-ink); }
 .chip-route:hover { border-color: var(--color-ink); background: #ffffff0f; }
-/* Reading mode leads the panel and is set apart: a blue-lit chip, then a rule. */
-.chips-lead { display: flex; align-items: center; gap: 8px; }
-.chips-lead::after { content: ""; width: 1px; height: 20px; margin-right: 2px; background: var(--color-line-strong); }
-.composer .chip-read {
-  border-color: color-mix(in oklab, var(--color-c-sky) 55%, transparent);
-  background: linear-gradient(118deg in oklch, color-mix(in oklab, var(--color-c-blue) 34%, transparent), color-mix(in oklab, var(--color-c-sky) 12%, transparent));
-  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.08);
-  font-weight: 600;
-}
-.chip-read svg { color: var(--color-c-ice); }
-.chip-read:hover { border-color: var(--color-c-sky); background: color-mix(in oklab, var(--color-c-sky) 24%, transparent); }
+.composer .chip[data-current] { border-color: color-mix(in oklab, var(--color-c-sky) 60%, transparent); background: color-mix(in oklab, var(--color-c-sky) 14%, transparent); }
 .chip-short { display: none; }
-/* While the topics panel is open the composer stands taller, so the log keeps
-   room beneath it and the end of an answer can always scroll clear of it. */
-.chat-shell:has(.composer-topics:not([hidden])) .log { padding-bottom: calc(var(--composer-space) + 110px); }
 @media (max-width: 47.99rem) {
-  .chat-shell:has(.composer-topics:not([hidden])) .log { padding-bottom: calc(var(--composer-space) + 220px); }
-}
-/* A phone gets every button at once, no scrolling: a grid of tiles, four
-   across and three down, each an icon over a short name (the full label stays
-   the accessible name), like the shortcuts on a phone's own home screen. */
-@media (max-width: 47.99rem) {
-  .composer-topics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px 4px 10px; }
-  .composer-topics .chips-lead { display: block; }
-  .chips-lead::after { display: none; }
-  .chips-routes > li:first-child { margin-left: 0; }
-  .composer .composer-topics .chip {
-    flex-direction: column;
-    justify-content: center;
-    width: 100%;
-    min-height: 56px;
-    padding: 6px 2px;
-    gap: 4px;
-    border-radius: 14px;
-    font-size: 11px;
-    line-height: 1.1;
-    white-space: nowrap;
+  .composer-topics {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-inline: -8px;
+    padding-inline: 8px;
+    -webkit-mask-image: linear-gradient(to right, #000 88%, transparent);
+    mask-image: linear-gradient(to right, #000 88%, transparent);
   }
-  .composer-topics .chip svg { width: 18px; height: 18px; }
+  .composer-topics::-webkit-scrollbar { display: none; }
+  .composer-topics > .chips:first-child { flex-wrap: nowrap; }
+  .chips-routes > li:first-child { margin-left: 0; }
+  .chips-routes > li:last-child { padding-right: 24px; }
   .composer-topics .chip-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .composer-topics .chip-short { display: block; }
+  .composer-topics .chip-short { display: inline; }
 }
-@media (prefers-reduced-motion: no-preference) {
-  .composer-topics .chip { animation: chip-in 480ms var(--ease-spring) both; animation-delay: calc(var(--i, 0) * 0ms); }
-}
-@keyframes chip-in { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
 
-/* --- Sidebar ----------------------------------------------------------------- */
+/* --- Sidebar: the contents ---------------------------------------------------- */
 
-:root { --sidebar-w: 272px; }
 .sidebar {
   position: fixed;
   top: 0;
@@ -907,342 +842,194 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   display: flex;
   flex-direction: column;
   width: var(--sidebar-w);
-  padding: 14px 12px max(14px, env(safe-area-inset-bottom));
+  padding: 20px 12px max(14px, env(safe-area-inset-bottom));
+  overflow-y: auto;
   border-right: 1px solid var(--color-line);
-  background: color-mix(in oklab, var(--color-paper) 92%, transparent);
+  background: color-mix(in oklab, var(--color-paper) 94%, transparent);
   backdrop-filter: blur(16px);
-  transform: translateX(-100%);
-  visibility: hidden;
-  transition: transform 420ms var(--ease-drawer), visibility 0s linear 420ms;
 }
-/* The head holds only the drawer's close button; on a wide screen it is not there. */
-.side-head { display: none; align-items: center; justify-content: flex-end; padding: 2px 6px 12px; }
-.side-close { display: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-line-strong); color: var(--color-muted); place-items: center; cursor: pointer; }
-.side-actions { display: grid; gap: 2px; }
-.side-label { margin: 16px 0 6px; padding-inline: 10px; font-size: 12px; font-weight: 500; color: var(--color-muted); }
-.side-list { display: grid; gap: 2px; list-style: none; }
+.side-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px 18px; border-bottom: 1px solid var(--color-line); }
+.side-person { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.side-person > span:last-child { display: grid; min-width: 0; }
+.side-name { font-size: 14.5px; font-weight: 650; letter-spacing: -0.01em; color: var(--color-ink); }
+.side-role { font-size: 12px; line-height: 1.4; color: var(--color-muted); }
+.side-close { display: none; width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--color-line-strong); color: var(--color-muted); place-items: center; cursor: pointer; }
+.side-close:hover { color: var(--color-ink); border-color: var(--color-ink); }
+.side-label { margin: 20px 0 6px; padding-inline: 10px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-muted); }
+.side-list { display: grid; gap: 1px; list-style: none; }
 .side-item {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   min-height: 38px;
   padding: 0 10px;
   border-radius: 10px;
   color: var(--color-muted);
-  font-size: 13.5px;
+  font-size: 14px;
   text-align: left;
-  cursor: pointer;
-  transition: background-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
+  transition: background-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out);
 }
-.side-item svg { flex-shrink: 0; color: var(--topic); transition: transform var(--dur-ui) var(--ease-out); }
 .side-item:hover { background: #ffffff0a; color: var(--color-ink); }
-.side-item:hover svg { transform: scale(1.18) rotate(-6deg); }
-.side-item:active { transform: scale(0.98); }
-.side-item[data-asked] { color: var(--color-ink); }
-.side-check { margin-left: auto; color: var(--color-c-sky) !important; }
-.side-foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 12px 8px 0; border-top: 1px solid var(--color-line); font-size: 13px; color: var(--color-ink); }
-.side-foot .msg-avatar { width: 28px; height: 28px; flex-shrink: 0; }
-.side-foot-name { font-weight: 600; white-space: nowrap; }
-.side-foot-meta { color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.side-foot-meta[data-typing] { color: var(--color-c-sky); }
-.drawer-backdrop { position: fixed; inset: 0; z-index: 35; background: #00000088; border: 0; cursor: pointer; }
-.identity-menu { display: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-line-strong); color: var(--color-ink); place-items: center; flex-shrink: 0; cursor: pointer; }
+.side-number { width: 18px; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--color-line-strong); transition: color var(--dur-hover) var(--ease-out); }
+.side-item:hover .side-number { color: var(--color-muted); }
+/* The section in view: ink, its number lit, and a bar at the edge. */
+.side-item[aria-current="location"] { color: var(--color-ink); background: #ffffff08; font-weight: 550; }
+.side-item[aria-current="location"] .side-number { color: var(--color-c-sky); }
+.side-item[aria-current="location"]::before { content: ""; position: absolute; left: -12px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--color-c-sky); }
+.side-profile svg { flex-shrink: 0; color: var(--color-ink); }
+.side-foot { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 14px 52px 0 10px; border-top: 1px solid var(--color-line); font-size: 13px; font-weight: 500; color: var(--color-ink); }
+.drawer-backdrop { position: fixed; inset: 0; z-index: 35; background: #000000a0; border: 0; cursor: pointer; }
 
-/* Wide screens: the sidebar stands beside the chat once it has opened. */
-@media (min-width: 64rem) {
-  .chat-shell[data-state="chat"] .sidebar { transform: none; visibility: visible; transition: transform 420ms var(--ease-out), visibility 0s; }
-  .chat-shell[data-state="chat"] .chat-main { padding-left: var(--sidebar-w); }
-  .chat-shell[data-state="chat"] .composer { left: var(--sidebar-w); }
-  .chat-shell[data-state="chat"] .watermark-l { display: none; }
-  :root[data-js] .chat-shell[data-state="chat"] .identity { display: none; }
-}
-/* Narrow screens: a drawer behind the menu button. */
-@media (max-width: 63.99rem) {
-  .chat-shell[data-drawer] .sidebar { transform: none; visibility: visible; transition: transform 420ms var(--ease-out), visibility 0s; }
-  .side-head { display: flex; }
-  .side-close { display: grid; }
-  .chat-shell[data-state="chat"] .identity-menu { display: grid; }
-}
-
-/* The ghost in the corner is the direct route to the game. */
-.side-profile svg { color: var(--color-ink); }
-.corner-restart {
-  position: fixed;
-  top: 14px;
-  right: 64px;
-  z-index: 40;
-  gap: 8px;
-  padding: 0;
-}
-:root:not([data-motion="off"]) .corner-restart svg { animation: none; }
-.ghost {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 1px solid var(--color-line-strong);
-  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
-  color: var(--color-c-ice);
-  cursor: pointer;
-  backdrop-filter: blur(12px);
-  transition: border-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out), box-shadow var(--dur-hover) var(--ease-out);
-}
-.ghost svg { transition: transform var(--dur-ui) var(--ease-out); }
-.ghost:hover { color: #fff; border-color: var(--color-c-sky); box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-c-sky) 22%, transparent), 0 8px 28px -10px var(--color-c-sky); }
-.ghost:hover svg { transform: translateY(-2px) rotate(-8deg) scale(1.1); }
-.ghost:active { transform: scale(0.94); }
-@media (prefers-reduced-motion: no-preference) {
-  :root:not([data-motion="off"]) .ghost svg { animation: ghost-float 3.2s ease-in-out infinite; }
-  :root:not([data-motion="off"]) .ghost:hover svg { animation: none; }
-}
-@keyframes ghost-float {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -2.5px; }
-}
-
-/* The bar under the field: plus, model pill, send. */
-.composer-bar { display: flex; align-items: center; gap: 8px; padding: 4px 2px 0; }
-.composer-plus {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  border: 1px solid var(--color-line-strong);
-  color: var(--color-ink);
-  cursor: pointer;
-  transition: border-color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
-}
-.composer-plus svg { transition: transform var(--dur-ui) var(--ease-out); }
-.composer-plus:hover { border-color: var(--color-ink); background: #ffffff0a; }
-.composer-plus:active { transform: scale(0.94); }
-.composer-plus[aria-expanded="true"] { border-color: var(--color-c-sky); color: var(--color-c-sky); }
-.composer-plus[aria-expanded="true"] svg { transform: rotate(45deg); }
-.model-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 34px;
-  padding: 0 13px;
-  border-radius: 100px;
-  border: 1px solid var(--color-line-strong);
-  background: #ffffff05;
-  font-size: 13px;
-  white-space: nowrap;
-  cursor: default;
-}
-.model-name { font-weight: 600; color: var(--color-ink); }
-/* The one place the palette bends: "Ultra" shimmers pink to purple, the way
-   the highest effort reads in a coding agent's composer. */
-.model-effort {
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: #e879f9;
-  background: linear-gradient(100deg, #f472b6 0%, #c084fc 30%, #818cf8 50%, #c084fc 70%, #f472b6 100%);
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-@media (prefers-reduced-motion: no-preference) {
-  :root:not([data-motion="off"]) .model-effort { animation: ultra-shimmer 2.6s linear infinite; }
-}
-@keyframes ultra-shimmer { from { background-position: 0% 50%; } to { background-position: 220% 50%; } }
-.composer-bar .composer-send { margin-left: auto; }
-
-/* --- Identity bar (chat state) ------------------------------------------- */
-
-/* The identity bar does not cut the page: a full-width fade from the ground
-   colour into nothing, with a blur that weakens downwards, so the conversation
-   dissolves under it as it scrolls instead of hitting an edge. */
-.identity {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  isolation: isolate;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 0 16px;
-  margin-bottom: 6px;
-}
-.identity::before {
-  content: "";
-  position: absolute;
-  inset: -1px -50vw -22px;
-  z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(to bottom, var(--color-paper) 0%, color-mix(in oklab, var(--color-paper) 88%, transparent) 55%, transparent 100%);
-  backdrop-filter: blur(12px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
-}
-/* The fixed corner links share the top edge; leave them room on narrow screens. */
-@media (max-width: 84.99rem) {
-  .chat-shell[data-state="chat"] .identity { padding-right: 0; }
-}
-/* On a phone the bar is one line: avatar, name, restart. The reading-mode
-   button and the status line go; the corner controls get the room they need. */
-@media (max-width: 47.99rem) {
-  .chat-shell[data-state="chat"] .identity { padding: 10px 0 12px; gap: 8px; }
-  .identity .identity-text { min-width: 0; }
-  .identity .identity-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .identity .identity-status { display: none; }
-  .identity .identity-readall { display: none; }
-  .identity .msg-avatar { flex-shrink: 0; }
-}
-
-/* --- Intro / chat states --------------------------------------------------- */
-
-/* Without JavaScript the page is the intro followed by every answer. With it,
-   the intro is the whole first screen and the answers arrive on request. */
-.identity { display: none; }
-:root[data-js] .chat-shell[data-state="chat"] .identity { display: flex; }
-:root[data-js] .chat-shell[data-state="chat"] .intro-wrap { display: none; }
-:root[data-js] .chat-shell[data-state="intro"] .log { display: none; }
-:root:not([data-js]) .composer { display: none; }
-:root:not([data-js]) .chat-shell { padding-bottom: 80px; }
-:root[data-js] .flow:not([data-sent]) { display: none; }
-:root[data-js] .flow > .msg:not([data-sent]) { display: none; }
-
-/* --- Log and messages ------------------------------------------------------ */
-
-.log {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  padding: 8px 0 var(--composer-space);
-}
-.flow,
-.entry {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.flow { scroll-margin-top: 92px; }
-/* An answer takes focus when it opens so a screen reader lands on it; the
-   focus is programmatic, so no ring is drawn round the whole section. */
-.log [tabindex="-1"]:focus-visible { outline: none; }
-
-.msg {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-}
-.msg-avatar {
+.avatar {
   display: block;
-  width: 36px;
-  height: 36px;
+  flex-shrink: 0;
   padding: 1.5px;
   border-radius: 50%;
   overflow: hidden;
   background: conic-gradient(from 0deg, var(--color-c-blue), var(--color-c-sky), #ffffff, var(--color-c-sky), var(--color-c-blue));
 }
-/* The same picture, the same crop and the same ring as the intro portrait,
-   at 36px. */
-.msg-avatar img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: 50% 50%; filter: saturate(0.95) contrast(1.02); }
+.avatar img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 
-.bubble {
-  max-width: 68ch;
-  padding: 13px 18px;
-  border-radius: 18px 18px 18px 6px;
+/* The phone's bar: the person, the section in view, and the contents. */
+.topline {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 56px;
+  padding: 0 var(--gutter);
+  border-bottom: 1px solid var(--color-line);
+  background: color-mix(in oklab, var(--color-paper) 86%, transparent);
+  backdrop-filter: blur(14px) saturate(1.3);
+}
+.topline-person { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--color-ink); }
+.topline-name { font-size: 14.5px; font-weight: 650; white-space: nowrap; }
+.topline-section { overflow: hidden; font-size: 13.5px; color: var(--color-muted); white-space: nowrap; text-overflow: ellipsis; }
+.topline-section::before { content: "/"; margin-right: 8px; color: var(--color-line-strong); }
+.topline-menu { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--color-line-strong); color: var(--color-ink); cursor: pointer; }
+
+/* Wide screens: the contents stand beside the page. Narrow: a drawer. */
+@media (max-width: 63.99rem) {
+  .topline { display: flex; }
+  .sidebar {
+    width: min(var(--sidebar-w) + 24px, 86vw);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 420ms var(--ease-drawer), visibility 0s linear 420ms;
+  }
+  .home[data-drawer] .sidebar { transform: none; visibility: visible; transition: transform 420ms var(--ease-out), visibility 0s; }
+  .side-close { display: grid; }
+}
+
+/* --- Sections ----------------------------------------------------------------- */
+
+/* The room above a section is its own padding, so a jump to it lands the
+   number and heading near the top rather than a gap's height below it. */
+.doc-section { --section-gap: 104px; padding-top: var(--section-gap); scroll-margin-top: calc(16px - var(--section-gap)); }
+.section-head { margin-bottom: 28px; }
+.section-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--color-c-sky);
+}
+.section-title {
+  margin-top: 10px;
+  font-size: clamp(1.875rem, 3.6vw, 2.5rem);
+  font-weight: 720;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  color: var(--color-ink);
+  outline: none;
+}
+.section-lead { margin-top: 14px; max-width: 64ch; font-size: 17px; line-height: 1.65; color: var(--color-muted); }
+.section-lead p + p { margin-top: 10px; }
+.section-lead a { color: var(--color-ink); }
+/* One column whose cards never grow past it: a transcript's long line scrolls
+   inside its own box instead of widening the page. */
+.section-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.section-note { margin-top: 4px; font-size: 14px; line-height: 1.6; color: var(--color-muted); }
+
+/* Where a jump landed: the number and the heading light up, then settle. */
+@keyframes section-flash {
+  0%, 30% { color: var(--color-c-ice); text-shadow: 0 0 28px color-mix(in oklab, var(--color-c-sky) 70%, transparent); }
+  100% { text-shadow: 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .doc-section[data-flash] .section-title { animation: section-flash 1.4s var(--ease-out); }
+}
+
+/* --- Cards -------------------------------------------------------------------- */
+
+.card {
+  position: relative;
+  overflow: clip;
+  padding: 26px 28px;
   border: 1px solid var(--color-line);
-  background: var(--sheen), var(--color-surface);
+  border-radius: 18px;
+  background: var(--sheen), color-mix(in oklab, var(--color-surface) 92%, transparent);
   box-shadow: var(--edge), var(--elev-1);
   font-size: 15px;
   line-height: 1.65;
   color: var(--color-ink);
 }
-.bubble p + p { margin-top: 10px; }
-/* The typed opening: the untyped rest holds its place, unseen; a caret
-   follows the last letter and goes when the writing is done. */
-.typed-rest { opacity: 0; }
-.typed-caret { display: inline-block; width: 2px; height: 1.05em; margin: 0 1px 0 2px; vertical-align: -0.15em; background: var(--color-c-sky); border-radius: 1px; }
-@media (prefers-reduced-motion: no-preference) {
-  .typed-caret { animation: blink 1s steps(1) infinite; }
-}
-.bubble strong { font-weight: 600; }
-
-.msg.user { grid-template-columns: minmax(0, 1fr); justify-items: end; }
-.msg.user .bubble {
-  max-width: 60ch;
-  /* The visitor's words are free text: a URL or one long word breaks inside the bubble. */
-  overflow-wrap: anywhere;
-  border: 0;
-  border-radius: 18px 18px 6px 18px;
-  background: var(--grad);
-  color: #fff;
-  font-weight: 500;
-  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.22), 0 10px 30px #0a66c233;
-}
-
-.msg-card .bubble {
-  width: 100%;
-  max-width: 100%;
-  padding: 22px 24px;
-  border-radius: 18px;
-  background: var(--sheen), color-mix(in oklab, var(--color-surface) 92%, transparent);
-  box-shadow: var(--edge), var(--elev-2);
-  position: relative;
-  overflow: clip;
-}
-.msg-card .bubble::before {
+.card::before {
   content: "";
   position: absolute;
   inset: 0 0 auto;
   height: 2px;
   background: linear-gradient(90deg, var(--topic), transparent 70%);
-  opacity: 0.9;
+  opacity: 0.75;
 }
-.card-head { margin-bottom: 14px; }
-.card-expand { display: none; }
-@media (max-width: 47.99rem) {
-  .msg-card[data-tall] .bubble { max-height: 300px; overflow: hidden; padding-bottom: 56px; }
-  .msg-card[data-tall] .bubble::after {
-    content: "";
-    position: absolute;
-    inset: auto 0 0;
-    height: 120px;
-    background: linear-gradient(transparent, var(--color-surface) 70%);
-    pointer-events: none;
-  }
-  .msg-card[data-tall] .card-expand {
-    display: inline-flex;
-    white-space: nowrap;
-    position: absolute;
-    left: 50%;
-    bottom: 14px;
-    translate: -50% 0;
-    z-index: 1;
-    align-items: center;
-    min-height: 36px;
-    padding: 0 16px;
-    border-radius: 100px;
-    border: 1px solid var(--color-line-strong);
-    background: var(--color-surface-2);
-    color: var(--color-ink);
-    font-size: 13px;
-    font-weight: 500;
-  }
-}
+.card-head { margin-bottom: 16px; }
 .card-eyebrow { color: var(--topic); }
-.card-title { margin-top: 4px; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; }
+.card-title { margin-top: 4px; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2; }
 .card-stat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-top: 10px; }
 .card-stat-value { font-size: clamp(2rem, 3.4vw, 2.6rem); font-weight: 750; letter-spacing: -0.045em; line-height: 1; color: var(--color-ink); font-variant-numeric: tabular-nums; }
 .card-stat-label { font-size: 13px; color: var(--color-muted); max-width: 34ch; }
 .card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-top: 22px; }
 
-.replies { padding-top: 2px; }
-.replies-lead { margin-bottom: 10px; font-size: 13px; color: var(--color-muted); }
 .replies-list { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; }
 
-/* Typing indicator: three dots in a bubble. */
-.typing .bubble { display: inline-flex; gap: 5px; align-items: center; padding: 15px 18px; width: max-content; }
-.typing .bubble span { width: 7px; height: 7px; border-radius: 50%; background: var(--color-muted); opacity: 0.35; }
+/* --- The page's foot ------------------------------------------------------------ */
+
+.home-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-top: 96px;
+  padding: 24px 0 0;
+  border-top: 1px solid var(--color-line);
+  font-size: 13.5px;
+  color: var(--color-muted);
+}
+.home-footer-name { font-weight: 600; color: var(--color-ink); }
+.home-footer ul { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; }
+
+/* Without JavaScript the page is the whole record and every contents link
+   still jumps; the ask bar and the drawer's button, which need a script, go. */
+:root:not([data-js]) .composer,
+:root:not([data-js]) .topline-menu { display: none; }
+
+@media (max-width: 47.99rem) {
+  .doc-section { --section-gap: 72px; }
+  .section-head { margin-bottom: 22px; }
+  .section-lead { font-size: 16px; }
+  .section-body { gap: 12px; }
+  .card { padding: 20px 18px; }
+  .card-title { font-size: 1.3rem; }
+  .home-footer { margin-top: 72px; flex-direction: column; }
+}
 
 /* --- Cards' inner components ---------------------------------------------- */
 
@@ -1503,55 +1290,13 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 .colophon-list { margin-top: 10px; padding-left: 18px; list-style: disc; font-size: 15px; line-height: 1.65; color: var(--color-muted); }
 .colophon-list li + li { margin-top: 8px; }
 
-.lost { display: grid; align-content: center; min-height: 100dvh; padding-block: 80px; }
-.lost-column { display: grid; gap: 18px; }
-.lost .replies-list { margin-top: 4px; }
+.lost { position: relative; display: grid; align-content: center; min-height: 100dvh; padding-block: 80px; }
+.lost-column { display: grid; gap: 16px; width: min(100% - 2 * var(--gutter), 640px); margin-inline: auto; }
+.lost-title { font-size: clamp(2.25rem, 6vw, 3.25rem); font-weight: 750; letter-spacing: -0.045em; line-height: 1.05; }
+.lost-text { max-width: 52ch; font-size: 17px; line-height: 1.65; color: var(--color-muted); }
+.lost .replies-list { margin-top: 8px; }
 
-/* --- The loader: the bottom line while the intro waits ------------------------ */
-
-.loader {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 30;
-  display: grid;
-  gap: 10px;
-  width: min(100% - 2 * var(--gutter), 720px);
-  margin: 0 auto;
-  padding: 14px 18px max(18px, env(safe-area-inset-bottom));
-  background: transparent;
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-}
-.loader-bar { display: block; height: 2px; border-radius: 2px; background: var(--color-line); overflow: hidden; }
-.loader-bar > span { display: block; height: 100%; background: var(--grad); transition: width 300ms linear; }
-.loader-line { display: flex; align-items: center; gap: 10px; min-height: 24px; }
-.loader-caret { color: var(--color-c-sky); }
-.loader-text { color: var(--color-ink); }
-.loader-count { color: var(--color-c-sky); font-weight: 600; white-space: nowrap; }
-.loader-count::before { content: "·"; margin-right: 10px; color: var(--color-muted); font-weight: 400; }
-.loader-cursor { display: inline-block; width: 7px; height: 15px; background: var(--color-c-sky); border-radius: 1px; }
-.loader:hover .loader-text { color: #fff; }
-.loader:hover::after { content: "click to skip"; margin-left: auto; font-size: 11px; color: var(--color-muted); }
-/* A touch screen has no hover, so it says so from the start. */
-@media (hover: none) {
-  .loader-line::after { content: "tap to skip"; margin-left: auto; font-size: 11px; color: var(--color-muted); white-space: nowrap; }
-}
-@keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
-@media (prefers-reduced-motion: no-preference) {
-  .loader-cursor { animation: blink 1s steps(1) infinite; }
-}
-:root:not([data-js]) .loader { display: none; }
-.chat-shell[data-state="intro"] .composer { display: none; }
-@media (max-width: 47.99rem) {
-  .loader { font-size: 12px; padding-inline: 12px; }
-}
-
-/* --- Composer ---------------------------------------------------------------- */
+/* --- The ask bar ------------------------------------------------------------- */
 
 .composer {
   position: fixed;
@@ -1559,19 +1304,24 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   right: 0;
   bottom: 0;
   z-index: 30;
-  transition: left 420ms var(--ease-out);
-  padding: 24px var(--gutter) max(12px, env(safe-area-inset-bottom));
-  background: linear-gradient(transparent, color-mix(in oklab, var(--color-paper) 92%, transparent) 40%);
+  padding: 20px var(--gutter) max(12px, env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, color-mix(in oklab, var(--color-paper) 94%, transparent) 45%);
   pointer-events: none;
 }
-.composer-panel {
+@media (min-width: 64rem) {
+  .composer { left: var(--sidebar-w); }
+}
+.composer-panel,
+.ask-reply {
   pointer-events: auto;
-  width: min(100%, 960px);
+  width: min(100%, var(--column));
   margin-inline: auto;
-  padding: 8px 8px 10px;
-  border-radius: 24px;
+}
+.composer-panel {
+  padding: 8px;
+  border-radius: 22px;
   border: 1px solid var(--color-line-strong);
-  background: var(--sheen), color-mix(in oklab, var(--color-surface) 90%, transparent);
+  background: var(--sheen), color-mix(in oklab, var(--color-surface) 92%, transparent);
   backdrop-filter: blur(18px) saturate(1.4);
   box-shadow: var(--edge), var(--elev-2);
   transition: border-color var(--dur-ui) var(--ease-out), box-shadow var(--dur-ui) var(--ease-out);
@@ -1580,17 +1330,18 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   border-color: color-mix(in oklab, var(--color-c-sky) 70%, var(--color-line-strong));
   box-shadow: var(--edge), var(--elev-2), 0 0 0 4px color-mix(in oklab, var(--color-c-sky) 18%, transparent);
 }
-.composer-row { display: flex; align-items: center; gap: 8px; }
+.composer-row { display: flex; align-items: center; gap: 6px; }
 .composer input {
   flex: 1;
   min-width: 0;
-  height: 46px;
-  padding: 0 14px;
+  height: 42px;
+  padding: 0 8px;
   background: transparent;
   border: 0;
   outline: none;
   color: var(--color-ink);
   font-size: 15px;
+  text-overflow: ellipsis;
 }
 .composer input::placeholder { color: var(--color-muted); }
 /* The "/" hint shows on pointer devices while the field is idle. */
@@ -1612,12 +1363,30 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   .composer-kbd { display: block; }
   .composer-panel:focus-within .composer-kbd { opacity: 0; }
 }
+.composer-plus {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: border-color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
+}
+.composer-plus svg { transition: transform var(--dur-ui) var(--ease-out); }
+.composer-plus:hover { border-color: var(--color-ink); background: #ffffff0a; }
+.composer-plus:active { transform: scale(0.94); }
+.composer-plus[aria-expanded="true"] { border-color: var(--color-c-sky); color: var(--color-c-sky); }
+.composer-plus[aria-expanded="true"] svg { transform: rotate(45deg); }
 /* An empty field has nothing to send. */
 .composer-panel:has(input:placeholder-shown) .composer-send { opacity: 0.4; box-shadow: none; }
 /* While the visitor types, the chip the router would answer with lights up. */
-.composer-panel[data-match] .chip { opacity: 0.55; }
+.composer-panel[data-match] .composer-topics .chip { opacity: 0.55; }
 .composer-panel[data-match="about"] .chip[data-topic="about"],
 .composer-panel[data-match="projects"] .chip[data-topic="projects"],
+.composer-panel[data-match="cases"] .chip[data-topic="cases"],
 .composer-panel[data-match="experience"] .chip[data-topic="experience"],
 .composer-panel[data-match="recommendations"] .chip[data-topic="recommendations"],
 .composer-panel[data-match="toolbox"] .chip[data-topic="toolbox"],
@@ -1629,15 +1398,15 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--topic) 16%, transparent);
 }
 .chip { transition: border-color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out), box-shadow var(--dur-ui) var(--ease-out), opacity var(--dur-ui) var(--ease-out), transform var(--dur-press) var(--ease-out); }
-/* The send button as a coding agent draws it: a small rounded square, filled,
-   with an up arrow; dimmed while the field is empty. */
+/* The send button: a small rounded square, filled, with an up arrow; dimmed
+   while the field is empty. */
 .composer-send {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--color-c-blue);
   color: #fff;
   cursor: pointer;
@@ -1647,18 +1416,52 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 .composer-send:hover { background: var(--color-c-sky); }
 .composer-send svg { stroke-width: 2.4; }
 .composer-send:active { transform: scale(0.94); }
-@keyframes send-fly { 0% { transform: translateY(0); opacity: 1; } 45% { transform: translateY(-14px); opacity: 0; } 50% { transform: translateY(12px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-@media (prefers-reduced-motion: no-preference) {
-  .composer-send[data-sent] svg { animation: send-fly 600ms var(--ease-out) both; }
+
+/* What the ask bar says back, just above it. */
+.ask-reply:empty { display: none; }
+.ask-reply { margin-bottom: 10px; }
+.ask-reply-card {
+  position: relative;
+  padding: 14px 52px 14px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--color-line-strong);
+  background: var(--sheen), color-mix(in oklab, var(--color-surface-2) 96%, transparent);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--edge), var(--elev-2);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--color-ink);
 }
-.chat-shell[data-state="chat"] .composer-hint { display: none; }
-.composer-hint {
-  pointer-events: auto;
-  width: min(100%, 960px);
-  margin: 10px auto 0;
-  text-align: center;
-  font-size: 12px;
+@media (prefers-reduced-motion: no-preference) {
+  .ask-reply-card { animation: reply-in 360ms var(--ease-out) both; }
+}
+@keyframes reply-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* The visitor's words are free text: a URL or one long word breaks inside. */
+.ask-question { overflow-wrap: anywhere; font-size: 13px; color: var(--color-muted); }
+.ask-question::before { content: "“"; }
+.ask-question::after { content: "”"; }
+.ask-answer { margin-top: 4px; }
+.ask-answer a { color: var(--color-c-ice); text-decoration: underline; text-underline-offset: 3px; }
+.ask-reply-card .replies-list { margin-top: 10px; gap: 6px; }
+.ask-reply-card .chip { min-height: 32px; font-size: 12.5px; }
+.ask-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   color: var(--color-muted);
+  cursor: pointer;
+}
+.ask-close:hover { color: var(--color-ink); background: #ffffff0f; }
+
+@media (max-width: 47.99rem) {
+  .composer { padding-top: 14px; }
+  .composer-panel { padding: 6px; border-radius: 20px; }
+  .composer input { font-size: 16px; }
 }
 
 /* --- Squircles --------------------------------------------------------------- */
@@ -1667,8 +1470,9 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
    the curve starts earlier and ends softer than a circular arc, so the radius
    grows to keep the same visual size. Elsewhere the corners stay round. */
 @supports (corner-shape: squircle) {
-  .bubble,
+  .card,
   .composer-panel,
+  .ask-reply-card,
   .evidence-panel,
   .transcript,
   .colophon-card,
@@ -1677,86 +1481,40 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
   .side-item {
     corner-shape: squircle;
   }
-  .bubble { border-radius: 28px 28px 28px 10px; }
-  .msg.user .bubble { border-radius: 28px 28px 10px 28px; }
-  .msg-card .bubble { border-radius: 30px; }
-  .composer-panel { border-radius: 36px; }
+  .card { border-radius: 30px; }
+  .composer-panel { border-radius: 34px; }
+  .ask-reply-card { border-radius: 28px; }
   .evidence-panel, .transcript, .colophon-card, .recommendations-grid > .recommendation-card { border-radius: 28px; }
   .toolbox-search-field { border-radius: 18px; }
-  .composer-send { corner-shape: squircle; border-radius: 14px; }
+  .composer-send { corner-shape: squircle; border-radius: 16px; }
   .side-item { border-radius: 14px; }
 }
 
 /* --- Responsive ------------------------------------------------------------ */
 
-@media (max-width: 63.99rem) {
-  .intro-stage { margin-top: 28px; }
-  .intro-portrait { width: clamp(150px, 36vw, 200px); }
-}
 @media (max-width: 47.99rem) {
-  .intro { padding-top: 64px; }
-  .intro-title { font-size: clamp(2.4rem, 12vw, 3.4rem); }
-  .intro-sub { margin-top: 14px; font-size: 1rem; }
-  .intro-stage { margin-top: 22px; gap: 22px; }
-  .intro-quote { display: none; }
-  .msg { gap: 10px; }
-  .msg-card .bubble { padding: 18px 16px; }
-  .bubble { padding: 12px 15px; font-size: 14.5px; }
-  .card-title { font-size: 1.3rem; }
-  .composer { padding-top: 16px; }
-  .composer-hint { display: none; }
   .evidence-flow { grid-template-columns: 1fr; gap: 24px; }
   .evidence-flow li { padding-top: 18px; }
 }
 
 /* ---------------------------------------------------------------------------
-   The page-load sequence and message arrivals.
+   Ambient motion. Nothing on the page waits for an animation to be read: the
+   content is there on the first frame, and these only move the light.
    --------------------------------------------------------------------------- */
 
-/* The mask box is padded past the glyph box so descenders and side bearings are
-   never clipped once the word has risen; the word starts far enough below the
-   padded edge (130% of its own height) that nothing peeks through at rest. */
-.mask { display: inline-block; vertical-align: top; overflow: hidden; padding: .1em .08em .22em; margin: -.1em -.08em -.22em; }
-.mask > span { display: inline-block; }
-
-@keyframes stage-rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
-@keyframes mask-rise { from { transform: translateY(130%); } to { transform: none; } }
-@keyframes pop { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
-@keyframes word-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 @keyframes ring-spin { to { transform: rotate(360deg); } }
 @keyframes orb-drift-1 { to { transform: translate3d(12vmax, 8vmax, 0) scale(1.12); } }
 @keyframes orb-drift-2 { to { transform: translate3d(-10vmax, 10vmax, 0) scale(1.08); } }
 @keyframes orb-drift-3 { to { transform: translate3d(8vmax, -8vmax, 0) scale(1.15); } }
-@keyframes dots { 0%, 80%, 100% { opacity: 0.35; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
 @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-c-sky) 25%, transparent); } 50% { box-shadow: 0 0 0 7px color-mix(in oklab, var(--color-c-sky) 8%, transparent); } }
 
 @media (prefers-reduced-motion: no-preference) {
-  :root:not([data-motion="off"]) [data-stage] { animation: stage-rise var(--dur-stage) var(--ease-out) both; animation-delay: var(--d, 0ms); }
-  :root:not([data-motion="off"]) .mask > span { animation: mask-rise 1000ms var(--ease-out) both; animation-delay: calc(var(--d, 0ms) + var(--w, 0) * 55ms); }
-  :root:not([data-motion="off"]) .intro-portrait { animation: pop 1100ms var(--ease-out) 380ms both; }
   :root:not([data-motion="off"]) .portrait-ring { animation: ring-spin 14s linear infinite; }
   :root:not([data-motion="off"]) .status-dot { animation: pulse 2.2s ease-in-out infinite; }
   :root:not([data-motion="off"]) .orb-1 { animation: orb-drift-1 26s ease-in-out infinite alternate; }
   :root:not([data-motion="off"]) .orb-2 { animation: orb-drift-2 32s ease-in-out infinite alternate; }
   :root:not([data-motion="off"]) .orb-3 { animation: orb-drift-3 28s ease-in-out infinite alternate; }
-
-  /* Each message arrives once, the moment the director shows it, and the
-     words of a reply follow one another the way a model's output does. In
-     reading mode everything is simply there. */
-  .log .msg { animation: pop var(--dur-spring) var(--ease-spring) both; }
-  .chat-shell[data-mode="read"] .log .msg { animation: none; }
-  .w { display: inline-block; animation: word-in 260ms var(--ease-out) both; }
-  .w[hidden] { display: none; }
-  .typing .bubble span { animation: dots 1.2s ease-in-out infinite; }
-  .typing .bubble span:nth-child(2) { animation-delay: 150ms; }
-  .typing .bubble span:nth-child(3) { animation-delay: 300ms; }
 }
-
-/* Motion turned back on after a pause: the page is already here, so the
-   entrance does not play again. */
-:root[data-resumed] [data-stage],
-:root[data-resumed] .mask > span,
-:root[data-resumed] .intro-portrait { animation: none !important; }
 
 /* A real stop control, not merely paused at an invisible animation frame. */
 :root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
@@ -1770,7 +1528,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
    The projects route: the long-form page, on the same theme.
    --------------------------------------------------------------------------- */
 
-#projects, .project-feature { background: transparent; }
+.project-feature { background: transparent; }
 .project-feature { position: relative; overflow: clip; }
 .project-feature h2 { font-size: clamp(2rem, 3.3vw, 2.75rem); letter-spacing: -0.045em; overflow-wrap: anywhere; }
 .project-feature > .shell > div { min-width: 0; }
@@ -1786,7 +1544,7 @@ main:has(.chat-shell[data-state="intro"]) ~ .motion-control { display: none; }
 .contact-secondary { color: var(--color-ink); border: 1px solid var(--color-line-strong); }
 .contact-secondary:hover { border-color: var(--color-ink); }
 .playground-panel { padding: 22px 0; border-top: 1px solid var(--color-line); margin-top: 12px; }
-#contact h2 { font-size: clamp(2.5rem, 5vw, 4.5rem); max-width: 21ch; }
+#contact.rhythm h2 { font-size: clamp(2.5rem, 5vw, 4.5rem); max-width: 21ch; }
 footer { padding-bottom: 50px; }
 @media (max-width: 63.99rem) {
   .contact-layout { grid-template-columns: 1fr; gap: 40px; }

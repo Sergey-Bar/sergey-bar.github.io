@@ -13,7 +13,7 @@ export function ToolboxExplorer({ groups }: { groups: Group[] }) {
   const matches = groups.filter((group) => group.search.includes(term));
   const visible = term || expanded ? matches : matches.slice(0, 6);
   return (
-    <div className="mt-10">
+    <div>
       <div className="toolbox-search">
         <label htmlFor={inputId}>Find a tool or discipline</label>
         <div className="toolbox-search-field">

@@ -3,118 +3,70 @@
 Personal site for Sergey Bar, QA Tech Lead & AI Automation Engineer.
 Static export, GitHub Pages, no analytics, no CV file; the CV is sent on request by email or on LinkedIn.
 
-Four routes: `/` (the site as a conversation), `/projects` (Mjolnir and
+Four routes: `/` (the whole record as one document), `/projects` (Mjolnir and
 Automate in long form, each linked to its public repository), plus `/colophon`
 (how the site is built and tested) and `/accessibility`. LinkedIn is the
 contact route; GitHub is the evidence. There is no contact form and no CV file:
 the CV is sent on request, by email or on LinkedIn.
 
-## The conversation
+## The page
 
-The home page is a chat. It opens on an intro screen (greeting, name, role,
-portrait, one line of proof, two ways in) with a composer fixed to the bottom
-of the viewport: a text field plus one chip per topic. Pressing a chip, or
-typing a question, sends a bubble on the visitor's behalf and the answer
-arrives as a sequence of replies: short bubbles for sentences, full-width cards
-for the record at a glance, the verified outcomes, the two projects with the
-recorded Mjolnir scan and its worthiness meter, the five roles with their
-native disclosures, the fourteen recommendations, the searchable toolbox, and
-the contact routes. Every answer ends with quick replies to the next topics.
+The home page is one document: everything the old chat answered, shown at
+once, in the order a reader takes it in. A recruiter with thirty seconds gets
+the record on the first frame; there is no loader, no intro and nothing typed
+out.
 
-The answers are not fetched and not generated. `src/chat/flows.tsx` renders
-all seven of them on the server from the content modules, in a fixed logical
-order, so a crawler or a visitor without JavaScript reads the intro followed by
-every answer. `src/chat/chat-director.tsx` is the client island that turns
-that document into a chat: it hides unsent answers (only once an inline flag in
-the layout has set `data-js`, so nothing is ever hidden without the script to
-show it), reveals a flow one message at a time behind a typing indicator, and
-reorders flows visually with flex `order` so the conversation reads in the
-order the visitor asked. The log is `role="log" aria-live="polite"`, so each
-reply is announced as it lands.
+It opens on the hero: an "Open to work · Based in Israel" line, the name as the
+page's only `h1`, the role, the one-line pitch, three actions (LinkedIn,
+"Request my CV" by email, GitHub) and the portrait, with the employers'
+marks underneath. Then eight numbered sections, each an `h2` with a lead
+paragraph and its cards: About me, Projects, Case studies, Experience,
+Recommendations, Toolbox, Contact, Something fun. Long cards keep progressive
+disclosure: a case study shows the problem, the outcome and one figure, with
+the approach and evidence behind one line; a role shows its scope with the
+responsibilities and outcomes behind one line; three recommendations lead and
+the other eleven open on request. The foot links the long pages (projects in
+full, the colophon, accessibility), which are not in the contents.
 
-Typed questions are routed by `routeInput` in `src/chat/topics.ts`: a keyword
-and phrase lookup, phrases outweighing words. A greeting gets a greeting; a
-question it cannot place gets an honest "I don't have an answer for that one"
-and the full list of topics. It is a lookup, not a model, and the reply says
-so. Every tool name in the toolbox routes to it as a whole word, so "Java" or
-"Postman" is answered without a hand-kept keyword; a well-known tool the
-toolbox does not list ("Selenium") is answered as not listed, and where Mjolnir
-reads suites in it the reply says that too. Legacy anchors (`/#projects`,
-`/#experience`, …) and `?topic=` open the matching conversation on arrival, so
-links to the old sections still land.
+All of it is rendered on the server (`src/home/sections.tsx`,
+`src/home/hero.tsx`), so a crawler or a visitor without JavaScript reads the
+same page and every contents link still jumps. `src/home/home-director.tsx` is
+the one client island, and it only adds reading aids around the document:
 
-Each answer has an address: asking a topic sets `#<topic>`, so the address bar
-can be shared, and Back and Forward walk the answers already given (to the top
-of the chat past the first) before Back leaves the site.
+- **Contents.** On a wide screen a sidebar stands beside the page: the person,
+  the eight sections numbered 01 to 08, the profiles (LinkedIn, GitHub, email)
+  and the availability line, with the motion control in its foot. The section
+  in view is marked (`aria-current="location"`, a lit number and an edge bar),
+  measured as the last section whose top has passed a third of the screen. On
+  a phone the contents are a drawer behind the menu button in a slim top bar,
+  which also names the section in view; the drawer takes focus when it opens,
+  and Escape or a jump closes it and hands focus back.
+- **The ask bar.** Fixed under the page: a field, a send button and a plus.
+  The plus holds every section as a chip (one row of short names on a phone,
+  scrolled sideways) and the profiles as icons; the panel is open from the
+  start and only the plus closes it, after which it stays closed until the
+  plus reopens it. The chip for the section in view is marked, and while the
+  visitor types, the chip the router would answer with lights up. A question
+  is routed by `routeInput` in `src/home/topics.ts` and answered by the page
+  itself: the reader is taken to the section, under its own address, and a
+  short reply above the bar says where ("Showing Toolbox, searched for
+  “java”."); a tool's name is handed to the toolbox's own search. A greeting
+  gets a greeting, a well-known tool the toolbox does not list gets an honest
+  "not in my toolbox" (and, where Mjolnir reads suites in it, says so), and a
+  question no section answers gets "no section answers that one yet" with the
+  likeliest sections. It is a lookup, not a model, and the reply says so.
+  "/" focuses the field from anywhere and Escape leaves it.
 
-The view follows the conversation the way a reader would: the question is
-pinned under the identity bar and replies fill the screen beneath it; once they
-overflow the view stops moving, and any wheel, swipe or arrow key stops it for
-good. "Start over" returns to the intro and clears the log.
-
-Replies stream. When a text bubble is revealed the director splits its words
-into spans, once, and the stylesheet fades them in one after another at the
-pace of a model's output; cards and quick replies arrive whole, and with motion
-off the text is simply there. While the visitor types, the chip the router
-would answer with lights up, so the lookup shows its intent before it is
-asked; the identity bar reads "typing…" while a reply is composed. On a device
-with a pointer the composer takes focus after the opening, "/" focuses it from
-anywhere and Escape hands focus back to the page.
-
-The first screen is quiet: the name, the role and the portrait, with a line
-at the bottom that pretends to boot the chat (negotiating with the release
-gate, convincing the flaky test, counting bugs): one line per visit, kept for
-the whole wait, with "Ready in 2…1" appended for the last two seconds. The
-line rotates through twelve, so the next load reads a different one.
-After those three seconds, or on a click or tap on the line ("tap to skip" is
-written on touch screens, which have no hover), or on the first scroll, the
-intro lifts and the chat opens with one greeting; the topics live only in the
-composer. A hidden tab pauses the countdown. "Read all" in the identity bar shows
-every answer at once in the record's order, with no pacing. Long cards keep their
-rhythm: a recommendation shows two sentences and opens the rest on request, a
-case study shows the problem, the outcome and one figure, with the approach and
-the evidence behind one line. Every card leads with one figure under its title.
-
-Once the chat is open, a sidebar stands beside it on a wide screen, the way a
-coding agent lays out its session: "Read everything", every topic with a check
-once it has been asked, GitHub, LinkedIn and email, and the person at the bottom
-with the typing state. The long pages (projects in full, how the site is built,
-accessibility) are not in the sidebar; they stay reachable by their address and
-from one another's footers. On narrower screens the same sidebar is a
-drawer behind the menu button in the identity bar, with a backdrop and Escape
-to close. Under the text field the bar reads like a chat with a model: a plus
-that holds every topic as chips above the field. The panel leads with "Read
-everything", set apart as a blue-lit chip and a rule, then the topics, then
-GitHub, LinkedIn and email as icon-only chips at the end of the row (named for
-assistive technology and in a tooltip). The lists flow as one row, so a wide
-screen fits the panel in two rows; a phone keeps two rows and scrolls them
-sideways, faded at the edge. Labels stay on the topics: icons that only open on
-hover would hide them from touch screens and leave visitors guessing. The panel
-is open when the chat opens and stays open: asking, reading mode, the game and
-Escape leave it as it is, so every topic is always one press away. Only the
-button beside the field closes it, and it stays closed until that button
-reopens it. Beside the plus a pill
-names the model, "Sergey Bar" at "Ultra" effort (the one place the palette
-bends: the word shimmers pink to purple), and the send button ends the row: a
-small filled rounded square with an up arrow, the way a coding agent draws it,
-dimmed while the field is empty. There is no microphone. Replies carry no
-avatar, and the chat has no header beyond the menu button on a phone; the
-portrait and the name stand once, in the sidebar's foot, beside the motion
-control. The corner holds two round buttons in one style: "Start over", one
-press and no confirmation, and the ghost, which opens the demolition run directly, without the conversation. The loading
-screen shows none of this: no corner buttons and no motion control, only the
-name, the role, the portrait and the loading line. GitHub, LinkedIn and email
-live in the sidebar's "Profiles" list and behind the plus. The chat's first
-message is personal ("Allow me to introduce myself…") and is typed out letter
-by letter, once per visit, with the whole text laid out from the first frame so
-nothing re-wraps; a restart, or motion off, shows it whole. Text bubbles grow
-as their words arrive, a card
-taller than a phone screen opens folded with a "Show the whole card" button,
-and "Start over" clears the conversation with a single press.
-
-There is no opening veil: the intro is the first thing on screen, and the
-chat opens about three seconds after load. A recruiter with half a minute reads
-the record, not the wait.
+Typed questions are routed by keywords and phrases, phrases outweighing words.
+Every tool name in the toolbox routes to it as a whole word, so "Java" or
+"Postman" is answered without a hand-kept keyword. Each section has an address
+(`#projects`, `#experience`, …): the contents, the chips and the ask bar all
+use it, so the address bar can be shared and Back walks the sections visited
+before it leaves the site. Old anchors (`#case-studies`, `#work`, `#profile`,
+`#play`) and `?topic=` land on their section under its own address. The page's
+scroll padding follows the ask bar's measured height, so a link reached by Tab
+never focuses beneath it, and a jump lands a section's heading near the top
+rather than a gap's height below it.
 
 ## Palette
 
@@ -128,7 +80,7 @@ The tokens are written in OKLCH, and the greys sit on the blues' own hue, so
 every neutral is a very dark blue rather than a grey. A wide-gamut (P3) screen
 gets more saturated blues than sRGB can show; the gradients interpolate in
 OKLCH. Surfaces have depth from three tokens: a raised surface (a bubble, a
-card, the composer) catches light on its top edge (`--edge`), carries a faint
+card, the ask bar) catches light on its top edge (`--edge`), carries a faint
 sheen down its face (`--sheen`) and casts a short contact shadow plus a long
 soft one (`--elev-1`, `--elev-2`); a well set into a card (the evidence panel,
 the scan transcript, a recommendation) is shaded at its top edge instead
@@ -171,8 +123,8 @@ left behind; it fades when the pointer leaves the document and does not exist
 on touch screens. Looping ambience (the ring, the status
 pulse, the background light) stops entirely under `prefers-reduced-motion` or
 the visitor's own "Pause motion" control, which persists in localStorage and
-is applied before first paint. With motion off the chat still works; replies
-simply appear at once.
+is applied before first paint. Nothing on the page waits for an animation to
+be read, so motion off changes only the light.
 
 The toolbox has a small search island, matching disciplines and tool names.
 Group content is server-rendered, with a live result count and clear empty state.
@@ -325,9 +277,12 @@ workflow.
 ## Tested like a product
 
 `npm run test:e2e` runs a Playwright suite against the built export, served as
-GitHub Pages serves it: every conversation to its last message, quick replies,
-ordering, the already-answered path, restart, legacy anchors, typed routing,
-the chip preview, greeting and fallback, the keyboard shortcuts, the three
+GitHub Pages serves it: the first screen with nothing to wait for, the heading
+outline, every section, the page without JavaScript, no horizontal overflow
+down to 320px, the contents and the phone's drawer, Back through visited
+sections, old anchors, the ask bar's topics panel, typed routing and the
+toolbox search hand-off, the unlisted-tool, greeting and fallback replies, the
+keyboard shortcuts, focus never hidden under the ask bar, the game, the three
 route pages and the 404, at desktop and phone sizes, with an axe-core audit
 (WCAG 2.2 A and AA) of each state. CI runs it on every push; the deploy job
 downloads the HTML report and publishes it at `/qa/report/`, which the colophon
@@ -346,13 +301,13 @@ recorded scan as a transcript, finding by finding, from `data/mjolnir/demo-repor
 
 The game uses a native modal dialog with keyboard cycling and focus
 restoration. Hidden Back to top controls are disabled and do not intercept
-pointer input. The chat announces one short status line per answer to
-assistive technology rather than exposing the whole log as a live region, moves
-the reading cursor to each answer as it arrives, and keeps the count-up figures
-decorative with the final value exposed alongside.
+pointer input. The ask bar announces one short status line per question to
+assistive technology, moves focus to the heading of the section it opens on a
+touch screen, and the count-up figures stay decorative with the final value
+exposed alongside.
 
 See `docs/cinematic-validation.md` for the dated validation log, including the
-chat redesign.
+earlier chat design that this page replaced.
 
 ## LinkedIn recommendations
 

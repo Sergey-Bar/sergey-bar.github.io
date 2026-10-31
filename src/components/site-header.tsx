@@ -37,9 +37,9 @@ export function SiteHeader() {
   }, [open]);
 
   /**
-   * This header renders on the route pages only (the chat page has its own
-   * corner); a route item is current by pathname, and the hash items simply
-   * open their conversation on the chat page.
+   * This header renders on the route pages only (the home page has its own
+   * contents); a route item is current by pathname, and the hash items simply
+   * jump to their section on the home page.
    */
   useEffect(() => {
     const match = nav.find(
@@ -116,7 +116,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 lg:ml-0">
-          {/* The same profile pill as the chat page: one control, two routes,
+          {/* The profile pill: one control, two routes,
               the highlight following the pointer and resting on LinkedIn. */}
           <div className="social">
             <a href={contact.github} className="social-link" aria-label="GitHub" title="GitHub">

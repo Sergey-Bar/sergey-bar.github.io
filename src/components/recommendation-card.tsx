@@ -1,4 +1,4 @@
-import { More } from "@/chat/message";
+import { More } from "@/home/blocks";
 import type { Recommendation } from "@/content/recommendations";
 
 /** The first two sentences stay visible; the rest opens on request. */

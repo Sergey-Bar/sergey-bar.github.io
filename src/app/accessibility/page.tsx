@@ -39,22 +39,22 @@ export default function AccessibilityPage() {
             <article className="colophon-card" data-reveal>
               <h2>What the site does</h2>
               <ul className="colophon-list">
-                <li>Every answer exists in the page without JavaScript, in a fixed logical order.</li>
-                <li>The chat announces one short status line per reply and moves the reading cursor to the answer; it never exposes the whole log as a live region.</li>
+                <li>The whole record is one page, there without JavaScript: one h1, then a numbered h2 per section, in a fixed logical order.</li>
+                <li>The contents mark the section in view as the current location. The ask bar announces one short status line per question, and on a touch screen moves focus to the heading of the section it opens.</li>
                 <li>Animated figures are decorative, with the final value exposed alongside.</li>
-                <li>All controls are reachable by keyboard: chips, quick replies, disclosures, the composer, the pause control. The slash key focuses the composer and Escape leaves it.</li>
-                <li>Focus is visible on every control, and never lost on restart or when the opening ends.</li>
-                <li>The operating system&apos;s reduced-motion setting disables every animation and the opening sequence; a pause control does the same by choice and is remembered.</li>
+                <li>All controls are reachable by keyboard: the contents, disclosures, the ask bar and its topics, the pause control. The slash key focuses the ask bar and Escape leaves it; the drawer on a phone takes focus when it opens and returns it when it closes.</li>
+                <li>Focus is visible on every control and never lands under the fixed ask bar: the page&apos;s scroll padding follows the bar&apos;s height.</li>
+                <li>The operating system&apos;s reduced-motion setting disables every animation; a pause control does the same by choice and is remembered.</li>
                 <li>Text and controls hold at least 4.5:1 contrast on the dark ground; status is never carried by colour alone.</li>
-                <li>Touch targets are 44px or larger; the composer stays above the virtual keyboard.</li>
+                <li>Touch targets are 44px or larger; the ask bar stays above the virtual keyboard.</li>
               </ul>
             </article>
             <article className="colophon-card" data-reveal>
               <h2>Verified on every deploy</h2>
               <ul className="colophon-list">
                 <li>Lighthouse accessibility score of 0.95 or better on every route, or the deploy fails.</li>
-                <li>An axe-core audit (WCAG 2.2 A and AA rules) of the intro, of each conversation after it has fully arrived, of the fallback reply, of the projects route and of this page, run by the Playwright suite.</li>
-                <li>Keyboard paths through the chips, the composer and restart.</li>
+                <li>An axe-core audit (WCAG 2.2 A and AA rules) of the home page, of the ask bar&apos;s fallback reply, of the projects route and of this page, run by the Playwright suite.</li>
+                <li>Keyboard paths through the contents, the ask bar and the drawer, and a check that no focused link hides under the ask bar.</li>
               </ul>
             </article>
             <article className="colophon-card" data-reveal>

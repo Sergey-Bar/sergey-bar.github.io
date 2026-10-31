@@ -1,4 +1,4 @@
-import type { TopicId } from "@/chat/topics";
+import type { TopicId } from "@/home/topics";
 
 /**
  * Topic glyphs in lucide's geometry at lucide's 1.5px stroke, so they sit with

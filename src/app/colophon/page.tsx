@@ -10,7 +10,7 @@ import { contact } from "@/content/site";
 export const metadata: Metadata = {
   title: "Colophon",
   description:
-    "How this site is built: a static export, a conversation rendered on the server, budgets and gates that fail closed, and a Playwright suite that tests every answer on each deploy.",
+    "How this site is built: a static export, one document rendered on the server, budgets and gates that fail closed, and a Playwright suite that tests every section on each deploy.",
   alternates: { canonical: "/colophon/" },
 };
 
@@ -41,13 +41,14 @@ export default function ColophonPage() {
         <section className="shell pb-16">
           <div className="colophon-grid">
             <article className="colophon-card" data-reveal>
-              <h2>The conversation</h2>
+              <h2>One document</h2>
               <p>
-                Every answer is rendered on the server from typed content modules, in a fixed
-                order, so a crawler or a visitor without JavaScript reads the whole record. A small
-                client island turns that document into a chat: it reveals an answer when asked,
-                streams its words, and routes a typed question with a keyword lookup. It is a
-                lookup, not a model, and it says so when it does not know.
+                The home page is the whole record, rendered on the server from typed content
+                modules in the order a reader takes it in, so a crawler, a visitor without
+                JavaScript and a recruiter with thirty seconds all see the same page on the first
+                frame. A small client island adds the contents, which mark the section in view,
+                and an ask bar that routes a typed question to the section that answers it. It
+                is a lookup, not a model, and it says so when it does not know.
               </p>
             </article>
             <article className="colophon-card" data-reveal>
@@ -73,10 +74,10 @@ export default function ColophonPage() {
             <article className="colophon-card" data-reveal>
               <h2>Tested like a product</h2>
               <p>
-                A Playwright suite runs against the built export on every deploy: each
-                conversation, the router with typed questions, the fallback, restart, hash links,
-                the projects route, the phone layout, and an axe accessibility audit of each
-                state. The HTML report from the latest deploy is published next to the pages.
+                A Playwright suite runs against the built export on every deploy: the first
+                screen, the heading outline, the contents and Back, the ask bar with typed
+                questions and its fallback, old links, the page without JavaScript, the phone
+                layout down to 320px, and an axe accessibility audit of each state. The HTML report from the latest deploy is published next to the pages.
               </p>
               <p className="mt-4">
                 <a href="/qa/report/" className="action action-primary">

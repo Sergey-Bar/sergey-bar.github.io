@@ -1,9 +1,6 @@
-import { ChatShell } from "@/chat/chat-shell";
+import { HomeShell } from "@/home/home-shell";
 
+/** The shell holds its own `main`: the document only, with the contents and the ask bar beside it. */
 export default function HomePage() {
-  return (
-    <main id="main">
-      <ChatShell />
-    </main>
-  );
+  return <HomeShell />;
 }

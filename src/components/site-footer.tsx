@@ -3,7 +3,7 @@ import Link from "next/link";
 import { site } from "@/content/site";
 
 const links = [
-  { label: "Chat", href: "/" },
+  { label: "Home", href: "/" },
   { label: "Case studies", href: "/#cases" },
   { label: "Projects", href: "/projects/" },
   { label: "Colophon", href: "/colophon/" },

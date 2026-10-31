@@ -1,7 +1,6 @@
 import Link from "next/link";
 
-import { Bubble, Card, More, QuickReplies, UserBubble } from "@/chat/message";
-import { topicById, type TopicId } from "@/chat/topics";
+import { Card, More, Note, Section } from "@/home/blocks";
 import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
 import { CountUp } from "@/components/count-up";
 import { ExperienceRecord } from "@/components/experience-record";
@@ -15,7 +14,6 @@ import { ToolGroup } from "@/components/tool-group";
 import { ToolboxExplorer } from "@/components/toolbox-explorer";
 import { caseStudies } from "@/content/case-studies";
 import { roles } from "@/content/experience";
-import { employers, hero } from "@/content/hero";
 import { proofRow } from "@/content/metrics";
 import { mjolnir } from "@/content/mjolnir-facts";
 import { profile } from "@/content/profile";
@@ -25,29 +23,10 @@ import { availability, contact, site } from "@/content/site";
 import { credentials, toolbox } from "@/content/toolbox";
 
 /**
- * Every answer the site can give, rendered on the server in full. The director
- * reveals a flow when the visitor asks for it, one message at a time; a visitor
- * without JavaScript, or a crawler, reads all of them in this order. Nothing
- * below is copy that lives only in a component: every figure, role and quote
- * comes from the content modules, exactly as the previous site stated them.
+ * The whole record, rendered on the server in the order a reader takes it in.
+ * Nothing below is copy that lives only in a component: every figure, role and
+ * quote comes from the content modules.
  */
-
-function Flow({ id, children }: { id: TopicId; children: React.ReactNode }) {
-  const topic = topicById[id];
-  return (
-    <section
-      className="flow"
-      id={id}
-      data-flow={id}
-      data-topic={id}
-      aria-label={topic.description}
-      tabIndex={-1}
-    >
-      <UserBubble>{topic.prompt}</UserBubble>
-      {children}
-    </section>
-  );
-}
 
 /** A spec-sheet row inside the at-a-glance card. */
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -59,18 +38,9 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function AboutFlow() {
+function AboutSection() {
   return (
-    <Flow id="about">
-      <Bubble>
-        <p>
-          I&apos;m <strong>{site.name}</strong>, {site.role.replace("&", "and")} based in{" "}
-          {site.location}. {hero.positioning}
-        </p>
-      </Bubble>
-      <Bubble>
-        <p>{profile.distinction}</p>
-      </Bubble>
+    <Section id="about" lead={<p>{profile.distinction}</p>}>
       <Card eyebrow="the record at a glance">
         <dl className="spec">
           <Row label="Position">
@@ -122,117 +92,21 @@ function AboutFlow() {
           ))}
         </dl>
       </Card>
-      <Card eyebrow="experience across teams at">
-        <ul className="employers" aria-label="Employers">
-          {employers.map((employer) => (
-            <li key={employer.name} title={employer.name}>
-              {/* eslint-disable-next-line @next/next/no-img-element -- static export, brand assets */}
-              <img
-                src={employer.logo}
-                alt={employer.name}
-                width={employer.iw}
-                height={employer.ih}
-                loading="lazy"
-                className={`${employer.h} w-auto`}
-              />
-            </li>
-          ))}
-        </ul>
-      </Card>
-      <QuickReplies lead="Want the detail?" ids={["cases", "projects", "contact"]} />
-    </Flow>
+    </Section>
   );
 }
 
-function CasesFlow() {
+function ProjectsSection() {
   return (
-    <Flow id="cases">
-      <Bubble>
+    <Section
+      id="projects"
+      lead={
         <p>
-          Three pieces of work, each told the same way: the problem, what I did, the evidence
-          behind it, and the outcome. Every figure is read from the record, not retyped.
+          Two open-source products I built and maintain. Both are on GitHub, and both state their
+          own limits. A tool that rounds itself up is not worth reading.
         </p>
-      </Bubble>
-      {caseStudies.map((study, index) => (
-        <Card
-          key={study.slug}
-          eyebrow={`case ${index + 1} of ${caseStudies.length}`}
-          title={study.title}
-          stat={study.stat}
-        >
-          <dl className="case">
-            <div>
-              <dt>Problem</dt>
-              <dd>{study.problem}</dd>
-            </div>
-            <div>
-              <dt>Outcome</dt>
-              <dd className="case-outcome">{study.outcome}</dd>
-            </div>
-          </dl>
-          <More label="How, and the evidence">
-          <p className="case-context">{study.context}</p>
-          <dl className="case">
-            <div>
-              <dt>Approach</dt>
-              <dd>
-                <ul>
-                  {study.approach.map((step) => (
-                    <li key={step}>{step}</li>
-                  ))}
-                </ul>
-              </dd>
-            </div>
-            <div>
-              <dt>Evidence</dt>
-              <dd>
-                <ul className="case-evidence">
-                  {study.evidence.map((item) => (
-                    <li key={item.label}>
-                      <strong>
-                        {item.href ? (
-                          <a href={item.href} className="link-underline">
-                            {item.label}
-                          </a>
-                        ) : (
-                          item.label
-                        )}
-                      </strong>
-                      <span>{item.detail}</span>
-                    </li>
-                  ))}
-                </ul>
-              </dd>
-            </div>
-          </dl>
-          </More>
-          {study.artifact === "scan" ? <ScanTranscript /> : null}
-        </Card>
-      ))}
-      <Bubble>
-        <p>
-          This site is tested the same way: a Playwright suite runs every conversation, the
-          router and an accessibility audit on each deploy, and the{" "}
-          <Link href="/colophon/" className="link-underline">
-            colophon
-          </Link>{" "}
-          links the latest report.
-        </p>
-      </Bubble>
-      <QuickReplies ids={["projects", "experience", "contact"]} />
-    </Flow>
-  );
-}
-
-function ProjectsFlow() {
-  return (
-    <Flow id="projects">
-      <Bubble>
-        <p>
-          Two open-source products I built and maintain. Both are on GitHub, and both state
-          their own limits. A tool that rounds itself up is not worth reading.
-        </p>
-      </Bubble>
+      }
+    >
       {projects.map((project) => (
         <Card
           key={project.slug}
@@ -292,38 +166,116 @@ function ProjectsFlow() {
           </div>
         </Card>
       ))}
-      <Bubble>
-        <p>
-          The long version, with each repository&apos;s full design argument, is on the{" "}
-          <Link href="/projects/" className="link-underline">
-            projects page
-          </Link>
-          .
-        </p>
-      </Bubble>
-      <QuickReplies ids={["cases", "toolbox", "contact"]} />
-    </Flow>
+      <Note>
+        The long version, with each repository&apos;s full design argument, is on the{" "}
+        <Link href="/projects/" className="link-underline">
+          projects page
+        </Link>
+        .
+      </Note>
+    </Section>
   );
 }
 
-function ExperienceFlow() {
+function CasesSection() {
   return (
-    <Flow id="experience">
-      <Bubble>
+    <Section
+      id="cases"
+      lead={
+        <p>
+          Three pieces of work, each told the same way: the problem, what I did, the evidence
+          behind it, and the outcome. Every figure is read from the record, not retyped.
+        </p>
+      }
+    >
+      {caseStudies.map((study, index) => (
+        <Card
+          key={study.slug}
+          eyebrow={`case ${index + 1} of ${caseStudies.length}`}
+          title={study.title}
+          stat={study.stat}
+        >
+          <dl className="case">
+            <div>
+              <dt>Problem</dt>
+              <dd>{study.problem}</dd>
+            </div>
+            <div>
+              <dt>Outcome</dt>
+              <dd className="case-outcome">{study.outcome}</dd>
+            </div>
+          </dl>
+          <More label="How, and the evidence">
+            <p className="case-context">{study.context}</p>
+            <dl className="case">
+              <div>
+                <dt>Approach</dt>
+                <dd>
+                  <ul>
+                    {study.approach.map((step) => (
+                      <li key={step}>{step}</li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+              <div>
+                <dt>Evidence</dt>
+                <dd>
+                  <ul className="case-evidence">
+                    {study.evidence.map((item) => (
+                      <li key={item.label}>
+                        <strong>
+                          {item.href ? (
+                            <a href={item.href} className="link-underline">
+                              {item.label}
+                            </a>
+                          ) : (
+                            item.label
+                          )}
+                        </strong>
+                        <span>{item.detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            </dl>
+          </More>
+          {study.artifact === "scan" ? <ScanTranscript /> : null}
+        </Card>
+      ))}
+      <Note>
+        This site is tested the same way: a Playwright suite runs every section, the ask bar and
+        an accessibility audit on each deploy, and the{" "}
+        <Link href="/colophon/" className="link-underline">
+          colophon
+        </Link>{" "}
+        links the latest report.
+      </Note>
+    </Section>
+  );
+}
+
+function ExperienceSection() {
+  return (
+    <Section
+      id="experience"
+      lead={
         <p>
           Five roles, most recent first: role, period, scope and outcomes. The full record, with
           references on request, is on LinkedIn.
         </p>
-      </Bubble>
+      }
+    >
       {roles.map((role) => (
         <Card key={`${role.company}-${role.period}`}>
           <ExperienceRecord role={role} />
         </Card>
       ))}
-      <Card eyebrow="education and languages">
+      <Card title="Education and languages">
         <div className="grid gap-8 sm:grid-cols-2">
           <div>
-            <h4 className="data text-muted">education</h4>
+            <h4 className="data text-muted">Education</h4>
             <ul className="mt-3 flex flex-col gap-1.5">
               {credentials.education.map((item) => (
                 <li key={item.school} className="t-small text-ink">
@@ -336,7 +288,7 @@ function ExperienceFlow() {
             </ul>
           </div>
           <div>
-            <h4 className="data text-muted">languages</h4>
+            <h4 className="data text-muted">Languages</h4>
             <ul className="mt-3 flex flex-col gap-1.5">
               {credentials.languages.map((item) => (
                 <li key={item.name} className="t-small text-ink">
@@ -348,22 +300,23 @@ function ExperienceFlow() {
           </div>
         </div>
       </Card>
-      <QuickReplies ids={["recommendations", "projects", "contact"]} />
-    </Flow>
+    </Section>
   );
 }
 
-function RecommendationsFlow() {
+function RecommendationsSection() {
   const featured = recommendations.slice(0, 3);
   const rest = recommendations.slice(3);
   return (
-    <Flow id="recommendations">
-      <Bubble>
+    <Section
+      id="recommendations"
+      lead={
         <p>
           {recommendations.length} LinkedIn recommendations from managers and colleagues,
-          transcribed as written. Three of them:
+          transcribed as written. Three of them first:
         </p>
-      </Bubble>
+      }
+    >
       {featured.map((recommendation) => (
         <Card key={recommendation.name}>
           <RecommendationCard recommendation={recommendation} />
@@ -389,20 +342,21 @@ function RecommendationsFlow() {
           View them on LinkedIn
         </a>
       </Card>
-      <QuickReplies ids={["experience", "about", "contact"]} />
-    </Flow>
+    </Section>
   );
 }
 
-function ToolboxFlow() {
+function ToolboxSection() {
   return (
-    <Flow id="toolbox">
-      <Bubble>
+    <Section
+      id="toolbox"
+      lead={
         <p>
-          Grouped by the job they do. Everything here is something I have actually used.
-          Search covers all {toolbox.length} groups.
+          Grouped by the job they do. Everything here is something I have actually used. Search
+          covers all {toolbox.length} groups.
         </p>
-      </Bubble>
+      }
+    >
       <Card>
         <ToolboxExplorer
           groups={toolbox.map((group) => ({
@@ -417,15 +371,15 @@ function ToolboxFlow() {
           }))}
         />
       </Card>
-      <QuickReplies ids={["projects", "experience", "contact"]} />
-    </Flow>
+    </Section>
   );
 }
 
-function ContactFlow() {
+function ContactSection() {
   return (
-    <Flow id="contact">
-      <Bubble>
+    <Section
+      id="contact"
+      lead={
         <p>
           LinkedIn is the route, and the work lives on GitHub. There is no contact form. My CV is
           sent on request: write to{" "}
@@ -435,7 +389,8 @@ function ContactFlow() {
           or message me on LinkedIn, and it comes back as a file rather than sitting here for
           anyone to lift.
         </p>
-      </Bubble>
+      }
+    >
       <Card eyebrow="open to">
         <ul className="flex flex-wrap gap-1.5" aria-label="Open to">
           {availability.roles.map((role) => (
@@ -458,17 +413,13 @@ function ContactFlow() {
           </a>
         </div>
       </Card>
-      <QuickReplies ids={["cases", "recommendations", "fun"]} />
-    </Flow>
+    </Section>
   );
 }
 
-function FunFlow() {
+function FunSection() {
   return (
-    <Flow id="fun">
-      <Bubble>
-        <p>Not everything here is a release gate. This one is for after hours.</p>
-      </Bubble>
+    <Section id="fun" lead={<p>Not everything here is a release gate. This one is for after hours.</p>}>
       <Card eyebrow="after hours" title="A stress-relief toy">
         <p className="t-body text-muted">
           A small canvas game that hands you nine tools and this page&apos;s own headline to take
@@ -483,23 +434,21 @@ function FunFlow() {
           <li>Nothing is saved and nothing is sent</li>
         </ul>
       </Card>
-      <QuickReplies ids={["projects", "about", "contact"]} />
-    </Flow>
+    </Section>
   );
 }
 
-export function Flows() {
+export function Sections() {
   return (
     <>
-      <AboutFlow />
-      <ProjectsFlow />
-      <CasesFlow />
-      <ExperienceFlow />
-      <RecommendationsFlow />
-      <ToolboxFlow />
-      <ContactFlow />
-      <FunFlow />
+      <AboutSection />
+      <ProjectsSection />
+      <CasesSection />
+      <ExperienceSection />
+      <RecommendationsSection />
+      <ToolboxSection />
+      <ContactSection />
+      <FunSection />
     </>
   );
 }
-

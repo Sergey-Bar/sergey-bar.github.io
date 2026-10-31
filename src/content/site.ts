@@ -33,7 +33,7 @@ export const contact = {
 export type NavItem = { label: string; href: string };
 
 export const nav: readonly NavItem[] = [
-  { label: "Chat", href: "/" },
+  { label: "Home", href: "/" },
   { label: "Projects", href: "/projects/" },
   { label: "Case studies", href: "/#cases" },
   { label: "Experience", href: "/#experience" },

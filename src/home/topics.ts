@@ -192,7 +192,8 @@ const GREETINGS = [
 ];
 
 export type Route =
-  | { kind: "topic"; id: TopicId }
+  /** `term`: the toolbox name the question used, which the toolbox's own search can take. */
+  | { kind: "topic"; id: TopicId; term?: string }
   | { kind: "greeting" }
   /** `scanned`: Mjolnir reads suites written in it, which the reply says. */
   | { kind: "unlisted"; tool: string; scanned: boolean }
@@ -263,7 +264,13 @@ export function routeInput(raw: string): Route {
     const tool = UNLISTED[unlisted];
     return { kind: "unlisted", tool, scanned: (mjolnir.rules.frameworks as readonly string[]).includes(tool) };
   }
-  return best ? { kind: "topic", id: best.id } : { kind: "unknown" };
+  if (!best) return { kind: "unknown" };
+  if (best.id !== "toolbox") return { kind: "topic", id: best.id };
+  // The most specific tool named: "playwright mcp" rather than "playwright".
+  const term = topicById.toolbox.terms
+    ?.filter((name) => matcher(name, true).test(text))
+    .sort((a, b) => b.length - a.length)[0];
+  return term ? { kind: "topic", id: "toolbox", term } : { kind: "topic", id: "toolbox" };
 }
 
 /** A legacy anchor such as `#projects` resolves to the topic that replaced it. */
