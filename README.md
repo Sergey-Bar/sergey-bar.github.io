@@ -54,7 +54,8 @@ the one client island, and it only adds reading aids around the document:
 - **Contents.** On a wide screen a sidebar stands beside the page: the eight
   sections numbered 01 to 08, the profiles (LinkedIn, GitHub, email) and, at
   its foot, the person the way Claude Code keeps the account: the avatar, the
-  first name and "Ultra" (in the shimmer). The name and the title are in the
+  first name and "Ultra" as plain muted text after a dot, the way Claude Code
+  writes the plan beside the name. The name and the title are in the
   hero, so the menu carries only the first name. The section in view is marked
   (`aria-current="location"`, a lit number and an edge bar), measured as the
   last section whose top has passed a third of the screen. On a narrow screen
@@ -83,7 +84,11 @@ the one client island, and it only adds reading aids around the document:
   a screen reader. The buttons are 36px, 44px on a touch screen, and the
   plus is one "Topics" button with `aria-expanded`.
   The plus holds every section as a chip (one row of short names
-  on a phone, scrolled sideways) and the profiles as icons. Until the visitor
+  on a phone, which pulls in as the page is read: a chip whose section has been
+  passed folds away, width, gap and fade, so the section in view leads the row
+  and what is ahead follows; it comes back on a scroll up, folded chips leave
+  the tab order, and the contents drawer still reaches every section) and the
+  profiles as icons. Until the visitor
   chooses, the panel follows the layout: open on a narrow screen, where it is
   the way round the page, and put away beside the sidebar, which already lists
   every section; the stylesheet applies that default before any script runs.

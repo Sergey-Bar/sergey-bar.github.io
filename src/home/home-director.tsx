@@ -648,8 +648,13 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
             data-auto={chipsChoice === null ? "" : undefined}
           >
             <ul className="chips" aria-label="Jump to a section">
-              {topics.map((topic) => (
-                <li key={topic.id}>
+              {topics.map((topic, index) => (
+                <li
+                  key={topic.id}
+                  // On a phone the row pulls in as the page is read: a section already
+                  // passed folds away, and comes back when the reader scrolls up.
+                  data-passed={current && index < topics.findIndex((t) => t.id === current) ? "" : undefined}
+                >
                   <a
                     href={`#${topic.id}`}
                     className="chip"

@@ -126,8 +126,12 @@ test.describe("the opening screen", () => {
     const page = await context.newPage();
     await page.goto("/");
     await expect(page.locator(".boot")).toBeVisible();
-    await page.keyboard.press("ArrowDown");
-    await expect(page.locator(".boot")).toBeHidden({ timeout: 1_000 });
+    // The listener exists once the page has hydrated, which can be after the first key; press until it takes.
+    await expect(async () => {
+      await page.keyboard.press("ArrowDown");
+      await expect(page.locator("html")).not.toHaveAttribute("data-boot", "", { timeout: 300 });
+    }).toPass({ timeout: 8_000 });
+    await expect(page.locator(".boot")).toBeHidden({ timeout: 2_000 });
   });
 
   test("never shows when the system asks for reduced motion", async ({ browser }) => {
@@ -263,26 +267,66 @@ test.describe("the ask bar", () => {
     await expect(page.locator(".composer-model")).toHaveText(/Opus 5\.5\s*Max/);
     if (isMobile) {
       // A phone has no sidebar: the topics are the way round the page.
-      await expect(chips.first()).toBeVisible();
+      await expect(chips.last()).toBeVisible();
     } else {
       // Beside the sidebar, which lists every section, they start put away.
-      await expect(chips.first()).toBeHidden();
+      await expect(chips.last()).toBeHidden();
       await page.getByRole("button", { name: "Topics", exact: true }).click();
-      await expect(chips.first()).toBeVisible();
+      await expect(chips.last()).toBeVisible();
     }
     await expect(page.locator(".composer .chip-route")).toHaveCount(3);
     await chips.filter({ hasText: /Projects/ }).click();
     await expect(heading(page, "projects")).toBeInViewport();
-    await expect(chips.first()).toBeVisible();
+    await expect(chips.last()).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(chips.first()).toBeVisible();
+    await expect(chips.last()).toBeVisible();
     await page.getByRole("button", { name: "Topics", exact: true }).click();
-    await expect(chips.first()).toBeHidden();
+    await expect(chips.last()).toBeHidden();
     await ask(page, "how do I reach you");
     await expect(heading(page, "contact")).toBeInViewport();
-    await expect(chips.first()).toBeHidden();
+    await expect(chips.last()).toBeHidden();
     await page.getByRole("button", { name: "Topics", exact: true }).click();
-    await expect(chips.first()).toBeVisible();
+    await expect(chips.last()).toBeVisible();
+  });
+
+  test("on a phone the topics row pulls in as sections are passed, and comes back on the way up", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "the single-row topics are the phone layout");
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    const items = page.locator(".composer-topics > .chips:first-child > li");
+    await expect(items).toHaveCount(SECTIONS.length);
+    // At the top nothing has been passed.
+    for (let i = 0; i < SECTIONS.length; i++) await expect(items.nth(i)).toBeVisible();
+    await page.evaluate(() => {
+      document.documentElement.style.scrollBehavior = "auto";
+      document.getElementById("toolbox")!.scrollIntoView();
+    });
+    // About and Experience are behind the reader: folded away and out of the tab order.
+    await expect(items.nth(0)).toBeHidden();
+    await expect(items.nth(1)).toBeHidden();
+    // The section in view leads the row, and what is ahead follows.
+    await expect(items.nth(2)).toBeVisible();
+    await expect(items.nth(2).locator(".chip")).toHaveAttribute("data-current", "");
+    await expect(items.nth(3)).toBeVisible();
+    const leading = await items.nth(2).evaluate((li) => Math.round(li.getBoundingClientRect().left));
+    expect(leading).toBeLessThan(40);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(items.nth(0)).toBeVisible();
+    await expect(items.nth(1)).toBeVisible();
+  });
+
+  test("the plan beside the name is plain: no animation, no gradient, a dot between", async ({ page, isMobile }) => {
+    await page.goto("/");
+    if (isMobile) await page.getByRole("button", { name: "Contents", exact: true }).click();
+    const plan = page.locator(".side-foot .side-plan");
+    await expect(plan).toHaveText("Ultra");
+    const look = await plan.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { animation: cs.animationName, backgroundImage: cs.backgroundImage, dot: getComputedStyle(el, "::before").content };
+    });
+    expect(look.animation).toBe("none");
+    expect(look.backgroundImage).toBe("none");
+    expect(look.dot).toContain("·");
   });
 
   test("previews the section a question would go to while it is typed", async ({ page }) => {

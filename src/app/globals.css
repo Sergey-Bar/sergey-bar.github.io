@@ -647,6 +647,23 @@
   .chips-routes > li:last-child { padding-right: 24px; }
   .composer-topics .chip-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .composer-topics .chip-short { display: inline; }
+  /* The row pulls in as the page is read: a chip whose section has been
+     passed folds to nothing (its width, its gap and its fade), so the section
+     in view is at the left edge and what is ahead follows. It comes back on a
+     scroll up. Folded, it leaves the tab order and the screen reader's list;
+     the contents drawer still reaches every section. */
+  .composer-topics > .chips:first-child > li {
+    max-width: 220px;
+    overflow: hidden;
+    transition: max-width 320ms var(--ease-out), margin-right 320ms var(--ease-out), opacity 220ms var(--ease-out), visibility 0s;
+  }
+  .composer-topics > .chips:first-child > li[data-passed] {
+    max-width: 0;
+    margin-right: -6px;
+    opacity: 0;
+    visibility: hidden;
+    transition: max-width 320ms var(--ease-out), margin-right 320ms var(--ease-out), opacity 220ms var(--ease-out), visibility 0s linear 320ms;
+  }
 }
 
 /* --- Sidebar: the contents ---------------------------------------------------- */
@@ -718,10 +735,11 @@
   .side-head { padding-bottom: 2px; }
 }
 .side-name { font-size: 14px; font-weight: 600; letter-spacing: -0.005em; color: var(--color-ink); }
-.side-plan { font-size: 13px; font-weight: 600; letter-spacing: 0.01em; color: #e879f9; background-image: linear-gradient(100deg, #f472b6 0%, #c084fc 30%, #818cf8 50%, #c084fc 70%, #f472b6 100%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-@media (prefers-reduced-motion: no-preference) {
-  .side-plan { animation: effort-shimmer 2.6s linear infinite; }
-}
+/* The plan reads like the one beside the name in Claude Code: plain, muted, a
+   dot between. */
+.side-plan { font-size: 13.5px; font-weight: 450; color: var(--color-muted); }
+.side-plan { margin-left: -4px; }
+.side-plan::before { content: "·"; margin-right: 6px; }
 .drawer-backdrop { position: fixed; inset: 0; z-index: 35; background: #000000a0; border: 0; cursor: pointer; }
 
 .avatar {
