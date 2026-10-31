@@ -109,7 +109,7 @@
 
 /* Labels, eyebrows, tags and figures read in the text face, with tabular
    figures so numbers still line up. Mono is kept for what really is terminal
-   output: the opening screen's line and the key hint. */
+   output: the opening screen's line. */
 @utility t-data {
   font-family: var(--font-sans);
   font-size: var(--ts-data);
@@ -194,7 +194,10 @@
 
   html {
     -webkit-text-size-adjust: 100%;
-    scroll-behavior: smooth;
+    /* Smooth only once the page has settled (the director marks the root): what
+       the browser does while loading, restoring a position or landing on a
+       fragment, is instant, never a glide. Without a script it is smooth. */
+    scroll-behavior: auto;
     /* A sticky header (the route pages' header, the phone's bar on the home
        page) would otherwise cover an anchor target. */
     scroll-padding-top: 5.5rem;
@@ -211,9 +214,14 @@
     }
   }
 
+  html:not([data-js]),
+  html[data-settled] {
+    scroll-behavior: smooth;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html {
-      scroll-behavior: auto;
+      scroll-behavior: auto !important;
     }
   }
 
@@ -352,33 +360,6 @@
     transform: scaleX(0);
   }
 }
-
-/* ---------------------------------------------------------------------------
-   The pause control: a labelled row in the place the page gives it (the
-   sidebar's foot on the home page), never a button floating over anything.
-   --------------------------------------------------------------------------- */
-
-.motion-toggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-height: 38px;
-  padding: 0 10px;
-  border-radius: 10px;
-  color: var(--color-muted);
-  font-size: 13.5px;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out);
-}
-.motion-toggle svg { flex-shrink: 0; width: 15px; color: var(--color-ink); }
-.motion-toggle:hover { background: #ffffff0a; color: var(--color-ink); }
-.motion-toggle[aria-pressed="true"] svg { color: var(--color-c-sky); }
-.motion-toggle:disabled { cursor: default; opacity: 0.7; }
-.motion-toggle:disabled:hover { background: none; color: var(--color-muted); }
-/* Inline, in a line of links (the 404): the label and the glyph, no row. */
-.motion-toggle-inline { width: auto; min-height: 32px; padding: 0 6px; margin-left: -6px; font-size: inherit; }
 
 /* ---------------------------------------------------------------------------
    The home page: one document, with the contents beside it and the ask bar
@@ -685,11 +666,8 @@
   background: color-mix(in oklab, var(--color-paper) 94%, transparent);
   backdrop-filter: blur(16px);
 }
-.side-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px 18px; border-bottom: 1px solid var(--color-line); }
-.side-person { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.side-person > span:last-child { display: grid; min-width: 0; }
-.side-name { font-size: 14.5px; font-weight: 650; letter-spacing: -0.01em; color: var(--color-ink); }
-.side-role { font-size: 13px; line-height: 1.4; color: var(--color-muted); }
+/* The head holds only the drawer's close button; beside the page it is not there. */
+.side-head { display: none; align-items: center; justify-content: flex-start; padding: 0 0 8px; }
 .side-close { display: none; width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--color-line-strong); color: var(--color-muted); place-items: center; cursor: pointer; }
 .side-close:hover { color: var(--color-ink); border-color: var(--color-ink); }
 .side-label { margin: 20px 0 6px; padding-inline: 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-muted); }
@@ -716,7 +694,34 @@
 .side-item[aria-current="location"] .side-number { color: var(--color-accent-ink); }
 .side-item[aria-current="location"]::before { content: ""; position: absolute; left: -12px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--color-c-sky); }
 .side-profile svg { flex-shrink: 0; color: var(--color-ink); }
-.side-foot { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--color-line); }
+/* The person at the foot, like an account: avatar, first name, plan. */
+.side-foot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Pinned to the bottom edge when the menu has to scroll (a short screen), over
+     the sidebar's own bottom padding so nothing shows beneath it. */
+  margin: auto -12px calc(-1 * max(14px, env(safe-area-inset-bottom)));
+  padding: 12px 22px max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-line);
+  background: var(--color-paper);
+}
+/* A short screen: the menu tightens so the whole of it still fits where it can. */
+@media (max-height: 700px) {
+  .side-item { min-height: 34px; }
+  .side-label { margin: 12px 0 4px; }
+}
+@media (max-height: 600px) {
+  .side-item { min-height: 32px; }
+  .side-head { padding-bottom: 2px; }
+}
+.side-name { font-size: 14px; font-weight: 600; letter-spacing: -0.005em; color: var(--color-ink); }
+.side-plan { font-size: 13px; font-weight: 600; letter-spacing: 0.01em; color: #e879f9; background-image: linear-gradient(100deg, #f472b6 0%, #c084fc 30%, #818cf8 50%, #c084fc 70%, #f472b6 100%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+@media (prefers-reduced-motion: no-preference) {
+  .side-plan { animation: effort-shimmer 2.6s linear infinite; }
+}
 .drawer-backdrop { position: fixed; inset: 0; z-index: 35; background: #000000a0; border: 0; cursor: pointer; }
 
 .avatar {
@@ -729,14 +734,14 @@
 }
 .avatar img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 
-/* The phone's bar: the person, the section in view, and the contents. */
+/* The narrow layout's bar: the contents button on the left, where the drawer
+   opens from, then the section in view. */
 .topline {
   position: sticky;
   top: 0;
   z-index: 30;
   display: none;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   height: 56px;
   padding: 0 var(--gutter);
@@ -744,14 +749,9 @@
   background: color-mix(in oklab, var(--color-paper) 86%, transparent);
   backdrop-filter: blur(14px) saturate(1.3);
 }
-.topline-person { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--color-ink); opacity: 0; visibility: hidden; translate: 0 6px; transition: opacity var(--dur-ui) var(--ease-out), translate var(--dur-ui) var(--ease-out), visibility 0s linear var(--dur-ui); }
-.topline-person[data-shown] { opacity: 1; visibility: visible; translate: 0 0; transition: opacity var(--dur-ui) var(--ease-out), translate var(--dur-ui) var(--ease-out), visibility 0s; }
-/* Without JavaScript nothing marks it, so it simply shows. */
-:root:not([data-js]) .topline-person { opacity: 1; visibility: visible; translate: 0 0; }
-.topline-name { font-size: 14.5px; font-weight: 650; white-space: nowrap; }
-.topline-section { overflow: hidden; font-size: 13.5px; color: var(--color-muted); white-space: nowrap; text-overflow: ellipsis; }
-.topline-section::before { content: "/"; margin-right: 8px; color: var(--color-line-strong); }
-.topline-menu { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--color-line-strong); color: var(--color-ink); cursor: pointer; }
+.topline-section { overflow: hidden; font-size: 14.5px; font-weight: 550; color: var(--color-ink); white-space: nowrap; text-overflow: ellipsis; }
+.topline-menu { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; margin-left: -8px; border-radius: 50%; color: var(--color-ink); cursor: pointer; transition: background-color var(--dur-hover) var(--ease-out); }
+.topline-menu:hover { background: #ffffff0f; }
 
 /* Wide screens: the contents stand beside the page. Narrow: a drawer. */
 @media (max-width: 63.99rem) {
@@ -763,6 +763,7 @@
     transition: transform 420ms var(--ease-drawer), visibility 0s linear 420ms;
   }
   .home[data-drawer] .sidebar { transform: none; visibility: visible; transition: transform 420ms var(--ease-out), visibility 0s; }
+  .side-head { display: flex; }
   .side-close { display: grid; }
 }
 
@@ -1147,7 +1148,9 @@
   bottom: 0;
   z-index: 30;
   padding: 20px var(--gutter) max(12px, env(safe-area-inset-bottom));
-  background: linear-gradient(transparent, color-mix(in oklab, var(--color-paper) 94%, transparent) 45%);
+  /* Fades in above the box and is solid by the status line, so the page
+     never shows through the small text under it. */
+  background: linear-gradient(transparent, color-mix(in oklab, var(--color-paper) 94%, transparent) 35%, var(--color-paper) 70%);
   pointer-events: none;
 }
 @media (min-width: 64rem) {
@@ -1172,12 +1175,15 @@
   border-color: color-mix(in oklab, var(--color-c-sky) 70%, var(--color-line-strong));
   box-shadow: var(--edge), var(--elev-2), 0 0 0 4px color-mix(in oklab, var(--color-c-sky) 18%, transparent);
 }
-.composer-row { display: flex; align-items: center; gap: 6px; }
+/* Laid out the way Claude Code draws its composer: the field on top, a bar
+   under it with the plus on the left and send on the right, and a status
+   line under the box. */
+.composer-row { display: flex; align-items: center; gap: 4px; }
 .composer input {
   flex: 1;
   min-width: 0;
-  height: 42px;
-  padding: 0 8px;
+  height: 44px;
+  padding: 0 10px;
   background: transparent;
   border: 0;
   outline: none;
@@ -1186,44 +1192,24 @@
   text-overflow: ellipsis;
 }
 .composer input::placeholder { color: var(--color-muted); }
-/* The "/" hint shows on pointer devices while the field is idle. */
-.composer-kbd {
-  display: none;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 7px;
-  border-radius: 7px;
-  border: 1px solid var(--color-line-strong);
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 22px;
-  text-align: center;
-  transition: opacity var(--dur-hover) var(--ease-out);
-}
-@media (hover: hover) and (pointer: fine) {
-  .composer-kbd { display: block; }
-  .composer-panel:focus-within .composer-kbd { opacity: 0; }
-}
 .composer-plus {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
-  border-radius: 50%;
-  border: 1px solid var(--color-line-strong);
-  color: var(--color-ink);
+  border-radius: 10px;
+  color: var(--color-muted);
   cursor: pointer;
-  transition: border-color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
+  transition: color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
 }
-.composer-plus svg { transition: transform var(--dur-ui) var(--ease-out); }
-.composer-plus:hover { border-color: var(--color-ink); background: #ffffff0a; }
+.composer-plus:hover { color: var(--color-ink); background: #ffffff0d; }
 .composer-plus:active { transform: scale(0.94); }
-.composer-plus[aria-expanded="true"] { border-color: var(--color-c-sky); color: var(--color-c-sky); }
-.composer-plus[aria-expanded="true"] svg { transform: rotate(180deg); }
-/* An empty field has nothing to send. */
-.composer-panel:has(input:placeholder-shown) .composer-send { opacity: 0.4; box-shadow: none; }
+/* Open, the plus stays a plus: lit, not turned into a cross. */
+.composer-plus[aria-expanded="true"] { color: var(--color-accent-ink); background: color-mix(in oklab, var(--color-c-sky) 14%, transparent); }
+/* Send is quiet until there is something to send; then it fills. */
+.composer-panel[data-ready] .composer-send { background: var(--color-c-blue); color: #fff; }
+.composer-panel[data-ready] .composer-send:hover { background: var(--color-c-sky); }
 /* While the visitor types, the chip the router would answer with lights up. */
 .composer-panel[data-match] .composer-topics .chip { opacity: 0.55; }
 .composer-panel[data-match="about"] .chip[data-topic="about"],
@@ -1240,24 +1226,59 @@
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--topic) 16%, transparent);
 }
 .chip { transition: border-color var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out), box-shadow var(--dur-ui) var(--ease-out), opacity var(--dur-ui) var(--ease-out), transform var(--dur-press) var(--ease-out); }
-/* The send button: a small rounded square, filled, with an up arrow; dimmed
-   while the field is empty. */
+/* On a touch screen both buttons are full 44px targets. */
+@media (pointer: coarse) {
+  .composer-plus, .composer-send { width: 44px; height: 44px; }
+}
+
+/* The send button: a return arrow in a small rounded square. */
 .composer-send {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
-  border-radius: 12px;
-  background: var(--color-c-blue);
-  color: #fff;
+  border-radius: 10px;
+  color: var(--color-muted);
   cursor: pointer;
-  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.18), 0 4px 14px -4px color-mix(in oklab, var(--color-c-blue) 70%, transparent);
-  transition: background-color var(--dur-hover) var(--ease-out), opacity var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out), box-shadow var(--dur-ui) var(--ease-out);
+  transition: background-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
 }
-.composer-send:hover { background: var(--color-c-sky); }
-.composer-send svg { stroke-width: 2.4; }
+.composer-send:hover { color: var(--color-ink); background: #ffffff0d; }
 .composer-send:active { transform: scale(0.94); }
+
+/* The line under the box: the mode, then the model, its effort and the
+   context ring at the end. */
+.composer-status {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, var(--column));
+  margin: 6px auto 0;
+  /* In line with the field's text and the bar's glyphs: the panel's padding
+     plus its border plus the field's own. */
+  padding: 0 19px;
+  font-size: 13px;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+.composer-mode { font-weight: 550; color: var(--color-ink); }
+.composer-model { display: inline-flex; align-items: baseline; gap: 8px; margin-left: auto; }
+/* The ring fills with the share of the page read, from the top, clockwise. */
+.context-ring { display: grid; place-items: center; width: 24px; height: 24px; }
+/* Until the page has measured itself the ring has nothing true to show. */
+.home:not([data-settled]) .context-ring { opacity: 0; }
+.context-ring svg { rotate: -90deg; }
+.context-track, .context-fill { fill: none; stroke-width: 2.5; }
+.context-track { stroke: var(--color-line-strong); }
+.context-fill {
+  stroke: var(--color-accent-ink);
+  stroke-linecap: round;
+  stroke-dasharray: calc(var(--read, 0) * 100) 100;
+  transition: stroke-dasharray 200ms var(--ease-out);
+}
+/* A zero-length round cap still paints a dot: at the top, the ring is empty. */
+.context-ring[data-read="0"] .context-fill { opacity: 0; }
 
 /* What the ask bar says back, just above it. */
 .ask-reply:empty { display: none; }
@@ -1304,6 +1325,12 @@
   .composer { padding-top: 14px; }
   .composer-panel { padding: 6px; border-radius: 20px; }
   .composer input { font-size: 16px; }
+  .composer-status { margin-top: 4px; padding: 0 17px; font-size: 12.5px; }
+  /* A phone on its side leaves little height: the bar keeps to the field. */
+  @media (max-height: 480px) {
+    .composer { padding-top: 8px; }
+    .composer-status { display: none; }
+  }
 }
 
 /* --- Squircles --------------------------------------------------------------- */
@@ -1326,7 +1353,7 @@
   .ask-reply-card { border-radius: 28px; }
   .evidence-panel, .recommendations-grid > .recommendation-card { border-radius: 28px; }
   .toolbox-search-field { border-radius: 18px; }
-  .composer-send { corner-shape: squircle; border-radius: 16px; }
+  .composer-send, .composer-plus { corner-shape: squircle; border-radius: 13px; }
   .side-item { border-radius: 14px; }
 }
 
@@ -1384,26 +1411,13 @@
   .employers img { scale: 0.86; }
 }
 
-/* --- Ultra: the effort beside the field ------------------------------------------ */
+/* --- Max: the effort on the status line --------------------------------------------- */
 
-/* The one place the palette bends: "Ultra" shimmers pink to purple, the way
-   the highest effort reads beside a coding agent's field. */
-.ultra {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 28px;
-  flex-shrink: 0;
-  padding: 0 10px 0 8px;
-  border-radius: 100px;
-  border: 1px solid color-mix(in oklab, #c084fc 38%, transparent);
-  background: color-mix(in oklab, #c084fc 9%, transparent);
-  font-size: 12.5px;
+/* The one place the palette bends: the effort shimmers pink to purple, the
+   way the highest setting reads beside a coding agent's model. */
+.composer-effort {
   font-weight: 650;
   letter-spacing: 0.01em;
-  white-space: nowrap;
-  cursor: default;
-  user-select: none;
   color: #e879f9;
   background-image: linear-gradient(100deg, #f472b6 0%, #c084fc 30%, #818cf8 50%, #c084fc 70%, #f472b6 100%);
   background-size: 220% 100%;
@@ -1411,11 +1425,10 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.ultra svg { color: #d8b4fe; }
 @media (prefers-reduced-motion: no-preference) {
-  :root:not([data-motion="off"]) .ultra { animation: ultra-shimmer 2.6s linear infinite; }
+  :root:not([data-motion="off"]) .composer-effort { animation: effort-shimmer 2.6s linear infinite; }
 }
-@keyframes ultra-shimmer { from { background-position: 0% 50%; } to { background-position: 220% 50%; } }
+@keyframes effort-shimmer { from { background-position: 0% 50%; } to { background-position: 220% 50%; } }
 
 /* --- The opening screen, once a session ------------------------------------------- */
 

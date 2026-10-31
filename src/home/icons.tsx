@@ -89,15 +89,6 @@ export function SparkIcon(props: IconProps) {
   );
 }
 
-export function SendIcon(props: IconProps) {
-  return (
-    <svg {...svgProps(props)}>
-      <path d="M12 19V5" />
-      <path d="m5 12 7-7 7 7" />
-    </svg>
-  );
-}
-
 export function RestartIcon(props: IconProps) {
   return (
     <svg {...svgProps(props)}>

@@ -11,11 +11,10 @@ import {
 } from "react";
 
 import { Avatar } from "@/home/blocks";
-import { MailIcon, SendIcon, SparkIcon, TopicIcon } from "@/home/icons";
+import { MailIcon, TopicIcon } from "@/home/icons";
 import { routeInput, topicById, topicForHash, topics, type TopicId } from "@/home/topics";
 import { GitHubIcon, LinkedInIcon } from "@/components/brand-icons";
 import { CloseIcon, MenuIcon } from "@/components/icons";
-import { MotionToggle } from "@/components/motion-director";
 import { contact, site } from "@/content/site";
 
 /** Names short enough for a phone's row of chips; the full label stays the accessible name. */
@@ -62,6 +61,52 @@ function nextBootLine(): string {
   } catch {
     return BOOT_LINES[Math.floor(Math.random() * BOOT_LINES.length)];
   }
+}
+
+/**
+ * The context ring: the share of the page scrolled, drawn as a ring that
+ * fills from the top. It owns its own listeners and writes straight to its
+ * element, so reading the page never re-renders the page. Decorative to
+ * assistive technology, whose own reading position already says where it is
+ * (a progressbar that changes with every wheel tick is noise, not help).
+ */
+function ContextRing() {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const ring = ref.current;
+    if (!ring) return;
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const room = document.documentElement.scrollHeight - window.innerHeight;
+      const read = room > 0 ? Math.min(100, Math.max(0, Math.round((window.scrollY / room) * 100))) : 100;
+      ring.style.setProperty("--read", String(read / 100));
+      ring.dataset.read = String(read);
+      ring.title = `${read}% of the page read`;
+    };
+    const queue = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    measure();
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+    const heights = new ResizeObserver(queue);
+    heights.observe(document.body);
+    return () => {
+      cancelAnimationFrame(frame);
+      heights.disconnect();
+      window.removeEventListener("scroll", queue);
+      window.removeEventListener("resize", queue);
+    };
+  }, []);
+  return (
+    <span ref={ref} className="context-ring" data-read="0" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 20 20">
+        <circle cx="10" cy="10" r="8" className="context-track" />
+        <circle cx="10" cy="10" r="8" className="context-fill" pathLength={100} />
+      </svg>
+    </span>
+  );
 }
 
 /** The box of an element's text itself, not of the block it sits in. */
@@ -111,8 +156,8 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
 
   /** The section in view, marked in the contents; null while the hero is. */
   const [current, setCurrent] = useState<TopicId | null>(null);
-  /** True once the hero's name has scrolled under the phone's bar, which then names the person. */
-  const [pastHero, setPastHero] = useState(false);
+  /** The field holds something worth sending, which fills the send button. */
+  const [ready, setReady] = useState(false);
   /** The sidebar as a drawer on narrow screens. */
   const [drawer, setDrawer] = useState(false);
   /**
@@ -266,8 +311,25 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
       }
       if (atEnd && sections.length) found = sections[sections.length - 1].dataset.section as TopicId;
       setCurrent(found);
-      const name = document.querySelector(".hero-name");
-      setPastHero(!!name && name.getBoundingClientRect().bottom < 64);
+      // Nothing transitions on the first measure: a reload mid-page shows the
+      // docked person as it is, with no fade.
+      if (!rootRef.current?.hasAttribute("data-settled")) {
+        // Two frames on, once React has painted what this measure decided.
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            rootRef.current?.setAttribute("data-settled", "");
+            document.documentElement.setAttribute("data-settled", "");
+            // The hash the layout's script set aside for a reload comes back to the address,
+            // under the section's own name, without moving the page.
+            const kept = (window as unknown as { __hash?: string }).__hash;
+            if (kept) {
+              delete (window as unknown as { __hash?: string }).__hash;
+              const id = topicForHash(kept);
+              history.replaceState(history.state, "", `${location.pathname}${location.search}${id ? `#${id}` : kept}`);
+            }
+          }),
+        );
+      }
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(measure);
@@ -275,8 +337,13 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
     measure();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
+    // A row that opens or a group the toolbox search filters changes the page's
+    // height without a scroll event; the marks follow it.
+    const heights = new ResizeObserver(onScroll);
+    heights.observe(document.body);
     return () => {
       cancelAnimationFrame(frame);
+      heights.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
@@ -352,6 +419,7 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
     if (!question || !input) return;
     input.value = "";
     setMatch(null);
+    setReady(false);
     const key = ++replyKey.current;
     const route = routeInput(question);
     if (route.kind === "topic") {
@@ -383,6 +451,7 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
   const onInput = () => {
     const route = routeInput(inputRef.current?.value ?? "");
     setMatch(route.kind === "topic" ? route.id : null);
+    setReady(!!inputRef.current?.value.trim());
   };
 
   /** Any link to a section, anywhere in the shell: the drawer closes and the reply goes. */
@@ -419,25 +488,9 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
         <span className="grain page-grain" />
       </div>
 
-      {/* The phone's bar: who, where in the page, and the contents. */}
+      {/* The narrow layout's bar: the contents button on the left, where the
+          drawer opens from, then where in the page the reader is. */}
       <div className="topline">
-        {/* Hidden while the hero itself shows the name and the photo. */}
-        <a
-          href="#main"
-          className="topline-person"
-          data-shown={pastHero ? "" : undefined}
-          aria-hidden={pastHero ? undefined : true}
-          tabIndex={pastHero ? undefined : -1}
-          onClick={() => window.scrollTo({ top: 0 })}
-        >
-          <Avatar size={28} />
-          <span className="topline-name">{site.name}</span>
-          {current ? (
-            <span className="topline-section" aria-hidden="true">
-              {topicById[current].label}
-            </span>
-          ) : null}
-        </a>
         <button
           ref={menuRef}
           type="button"
@@ -449,18 +502,16 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
         >
           <MenuIcon size={17} />
         </button>
+        {current ? (
+          <span className="topline-section" aria-hidden="true">
+            {topicById[current].label}
+          </span>
+        ) : null}
       </div>
 
       {/* The contents. Beside the page on a wide screen; a drawer on a phone. */}
       <aside className="sidebar" id="sidebar" aria-label="Contents and profiles">
         <div className="side-head">
-          <span className="side-person">
-            <Avatar size={40} />
-            <span>
-              <span className="side-name">{site.name}</span>
-              <span className="side-role">{site.role}</span>
-            </span>
-          </span>
           <button ref={closeRef} type="button" className="side-close" onClick={closeDrawer} aria-label="Close contents">
             <CloseIcon size={16} />
           </button>
@@ -513,8 +564,12 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
           </li>
         </ul>
 
+        {/* The person, at the foot, the way Claude Code keeps the account: the
+            first name and the plan. */}
         <div className="side-foot">
-          <MotionToggle />
+          <Avatar size={30} />
+          <span className="side-name">{site.name.split(" ")[0]}</span>
+          <span className="side-plan">Ultra</span>
         </div>
       </aside>
       <button
@@ -583,7 +638,7 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
           ) : null}
         </div>
 
-        <div className="composer-panel" data-match={match ?? undefined}>
+        <div className="composer-panel" data-match={match ?? undefined} data-ready={ready ? "" : undefined}>
           {/* Every topic, a jump away, then the profiles as icons. Open from
               the start; only the plus closes it. */}
           <div
@@ -628,19 +683,19 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
               </li>
             </ul>
           </div>
+          {/* One row, the way a chat bar reads: the plus (every topic), the
+              field, send. */}
           <div className="composer-row">
             <button
               type="button"
               className="composer-plus"
-              aria-label={chipsOpen ? "Hide the topics" : "Show every topic"}
-              aria-pressed={chipsOpen}
+              aria-label="Topics"
               aria-expanded={chipsOpen}
               aria-controls="composer-topics"
               onClick={() => setChipsChoice(!chipsOpen)}
             >
-              {/* A chevron: up opens the topics above the field, down puts them away. */}
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="m6 15 6-6 6 6" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
               </svg>
             </button>
             <label htmlFor="ask" className="sr-only">
@@ -657,19 +712,28 @@ export function HomeDirector({ hero, sections, footer }: { hero: ReactNode; sect
               maxLength={140}
               onInput={onInput}
             />
-            <kbd className="composer-kbd" aria-hidden="true">
-              /
-            </kbd>
-            {/* The effort a coding agent would show beside its field: here the
-                answers are written, not generated, at the highest setting. */}
-            <span className="ultra" title="Written by hand, at maximum effort" aria-hidden="true">
-              <SparkIcon size={13} />
-              Ultra
-            </span>
             <button type="submit" className="composer-send" aria-label="Ask">
-              <SendIcon size={16} />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M20 5v7a3 3 0 0 1-3 3H5" />
+                <path d="m9 11-4 4 4 4" />
+              </svg>
             </button>
           </div>
+        </div>
+        {/* The line under the box: the mode on the left, the model, its
+            effort and the context on the right. The answers here are written,
+            not generated; the line is the joke, and the context ring is real:
+            it fills as the page is read. */}
+        <div className="composer-status">
+          <span className="sr-only">Answers here are written by hand, at maximum effort.</span>
+          <span className="composer-mode" aria-hidden="true">
+            Auto
+          </span>
+          <span className="composer-model" aria-hidden="true">
+            Opus 5.5
+            <span className="composer-effort">Max</span>
+          </span>
+          <ContextRing />
         </div>
       </form>
       <p className="sr-only" role="status">

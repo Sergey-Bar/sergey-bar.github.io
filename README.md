@@ -26,7 +26,7 @@ rendered underneath, so nothing waits for it. The layout's inline script
 decides before first paint (and marks the session); the stylesheet keeps a
 late fade of its own and shows the hero's name regardless, so a script that
 never arrives cannot leave the screen up; and it never shows with motion
-paused, under `prefers-reduced-motion`, or without JavaScript.
+under `prefers-reduced-motion`, or without JavaScript.
 
 The page opens on the hero: the name as the page's only `h1`, the role, the
 one-line pitch, three actions (LinkedIn, "Request my CV" by email, GitHub) and
@@ -51,24 +51,43 @@ All of it is rendered on the server (`src/home/sections.tsx`,
 same page and every contents link still jumps. `src/home/home-director.tsx` is
 the one client island, and it only adds reading aids around the document:
 
-- **Contents.** On a wide screen a sidebar stands beside the page: the person,
-  the eight sections numbered 01 to 08, the profiles (LinkedIn, GitHub, email)
-  and, in its foot, the "Pause motion" control as a labelled row of its own,
-  so it never sits on top of anything. The section
-  in view is marked (`aria-current="location"`, a lit number and an edge bar),
-  measured as the last section whose top has passed a third of the screen. On
-  a phone the contents are a drawer behind the menu button in a slim top bar,
-  which also names the section in view, and shows the person (avatar and name)
-  only once the hero's own name has scrolled under it, so the first screen
-  never shows them twice; the drawer takes focus when it opens,
-  and Escape or a jump closes it and hands focus back.
-- **The ask bar.** Fixed under the page: a field, a send button and a
-  chevron. The chevron holds every section as a chip (one row of short names
+- **Contents.** On a wide screen a sidebar stands beside the page: the eight
+  sections numbered 01 to 08, the profiles (LinkedIn, GitHub, email) and, at
+  its foot, the person the way Claude Code keeps the account: the avatar, the
+  first name and "Ultra" (in the shimmer). The name and the title are in the
+  hero, so the menu carries only the first name. The section in view is marked
+  (`aria-current="location"`, a lit number and an edge bar), measured as the
+  last section whose top has passed a third of the screen. On a narrow screen
+  the contents are a drawer, and its button is on the left of a slim top bar
+  (which also names the section in view), on the side the drawer opens from;
+  the drawer takes focus when it opens, and Escape or a jump closes it and
+  hands focus back. On a short screen the menu tightens (34px, then 32px
+  rows) and, when it still cannot fit, scrolls beneath its pinned foot. In
+  landscape on a phone the ask bar keeps to the field and drops its status
+  line. A sweep at 17 sizes from 320x568 to 2560x1440 (phones, a phone on its
+  side, tablets, the 1023/1024 boundary, desktops) checks horizontal overflow
+  at every section, the hamburger's side, the drawer's edge, the foot, the plus
+  panel and the ask bar's share of the height.
+- **The ask bar.** Fixed under the page, on one row: a plus (every topic), the
+  field, and a return-arrow send (quiet until there is something to send).
+  Under the box a status line the way Claude Code draws one: "Auto" where the
+  mode would be, and "Opus 5.5" with "Max" where the model and its effort
+  would be, the effort in the one pink-to-purple shimmer on the page. The
+  answers are written, not generated: the line is the joke, hidden from
+  assistive technology and replaced by one plain sentence. The ring at its end
+  is real: a context meter that fills with the share of the page read, empty
+  at the top. It owns its own listeners and writes straight to its element, so
+  reading the page never re-renders the page, and it follows the page's height
+  (a row that opens, a toolbox search) as well as the scroll. It is
+  `aria-hidden`: a progress bar that changes with every wheel tick is noise to
+  a screen reader. The buttons are 36px, 44px on a touch screen, and the
+  plus is one "Topics" button with `aria-expanded`.
+  The plus holds every section as a chip (one row of short names
   on a phone, scrolled sideways) and the profiles as icons. Until the visitor
   chooses, the panel follows the layout: open on a narrow screen, where it is
   the way round the page, and put away beside the sidebar, which already lists
   every section; the stylesheet applies that default before any script runs.
-  Once the visitor uses the chevron, the choice holds and nothing else opens
+  Once the visitor uses the plus, the choice holds and nothing else opens
   or closes it. The chip for the section in view is marked, and while the
   visitor types, the chip the router would answer with lights up. A question
   is routed by `routeInput` in `src/home/topics.ts` and answered by the page
@@ -123,8 +142,7 @@ order.
 
 Labels, card eyebrows, tags, sidebar headings and figures are set in the text
 face, with tabular figures so numbers still align. Mono appears only where the
-page shows terminal output: the scan transcript, the loading line and the "/"
-key hint.
+page shows terminal output: the opening screen's line.
 
 ## Stack
 
@@ -142,15 +160,23 @@ has looked: its observer's first report is the page as it opened, and only
 what is off screen then is armed (`data-armed`) to fade in and count up when
 it arrives. A reload that restores the scroll, or an address that lands on a
 section, shows what is in view as it is, with the final figures, so a refresh
-never blinks. The portrait does not move; only the thin ring around it turns. A soft light follows a fine pointer across
+never blinks. A reload (or a return through history) with a section's hash in
+the URL used to restore the scroll and then glide to the heading, because the
+browser applies the fragment too and `scroll-behavior: smooth` animated it:
+the layout's inline script now sets the hash aside before the page loads, so
+the browser restores where the reader was, and the director puts the hash back
+in the address once the page has settled. The root only turns smooth then
+(`data-settled`), so whatever the browser does while loading is instant, and
+the ring waits for the first measure rather than showing
+an empty state. The portrait does not move; only the thin ring around it turns. A soft light follows a fine pointer across
 the page, moved on the compositor from window-level events so it can never be
 left behind; it fades when the pointer leaves the document and does not exist
-on touch screens. Looping ambience (the ring, the status
-pulse, the background light) stops entirely under `prefers-reduced-motion` or
-the visitor's own "Pause motion" control (`MotionToggle`, sharing one
-preference with `MotionDirector` through `useMotion`), which persists in
-localStorage and is applied before first paint. Nothing on the page waits for an animation to
-be read, so motion off changes only the light.
+on touch screens. Looping ambience (the ring, the shimmer, the
+background light) stops entirely under `prefers-reduced-motion`. There is no
+control of the site's own: the system's setting is the preference (an old
+stored "pause" from an earlier version is cleared by the layout's script, so
+nobody is left stuck with no way back). Nothing on the page waits for an
+animation to be read, so reduced motion changes only the light.
 
 The toolbox has a small search island, matching disciplines and tool names.
 Group content is server-rendered, with a live result count and clear empty state.

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { MotionToggle } from "@/components/motion-director";
 import { TopicIcon } from "@/home/icons";
 import { topics } from "@/home/topics";
 import { site } from "@/content/site";
@@ -37,11 +36,10 @@ export default function NotFound() {
             </li>
           ))}
         </ul>
-        <p className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 t-small text-muted">
+        <p className="mt-8 t-small text-muted">
           <Link href="/" className="link-underline">
             Back to {site.name.split(" ")[0]}&apos;s page
           </Link>
-          <MotionToggle className="motion-toggle-inline" />
         </p>
       </div>
     </main>

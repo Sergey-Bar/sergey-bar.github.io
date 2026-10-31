@@ -107,8 +107,12 @@ test.describe("the opening screen", () => {
     // The page is already there underneath, its own name waiting for the handover.
     await expect(page.getByRole("heading", { level: 1, name: "Sergey Bar", includeHidden: true })).toBeAttached();
     await expect(page.locator(".hero-name")).toHaveCSS("visibility", "hidden");
-    await page.clock.runFor(1_400);
-    await expect(page.locator("html")).toHaveAttribute("data-boot", /handover|lifting/);
+    // The page's timer starts when it hydrates, which can be after any fixed jump of the clock, so
+    // the clock advances in steps until the handover has begun.
+    await expect(async () => {
+      await page.clock.runFor(300);
+      await expect(page.locator("html")).toHaveAttribute("data-boot", /handover|lifting/, { timeout: 100 });
+    }).toPass({ timeout: 10_000 });
     await page.clock.runFor(1_000);
     await expect(page.locator("html")).not.toHaveAttribute("data-boot");
     await expect(boot).toBeHidden();
@@ -163,26 +167,33 @@ test.describe("projects", () => {
 });
 
 test.describe("contents", () => {
-  test("the pause control is a row of the sidebar that overlaps nothing", async ({ page, isMobile }) => {
+  test("the person sits at the foot of the menu as a first name and a plan, with no title and no pause control", async ({ page, isMobile }) => {
     await page.goto("/");
     if (isMobile) await page.getByRole("button", { name: "Contents", exact: true }).click();
-    const toggle = page.getByRole("button", { name: "Pause motion" });
-    await expect(toggle).toBeVisible();
-    const clash = await page.evaluate(() => {
-      const control = document.querySelector(".motion-toggle")!.getBoundingClientRect();
-      const others = Array.from(document.querySelectorAll<HTMLElement>(".sidebar a, .sidebar button, .sidebar p"))
-        .filter((el) => !el.classList.contains("motion-toggle") && el.getBoundingClientRect().width > 0);
-      return others
-        .filter((el) => {
-          const box = el.getBoundingClientRect();
-          return box.left < control.right && box.right > control.left && box.top < control.bottom && box.bottom > control.top;
-        })
-        .map((el) => el.textContent?.trim());
+    const foot = page.locator(".sidebar .side-foot");
+    await expect(foot).toBeVisible();
+    await expect(foot).toHaveText("SergeyUltra");
+    await expect(foot.locator(".avatar")).toBeVisible();
+    // The foot is the lowest thing in the menu, and the menu has no head with the name.
+    const lowest = await page.evaluate(() => {
+      const foot = document.querySelector(".sidebar .side-foot")!.getBoundingClientRect().bottom;
+      return Array.from(document.querySelectorAll(".sidebar a, .sidebar nav, .sidebar .side-label"))
+        .every((el) => el.getBoundingClientRect().bottom <= foot);
     });
-    expect(clash).toEqual([]);
-    await toggle.click();
-    await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
-    await expect(page.getByRole("button", { name: "Resume motion" })).toBeVisible();
+    expect(lowest).toBe(true);
+    await expect(page.locator(".sidebar").getByText("QA Tech Lead")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /pause motion|resume motion/i })).toHaveCount(0);
+  });
+
+  test("the contents button is on the left, and the menu opens from the left", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "the drawer is the narrow layout");
+    await page.goto("/");
+    const menu = page.getByRole("button", { name: "Contents", exact: true });
+    const box = await menu.boundingBox();
+    expect(box!.x + box!.width / 2).toBeLessThan((page.viewportSize()!.width) / 2);
+    await menu.click();
+    await expect(page.locator(".sidebar")).toBeVisible();
+    await expect.poll(() => page.locator(".sidebar").evaluate((el) => Math.round(el.getBoundingClientRect().left))).toBe(0);
   });
 
   test("list every section, numbered, and mark the one in view", async ({ page }) => {
@@ -245,14 +256,18 @@ test.describe("the ask bar", () => {
     await page.goto("/");
     const chips = page.locator(".composer-topics .chip[data-topic]");
     await expect(chips).toHaveCount(SECTIONS.length);
-    await expect(page.locator(".composer .ultra")).toHaveText("Ultra");
+    await expect(page.locator(".composer-status")).toContainText("Auto");
+    const plus = page.getByRole("button", { name: "Topics", exact: true });
+    await expect(plus).toHaveAttribute("aria-expanded", isMobile ? "true" : "false");
+    await expect(plus).not.toHaveAttribute("aria-pressed");
+    await expect(page.locator(".composer-model")).toHaveText(/Opus 5\.5\s*Max/);
     if (isMobile) {
       // A phone has no sidebar: the topics are the way round the page.
       await expect(chips.first()).toBeVisible();
     } else {
       // Beside the sidebar, which lists every section, they start put away.
       await expect(chips.first()).toBeHidden();
-      await page.getByRole("button", { name: "Show every topic" }).click();
+      await page.getByRole("button", { name: "Topics", exact: true }).click();
       await expect(chips.first()).toBeVisible();
     }
     await expect(page.locator(".composer .chip-route")).toHaveCount(3);
@@ -261,12 +276,12 @@ test.describe("the ask bar", () => {
     await expect(chips.first()).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(chips.first()).toBeVisible();
-    await page.getByRole("button", { name: "Hide the topics" }).click();
+    await page.getByRole("button", { name: "Topics", exact: true }).click();
     await expect(chips.first()).toBeHidden();
     await ask(page, "how do I reach you");
     await expect(heading(page, "contact")).toBeInViewport();
     await expect(chips.first()).toBeHidden();
-    await page.getByRole("button", { name: "Show every topic" }).click();
+    await page.getByRole("button", { name: "Topics", exact: true }).click();
     await expect(chips.first()).toBeVisible();
   });
 
@@ -393,6 +408,64 @@ test.describe("the ask bar", () => {
   });
 });
 
+test.describe("refreshing the page", () => {
+  /** Where the page is, every animation frame from the first, so a glide cannot hide between samples. */
+  const trace = (page: Page) =>
+    page.evaluate(() => {
+      const ys: number[] = [];
+      const tick = () => {
+        ys.push(Math.round(scrollY));
+        if (ys.length < 90) requestAnimationFrame(tick);
+      };
+      tick();
+      return new Promise<number[]>((resolve) => setTimeout(() => resolve(ys), 1600));
+    });
+
+  test("a reload with a section's hash returns to where the reader was, not to the section", async ({ page }) => {
+    await page.goto("/#projects");
+    await page.evaluate(() => {
+      document.documentElement.style.scrollBehavior = "auto";
+      scrollTo(0, 3000);
+    });
+    await expect.poll(() => page.evaluate(() => Math.round(scrollY))).toBe(3000);
+    await page.reload();
+    const ys = await trace(page);
+    // Held at the reader's position from the first frame to the last: no glide to the heading.
+    expect(new Set(ys.filter((y) => y > 0))).toEqual(new Set([3000]));
+    // The address keeps the section's name, put back once the page had settled.
+    await expect(page).toHaveURL(/#projects$/);
+  });
+
+  test("a link to a section lands on it at once, and the page is smooth only afterwards", async ({ page }) => {
+    await page.goto("/#toolbox");
+    const target = await page.evaluate(() => Math.round(document.getElementById("toolbox")!.getBoundingClientRect().top + scrollY));
+    const ys = await trace(page);
+    // Never mid-way: the page is at the section, or still at the top, in every frame.
+    const settled = ys[ys.length - 1];
+    expect(settled).toBeGreaterThan(target - 200);
+    const steps = ys.slice(1).filter((y, i) => Math.abs(y - ys[i]) > 400);
+    expect(steps.length).toBeLessThanOrEqual(1);
+    await expect(page.locator("html")).toHaveAttribute("data-settled", "");
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe("smooth");
+  });
+
+  test("a reload mid-page shows no empty ring", async ({ page, isMobile }) => {
+    test.skip(isMobile, "the sidebar stands beside the page on a wide screen");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/");
+    await page.evaluate(() => {
+      document.documentElement.style.scrollBehavior = "auto";
+      scrollTo(0, 3000);
+    });
+    await expect.poll(() => page.evaluate(() => Math.round(scrollY))).toBe(3000);
+    await page.reload();
+    await expect(page.locator(".home")).toHaveAttribute("data-settled", "");
+    // Settled, the ring says where the page is.
+    await expect(page.locator(".context-ring")).toHaveCSS("opacity", "1");
+    expect(Number(await page.locator(".context-ring").getAttribute("data-read"))).toBeGreaterThan(10);
+  });
+});
+
 test.describe("something fun", () => {
   test("the button opens the game, Escape closes it, and the page is as it was", async ({ page }) => {
     await page.goto("/#fun");
@@ -456,14 +529,50 @@ test.describe("details", () => {
     expect(natural).toBeGreaterThanOrEqual(Math.min(shown, 464));
   });
 
-  test("the phone's bar names the person only once the hero has gone", async ({ page, isMobile }) => {
-    test.skip(!isMobile, "the bar is the narrow layout");
+  test("the context ring fills as the page is read, and stays out of a screen reader's way", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
-    const person = page.locator(".topline-person");
-    await expect(person).toBeHidden();
-    await heading(page, "experience").scrollIntoViewIfNeeded();
-    await expect(person).toBeVisible();
-    await expect(person).toContainText("Sergey Bar");
+    const ring = page.locator(".context-ring");
+    // A reading meter that changes with every wheel tick is noise to assistive technology.
+    await expect(ring).toHaveAttribute("aria-hidden", "true");
+    await expect(page.getByRole("progressbar")).toHaveCount(0);
+    await expect(ring).toHaveAttribute("data-read", "0");
+    // Empty at the top: no dot from a zero-length cap.
+    await expect(ring.locator(".context-fill")).toHaveCSS("opacity", "0");
+    const dash = () => ring.locator(".context-fill").evaluate((c) => getComputedStyle(c).strokeDasharray);
+    const empty = await dash();
+    await heading(page, "projects").scrollIntoViewIfNeeded();
+    await expect.poll(async () => Number(await ring.getAttribute("data-read"))).toBeGreaterThan(20);
+    expect(Number(await ring.getAttribute("data-read"))).toBeLessThan(100);
+    await expect(ring.locator(".context-fill")).toHaveCSS("opacity", "1");
+    expect(await dash()).not.toBe(empty);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect.poll(() => ring.getAttribute("data-read")).toBe("100");
+  });
+
+  test("the ring follows the page when its height changes without a scroll", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/#toolbox");
+    const ring = page.locator(".context-ring");
+    await expect.poll(async () => Number(await ring.getAttribute("data-read"))).toBeGreaterThan(5);
+    const before = Number(await ring.getAttribute("data-read"));
+    // The page grows below the reader (a row opening, a search clearing): no scroll event, only a taller page.
+    await page.evaluate(() => {
+      const spacer = document.createElement("div");
+      spacer.style.height = "4000px";
+      document.querySelector(".home-column")!.append(spacer);
+    });
+    await expect.poll(async () => Number(await ring.getAttribute("data-read"))).toBeLessThan(before - 5);
+  });
+
+  test("the send button fills only when there is something to send", async ({ page }) => {
+    await page.goto("/");
+    const send = page.getByRole("button", { name: "Ask", exact: true });
+    const empty = await send.evaluate((b) => getComputedStyle(b).backgroundColor);
+    await field(page).fill("   ");
+    expect(await send.evaluate((b) => getComputedStyle(b).backgroundColor)).toBe(empty);
+    await field(page).fill("projects");
+    await expect.poll(() => send.evaluate((b) => getComputedStyle(b).backgroundColor)).not.toBe(empty);
   });
 
   test("the focus ring is the light blue and the footer links are full targets", async ({ page }) => {
