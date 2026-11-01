@@ -23,7 +23,7 @@ export type Role = {
 export const roles: readonly Role[] = [
   {
     company: "Israeli Air Force",
-    role: "Senior QA Engineer",
+    role: "Senior QA Engineer · Outsourced civilian contractor",
     period: "2025–Present",
     scope:
       "A full-stack data analysis platform in a security-critical environment, with zero pre-existing QA infrastructure.",
@@ -43,7 +43,7 @@ export const roles: readonly Role[] = [
   },
   {
     company: "Nova Ltd.",
-    role: "QA Engineer",
+    role: "QA Engineer · Outsourced contractor",
     period: "2025",
     scope:
       "Semiconductor metrology and process-control software deployed to tier-1 fabs including Samsung, Intel and TSMC. A maternity-cover role.",
