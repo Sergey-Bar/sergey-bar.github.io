@@ -136,11 +136,11 @@ function ProjectsSection() {
               <MjolnirConsole />
             ) : (
               <figure className="evidence-panel mt-8">
-                <figcaption className="t-title">How evidence moves through Automate</figcaption>
+                <figcaption className="t-title">How evidence moves through Lupin</figcaption>
                 <ol className="evidence-flow">
                   <li>
                     <strong>Test producers</strong>
-                    <span>Playwright · JUnit · legacy reporters</span>
+                    <span>Playwright · JUnit · k6 · ZAP</span>
                   </li>
                   <li>
                     <strong>Shared result model</strong>

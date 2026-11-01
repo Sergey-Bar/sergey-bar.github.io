@@ -139,9 +139,9 @@ export const topics: readonly Topic[] = [
     id: "projects",
     label: "Projects",
     prompt: "Show me your projects",
-    description: "Projects: Mjolnir and Automate, both open source",
+    description: "Projects: Mjolnir and Lupin, both open source",
     keywords: [
-      "project", "mjolnir", "automate", "open source", "open-source", "repo",
+      "project", "mjolnir", "lupin", "automate", "open source", "open-source", "repo",
       "github", "your work", "my work", "see work", "portfolio", "built", "build",
       "scanner", "green build", "npm", "product", "show me", "what have you made", "side project",
     ],
