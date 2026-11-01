@@ -34,6 +34,23 @@ def read_const(path: Path, key: str) -> str:
     return match.group(1)
 
 
+def metric(label: str) -> str:
+    text = (ROOT / "src/content/metrics.ts").read_text(encoding="utf-8")
+    match = re.search(rf'value:\s*"([^"]+)",\s*label:\s*"{label}"', text)
+    if not match:
+        raise SystemExit(f"metric {label!r} not found in metrics.ts")
+    return match.group(1)
+
+
+def downloads() -> str:
+    text = (ROOT / "src/content/npm-stats.ts").read_text(encoding="utf-8")
+    match = re.search(r'"downloadsAllTime":\s*(\d+)', text)
+    if not match:
+        raise SystemExit("downloadsAllTime not found in npm-stats.ts")
+    # Rounded down, so the preview never claims more than the page shows.
+    return f"{int(match.group(1)) // 1000}K+"
+
+
 def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
     fonts = Path("C:/Windows/Fonts")
     for name in (["segoeuib.ttf", "arialbd.ttf"] if bold else ["segoeui.ttf", "arial.ttf"]):
@@ -57,6 +74,11 @@ def main() -> None:
     name = read_const(ROOT / "src/content/site.ts", "name")
     role = read_const(ROOT / "src/content/site.ts", "role")
     headline = read_const(ROOT / "src/content/hero.ts", "headline")
+    proof = [
+        (f"{metric('years in software QA')}+", "years in software QA"),
+        (f"{metric('major releases')} releases", "zero critical defects"),
+        (downloads(), "npm downloads, Mjolnir"),
+    ]
     domain = read_const(ROOT / "src/content/site.ts", "domain").replace("https://", "")
 
     img = Image.new("RGBA", (W, H), PAPER + (255,))
@@ -81,26 +103,33 @@ def main() -> None:
 
     draw = ImageDraw.Draw(img)
 
-    # Copy.
+    # Copy. No greeting chip and no repeated role line: at link-preview size
+    # only the title and a few numbers register, so the space goes to proof.
     x = 80
-    draw.rounded_rectangle((x, 92, x + 112, 128), radius=18, fill=(20, 23, 28), outline=LINE, width=2)
-    draw.ellipse((x + 14, 100, x + 34, 120), fill=SKY)
-    draw.text((x + 42, 98), "Hello!", font=font(20, bold=True), fill=INK)
+    eyebrow = font(20, bold=True)
+    draw.text((x, 92), "TEST AUTOMATION  ·  CI/CD  ·  AI", font=eyebrow, fill=SKY)
 
     title_font = font(84, bold=True)
     first = name.split(" ")[0]
-    draw.text((x - 4, 160), "I'm ", font=title_font, fill=INK)
-    draw.text((x - 4 + draw.textlength("I'm ", font=title_font), 160), f"{first},", font=title_font, fill=SKY)
-    draw.text((x - 4, 252), "QA Tech Lead", font=title_font, fill=INK)
+    draw.text((x - 4, 128), "I'm ", font=title_font, fill=INK)
+    draw.text((x - 4 + draw.textlength("I'm ", font=title_font), 128), f"{first},", font=title_font, fill=SKY)
+    draw.text((x - 4, 220), "QA Tech Lead", font=title_font, fill=INK)
 
-    sub_font = font(28)
-    draw.text((x, 372), "& AI Automation Engineer", font=font(28, bold=True), fill=INK)
-    draw.text((x, 412), headline, font=sub_font, fill=MUTED)
+    draw.text((x, 340), "& AI Automation Engineer", font=font(30, bold=True), fill=INK)
+    draw.text((x, 382), headline, font=font(26), fill=MUTED)
 
-    draw.line((x, 486, x + 560, 486), fill=LINE, width=2)
+    # Proof row: three figures read from the site's own content.
+    big, label = font(36, bold=True), font(18)
+    col = x
+    for value, caption in proof:
+        draw.text((col, 444), value, font=big, fill=INK)
+        draw.text((col, 492), caption, font=label, fill=MUTED)
+        col += 200
+
+    draw.line((x, 534, x + 600, 534), fill=LINE, width=2)
     small = font(22)
-    draw.text((x, 506), f"{name}  ·  {role}", font=small, fill=MUTED)
-    draw.text((x, 540), domain, font=small, fill=SKY)
+    draw.text((x, 548), "Playwright · Python · TypeScript · Defense & Security", font=small, fill=MUTED)
+    draw.text((x, 580), domain, font=small, fill=SKY)
 
     out = ROOT / "public/og.png"
     img.convert("RGB").save(out, optimize=True)
