@@ -42,20 +42,19 @@ export const projects: readonly Project[] = [
     ],
   },
   {
-    slug: "automate",
-    name: "Automate",
-    kind: "Local-first QA control plane",
-    tagline: "A run is a chain of evidence.",
-    repo: "https://github.com/Sergey-Bar/AutoMate",
-    repoLabel: "github.com/Sergey-Bar/AutoMate",
+    slug: "lupin",
+    name: "Lupin",
+    kind: "Self-hosted QA control plane",
+    tagline: "Every test. One clear answer.",
+    repo: "https://github.com/Sergey-Bar/Lupin",
+    repoLabel: "github.com/Sergey-Bar/Lupin",
     about:
-      "The layer between test producers and the people who have to trust them. One canonical result model for Playwright, JUnit and legacy reporters, persisted run evidence, live run updates and quality-gate policies. Its capability register marks most of its own rows explicitly not real, so a summary table cannot round itself up.",
-    // From the Automate README's own summary table, which names each of these.
+      "The layer between test producers and the people who have to trust them. One result model for Playwright, JUnit, k6 and OWASP ZAP, with each run, retry and artifact kept together. Quality gates answer unknown or not configured instead of quietly passing, and flaky tests go into an audited quarantine: set aside, never hidden.",
+    // From the Lupin README, which names each of these.
     facts: [
-      { label: "register", value: "42 rows" },
-      { label: "marked not real", value: "26" },
-      { label: "Node", value: "24.21" },
-      { label: "pnpm", value: "10.30.2" },
+      { label: "inputs", value: "Playwright · JUnit · k6 · ZAP" },
+      { label: "retries", value: "recorded as flaky" },
+      { label: "install", value: "Docker only" },
       { label: "licence", value: "MIT" },
     ],
   },

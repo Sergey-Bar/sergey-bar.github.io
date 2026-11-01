@@ -55,7 +55,7 @@ export const caseStudies: readonly CaseStudy[] = [
       },
     ],
     outcome:
-      "A three-tier pyramid with full backend and frontend suites, a nightly regression pass in the pipeline, and one quality point of contact for release readiness.",
+      "A three-tier pyramid with full backend and frontend suites, a regression gate in the pipeline for every sprint release, and one quality point of contact for release readiness.",
     stat: { value: "0 → 3", label: "tiers of tests, built from no QA infrastructure" },
   },
   {

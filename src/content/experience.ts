@@ -31,7 +31,7 @@ export const roles: readonly Role[] = [
       "Sole quality owner, from requirements intake through to release sign-off",
       "Built the complete quality lifecycle from zero: test strategy, quality requirements, coverage planning, quality gates and release criteria",
       "Designed the platform's three-tier test pyramid from scratch (unit, integration and end to end) with full backend and frontend suites",
-      "Wired Playwright UI automation and API tests in Python and TypeScript into the pipeline as the scheduled nightly regression pass",
+      "Wired Playwright UI automation and API tests in Python and TypeScript into the pipeline as the regression gate for every monthly sprint release",
       "Designed the operational project-management system for cross-team visibility",
       "Covered the database beneath the platform as well as the application, alongside the data team",
     ],
@@ -81,13 +81,13 @@ export const roles: readonly Role[] = [
   },
   {
     company: "Enabley",
-    role: "QA Engineer",
+    role: "Junior QA Engineer",
     period: "2021–2022",
     scope:
       "An enterprise mobile-first training and knowledge platform with 1M+ active users across 25 languages, built on a microservices architecture.",
     ownership: [
-      "First and sole QA hire. Built the entire QA function from zero",
-      "Created test strategy, quality gates, release criteria and documentation (STP, STD)",
+      "First QA hire: wrote the product's first test plans, test cases and QA documentation (STP, STD)",
+      "Set the bug reporting format: reproduction steps, severity, expected versus actual",
     ],
     impact: [
       "Validated REST APIs with Postman and tested GraphQL queries for data accuracy across the full stack",

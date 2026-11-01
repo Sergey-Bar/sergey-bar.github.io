@@ -31,9 +31,9 @@ export const proofRow: readonly Metric[] = [
   },
   {
     value: "2×",
-    label: "QA built from zero",
+    label: "times first QA hire",
     detail:
-      "First and only QA engineer twice: at Enabley, and as sole quality owner of a security-critical defense platform.",
+      "First QA hire twice: at Enabley, and as sole quality owner of a security-critical defense platform.",
     source: "linkedin",
   },
   {

@@ -12,7 +12,7 @@ export const site = {
   domain: "https://sergey-bar.github.io",
   title: "Sergey Bar · QA Tech Lead & AI Automation Engineer",
   description:
-    "QA Tech Lead & AI Automation Engineer with 5 years in software QA across defence platforms, semiconductor metrology and enterprise security. Test strategy from zero, Playwright and Python automation as release gates, and open-source tools that publish their own limits.",
+    "QA Tech Lead & AI Automation Engineer with 5+ years in software QA across defence platforms, semiconductor metrology and enterprise security. Test strategy from zero, Playwright and Python automation as release gates, and open-source tools that publish their own limits.",
   locale: "en_US",
   location: "Israel",
 } as const;
@@ -35,5 +35,5 @@ export const availability = {
    * Two lanes, stated plainly: the QA track and the management track the CV
    * and the profile are both open to.
    */
-  roles: ["QA Roles", "Product Management", "Project Management"],
+  roles: ["QA Roles", "Product Management"],
 } as const;
