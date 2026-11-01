@@ -36,7 +36,7 @@ the official one as drawn, white with navy line work. The wordmarks are white
 versions of each company's own logo, made for the dark ground and kept next
 to their sources in `public/logos/` (`*-on-dark`): FLIR without its tagline,
 Nova without the small print that turned to dots, Enabley without the outline
-and shadow baked into its PNG, HP in white. Then eight
+and shadow baked into its PNG. Then eight
 numbered sections, each an `h2` with a lead paragraph and its cards: About me,
 Experience, Toolbox, Recommendations, Projects, Case studies, Contact,
 Something fun. Long cards keep progressive disclosure: a project shows its

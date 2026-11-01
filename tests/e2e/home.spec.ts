@@ -550,11 +550,11 @@ test.describe("content", () => {
   test("the employers are the IAF emblem as drawn and white wordmarks for the dark ground", async ({ page }) => {
     await page.goto("/");
     const marks = page.locator(".employers img");
-    await expect(marks).toHaveCount(5);
+    await expect(marks).toHaveCount(4);
     const sources = await marks.evaluateAll((imgs) => imgs.map((img) => img.getAttribute("src")));
     expect(sources[0]).toBe("/logos/iaf-emblem.svg");
     for (const src of sources.slice(1)) expect(src).toMatch(/-on-dark\.(svg|png)$/);
-    for (let i = 0; i < 5; i++) await expect(marks.nth(i)).toHaveJSProperty("complete", true);
+    for (let i = 0; i < 4; i++) await expect(marks.nth(i)).toHaveJSProperty("complete", true);
   });
 
   test("something fun lists the game's nine tools and opens it from its own corner", async ({ page }) => {

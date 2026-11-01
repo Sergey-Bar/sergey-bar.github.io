@@ -144,9 +144,9 @@ export const toolbox: readonly ToolGroup[] = [
     items: ["Scrum", "Agile", "Figma", "Trello", "Monday", "Make", "Office"],
   },
   {
-    id: "hardware",
-    title: "Hardware and measurement",
-    items: ["PC technician", "Computer Guru", "X-Rite"],
+    id: "support",
+    title: "Hardware and support",
+    items: ["PC technician", "Computer Guru"],
   },
 ];
 

@@ -105,7 +105,7 @@ export const topics: readonly Topic[] = [
       "experience", "job", "career", "worked", "work history", "work before",
       "work at", "work for", "did you work", "have you worked", "where do you work",
       "company", "companies", "employer", "employment", "previous", "past",
-      "flir", "nova", "air force", "enabley", "hp", "indigo", "teledyne", "role",
+      "flir", "nova", "air force", "enabley", "teledyne", "role",
       "history", "timeline", "background",
     ],
     hashes: ["experience"],

@@ -37,9 +37,9 @@ export const hero = {
  * tagline and with the wordmark centred on the icon; Nova's four letters
  * without the small "PROCESS INSIGHT" and registered mark, which turn to dots
  * at this size; Enabley's letters without the white outline and grey shadow
- * baked into its PNG; HP's disc in white.
+ * baked into its PNG.
  *
- * `h` is the rendered height in pixels, set by eye so the five read at one
+ * `h` is the rendered height in pixels, set by eye so the four read at one
  * weight: the square emblems stand taller than the wordmarks.
  */
 export const employers = [
@@ -47,5 +47,4 @@ export const employers = [
   { name: "Nova", logo: "/logos/nova-on-dark.svg", iw: 136, ih: 31, h: 24 },
   { name: "Teledyne FLIR", logo: "/logos/flir-on-dark.svg", iw: 247, ih: 44, h: 30 },
   { name: "Enabley", logo: "/logos/enabley-on-dark.png", iw: 890, ih: 297, h: 28 },
-  { name: "HP Indigo", logo: "/logos/hp-on-dark.svg", iw: 100, ih: 100, h: 40 },
 ] as const;

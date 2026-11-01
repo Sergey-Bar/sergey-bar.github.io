@@ -95,19 +95,4 @@ export const roles: readonly Role[] = [
       "Bug reporting carried structured reproduction steps and severity classification, which is what made cross-team triage fast",
     ],
   },
-  {
-    company: "HP Indigo",
-    role: "QC Analyst",
-    period: "2015–2017",
-    scope:
-      "Industrial printing systems combining software with scanning and optical hardware in a high-precision manufacturing environment.",
-    ownership: [
-      "Led root-cause analysis for quality defects across production runs",
-      "Assessed print accuracy, colour consistency and system reliability across software, optics and precision mechanics",
-    ],
-    impact: [
-      "Measured printed output with X-Rite colour instruments and generated the measurement reports the release decision rested on",
-      "Where the discipline started: defect analysis on systems where a measurement error is a defective unit",
-    ],
-  },
 ];

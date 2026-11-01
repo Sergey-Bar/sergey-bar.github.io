@@ -19,7 +19,7 @@ export const proofRow: readonly Metric[] = [
     value: "5",
     label: "years in software QA",
     detail:
-      "Since 2021, after two years of hardware quality control at HP Indigo (2015–2017).",
+      "Since 2021.",
     source: "linkedin",
   },
   {
